@@ -1,0 +1,11 @@
+OSOOL HOSPITALITY - HOSTINGER RELEASE 7
+
+1. Back up the existing public_html directory.
+2. Upload the ZIP contents directly into public_html.
+3. Confirm index.html and .htaccess are directly inside public_html.
+4. Confirm PHP mail is enabled and test the contact form.
+5. Clear Hostinger and browser cache.
+6. Verify https://osoulhospitality.com, /contact/, /outputs/, sitemap.xml and robots.txt.
+
+The contact form sends to info@osoulhospitality.com through submit.php.
+If PHP mail is disabled, configure SMTP or Hostinger email routing before launching campaigns.

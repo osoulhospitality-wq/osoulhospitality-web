@@ -1,0 +1,4 @@
+Contact: mailto:info@osoulhospitality.com
+Preferred-Languages: ar, en
+Canonical: https://osoulhospitality.com/.well-known/security.txt
+Expires: 2027-07-26T00:00:00.000Z

@@ -1,0 +1,22 @@
+{
+  "name": "Osool Hospitality Hostinger public_html",
+  "version": "7.0.0",
+  "date": "2026-07-26",
+  "domain": "https://osoulhospitality.com",
+  "routes": [
+    "/",
+    "solutions",
+    "outputs",
+    "about",
+    "scenarios",
+    "insights",
+    "contact",
+    "thank-you",
+    "privacy",
+    "terms",
+    "accessibility",
+    "en"
+  ],
+  "form": "submit.php -> info@osoulhospitality.com",
+  "analytics": "disabled"
+}

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
-
+Disallow: /thank-you/
 Sitemap: https://osoulhospitality.com/sitemap.xml
