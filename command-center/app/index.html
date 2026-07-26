@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Osoul Command Center — MVP</title>
+  <title>Osoul Command Center — Enterprise Transition v11</title>
   <link rel="icon" href="/brand/osool-mark-v8.svg">
   <link rel="stylesheet" href="./app.css">
 </head>
@@ -13,7 +13,7 @@
   <header class="topbar">
     <a class="brand" href="/command-center/"><img src="/brand/osool-mark-v8.svg" alt="" width="44" height="44"><span><b>Osoul Command Center</b><small>Procurement & Contract Intelligence</small></span></a>
     <div class="top-actions">
-      <span class="mode"><i></i> MVP محلي آمن</span>
+      <span class="mode"><i></i> v11 انتقال مؤسسي آمن</span>
       <button class="ghost" data-action="export">نسخة احتياطية</button>
       <label class="ghost file-button">استعادة<input id="restoreFile" type="file" accept="application/json"></label>
     </div>
@@ -27,7 +27,9 @@
       <button class="nav-item" data-view="quotes"><span>04</span> مقارنة العروض</button>
       <button class="nav-item" data-view="contracts"><span>05</span> العقود والمخاطر</button>
       <button class="nav-item" data-view="decisions"><span>06</span> سجل القرارات</button>
-      <button class="nav-item" data-view="settings"><span>07</span> البيانات والضبط</button>
+      <button class="nav-item" data-view="documents"><span>07</span> مركز المستندات</button>
+      <button class="nav-item" data-view="audit"><span>08</span> سجل التدقيق</button>
+      <button class="nav-item" data-view="settings"><span>09</span> البيانات والضبط</button>
       <div class="sidebar-note"><b>تنبيه الخصوصية</b><p>هذه النسخة تحفظ البيانات على هذا الجهاز فقط. لا تستخدمها كأرشيف نهائي للعقود الحساسة.</p></div>
     </nav>
 
@@ -70,6 +72,25 @@
         <div id="decisionTable" class="table-wrap"></div>
       </section>
 
+      <section class="view" id="view-documents">
+        <div class="page-head"><div><small>DOCUMENT INTAKE</small><h1>مركز المستندات</h1><p>تسجيل العقود والعروض والفواتير والتحقق من سلامتها قبل المعالجة المركزية.</p></div></div>
+        <div class="notice">في v11 تُحسب بصمة SHA-256 للملف محليًا ويُسجل وصفه فقط. لا يُرفع محتوى الملف إلى الخادم حتى تفعيل التخزين المشفر والصلاحيات.</div>
+        <article class="panel">
+          <div class="form-grid">
+            <label>نوع المستند<select id="documentType"><option>عقد</option><option>عرض سعر</option><option>فاتورة</option><option>سجل تجاري</option><option>شهادة ضريبية</option><option>أخرى</option></select></label>
+            <label>المرجع المرتبط<input id="documentReference" placeholder="اسم المورد أو رقم العقد"></label>
+            <label class="wide">اختر الملف<input id="documentFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv,.doc,.docx"></label>
+          </div>
+          <button class="primary" data-action="registerDocument">تسجيل المستند وحساب البصمة</button>
+        </article>
+        <div id="documentTable" class="table-wrap"></div>
+      </section>
+
+      <section class="view" id="view-audit">
+        <div class="page-head"><div><small>AUDIT TRAIL</small><h1>سجل التدقيق</h1><p>أثر لكل إنشاء أو حذف أو استعادة أو تصدير داخل الجهاز.</p></div><button class="secondary" data-action="exportAudit">تصدير السجل</button></div>
+        <div id="auditTable" class="table-wrap"></div>
+      </section>
+
       <section class="view" id="view-settings">
         <div class="page-head"><div><small>DATA CONTROL</small><h1>البيانات والضبط</h1><p>النسخ الاحتياطي والاستعادة وتنظيف بيئة العرض.</p></div></div>
         <div class="grid three">
@@ -77,7 +98,7 @@
           <article class="panel action-card"><h2>بيانات تجريبية</h2><p>سجلات موسومة للعرض واختبار المحركات.</p><button class="secondary" data-action="seed">إعادة تحميلها</button></article>
           <article class="panel action-card danger"><h2>مسح الجهاز</h2><p>يحذف بيانات هذه النسخة من المتصفح الحالي.</p><button class="danger-button" data-action="reset">مسح البيانات</button></article>
         </div>
-        <article class="panel"><h2>حدود هذه النسخة</h2><ul class="plain-list"><li>لا يوجد رفع ملفات أو OCR أو مستخدمون متعددون في النسخة العامة.</li><li>لا تُرسل البيانات إلى خادم؛ تبقى في تخزين المتصفح على هذا الجهاز.</li><li>الإنتاج المؤسسي يتطلب قاعدة بيانات مشفرة، تسجيل دخول، صلاحيات، سجل تدقيق خادمي ونسخ احتياطي.</li></ul></article>
+        <article class="panel"><h2>جاهزية الانتقال المؤسسي v11</h2><ul class="plain-list"><li>مخطط PostgreSQL والصلاحيات وسياسات RLS جاهز ضمن المصدر.</li><li>مركز المستندات يسجل البصمة والبيانات الوصفية محليًا دون رفع المحتوى.</li><li>سجل التدقيق يعمل على الجهاز ويُستبدل بسجل خادمي عند ربط Supabase.</li><li>تفعيل الحسابات والتخزين وOCR يتطلب مفاتيح المشروع واختيار مزود OCR بعد الاختبار.</li></ul></article>
       </section>
     </main>
   </div>
