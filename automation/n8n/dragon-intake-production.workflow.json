@@ -1,0 +1,449 @@
+{
+  "name": "Dragon Intake Production",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "events": [
+          "issues"
+        ],
+        "options": {}
+      },
+      "id": "4367309e-23f5-4e82-a668-888424fb94d0",
+      "name": "GitHub Trigger",
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        0
+      ],
+      "webhookId": "dragon-intake-production",
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $json;\nconst issue = event.issue ?? {};\nconst action = String(event.action ?? '').toLowerCase();\nconst labels = Array.isArray(issue.labels)\n  ? issue.labels.map((label) => typeof label === 'string' ? label : label?.name).filter(Boolean)\n  : [];\nconst acceptedActions = new Set(['opened', 'reopened', 'labeled', 'edited']);\nconst terminalOrBusy = ['dragon-processing', 'dragon-completed'];\nconst eligible = acceptedActions.has(action)\n  && issue.state === 'open'\n  && labels.includes('dragon-task')\n  && !labels.some((label) => terminalOrBusy.includes(label));\n\nif (!eligible) return [];\n\nreturn [{\n  json: {\n    action,\n    issueNumber: issue.number,\n    title: issue.title ?? '',\n    body: issue.body ?? '',\n    issueUrl: issue.html_url ?? '',\n    author: issue.user?.login ?? 'unknown',\n    repository: event.repository?.full_name ?? 'osoulhospitality-wq/osoulhospitality-web',\n    owner: event.repository?.owner?.login ?? 'osoulhospitality-wq',\n    repositoryName: event.repository?.name ?? 'osoulhospitality-web',\n    sourceLabels: labels,\n    processingLabels: [...new Set([...labels.filter((label) => !['dragon-completed', 'dragon-failed'].includes(label)), 'dragon-processing'])],\n    executionId: $execution.id,\n    receivedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "0a19342e-2eeb-42e8-b2f6-9de67ce9d548",
+      "name": "Validate Dragon Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Validate Dragon Task').item.json.issueNumber }}",
+        "editFields": {
+          "labels": [
+            {
+              "label": "dragon-task"
+            },
+            {
+              "label": "dragon-processing"
+            }
+          ]
+        }
+      },
+      "id": "cce22aac-fcb1-4db8-a1c4-289628a81b6c",
+      "name": "Mark Processing",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Validate Dragon Task').item.json.issueNumber }}",
+        "body": "=🐉 **Dragon accepted this task**\n\n- Status: `Processing`\n- Workflow: `Dragon Intake Production`\n- Execution ID: `{{ $execution.id }}`\n- Received: `{{ $('Validate Dragon Task').item.json.receivedAt }}`\n\nThe task is now being analyzed and converted into an executive deliverable."
+      },
+      "id": "d8389f56-bb02-4bb8-a8f5-1fa9b6659d96",
+      "name": "Post Acceptance",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Repository: {{ $('Validate Dragon Task').item.json.repository }}\nIssue: #{{ $('Validate Dragon Task').item.json.issueNumber }}\nTitle: {{ $('Validate Dragon Task').item.json.title }}\nAuthor: {{ $('Validate Dragon Task').item.json.author }}\n\nTask body:\n{{ $('Validate Dragon Task').item.json.body }}",
+        "options": {
+          "systemMessage": "You are Dragon, the executive delivery agent for Osool Hospitality. Treat the GitHub issue as an authorized work order. Produce a decisive, implementation-ready response in professional Arabic unless the issue explicitly requests another language. Separate verified facts from assumptions. Do not invent completed actions, credentials, sources, files, tests, approvals, or external side effects. If execution requires access not available inside this workflow, state the exact blocker and provide the smallest concrete next action. Structure the response as: Executive outcome; Work completed in this response; Deliverable; Risks and controls; Next automated action. Be concise but complete and suitable for an executive audit trail."
+        }
+      },
+      "id": "348f4962-ab0a-487e-87f6-6e9d3d70fe1d",
+      "name": "Dragon Executive Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        80,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5.6-terra"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "51206e94-28f8-4c55-8917-09618f36acc6",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        240
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "MAP_EXISTING_OPENAI_CREDENTIAL",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Validate Dragon Task').item.json.issueNumber }}",
+        "body": "=🐉 **Dragon delivery**\n\n{{ $json.output }}\n\n---\nAudit: workflow `Dragon Intake Production` · execution `{{ $execution.id }}`"
+      },
+      "id": "b28372d9-26ae-426a-9e87-371ea9d23565",
+      "name": "Post Delivery",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        -80
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Validate Dragon Task').item.json.issueNumber }}",
+        "editFields": {
+          "labels": [
+            {
+              "label": "dragon-task"
+            },
+            {
+              "label": "dragon-completed"
+            }
+          ]
+        }
+      },
+      "id": "fe7e0096-a340-41c7-bacf-6e51b11f87ef",
+      "name": "Mark Completed",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        -80
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Validate Dragon Task').item.json.issueNumber }}",
+        "body": "=⚠️ **Dragon execution failed safely**\n\nThe task was accepted but the executive agent returned an error. No completion claim was made.\n\n- Execution ID: `{{ $execution.id }}`\n- Error: `{{ $json.error?.message || $json.message || 'Unknown agent error' }}`\n\nReview the n8n execution log, correct the failing credential/model/input, then remove `dragon-failed` and reapply `dragon-task`."
+      },
+      "id": "1a332eff-9d80-482b-a865-1732d07e2b29",
+      "name": "Post Failure",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        120
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Validate Dragon Task').item.json.issueNumber }}",
+        "editFields": {
+          "labels": [
+            {
+              "label": "dragon-task"
+            },
+            {
+              "label": "dragon-failed"
+            }
+          ]
+        }
+      },
+      "id": "d842fc71-e734-4592-8ec5-445855c4eb37",
+      "name": "Mark Failed",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        120
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Dragon production controls\n\nAccepts only open GitHub issues carrying `dragon-task` and ignores tasks already marked `dragon-processing` or `dragon-completed`.\n\nRequired credential mappings after import:\n1. Existing GitHub API credential\n2. OpenAI API credential\n\nPublish only after the end-to-end acceptance test succeeds.",
+        "height": 260,
+        "width": 420,
+        "color": 5
+      },
+      "id": "ffca956f-bd7a-4e84-864b-b6aff68410e8",
+      "name": "Production Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        -360
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GitHub Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Dragon Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Dragon Task": {
+      "main": [
+        [
+          {
+            "node": "Mark Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Processing": {
+      "main": [
+        [
+          {
+            "node": "Post Acceptance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Acceptance": {
+      "main": [
+        [
+          {
+            "node": "Dragon Executive Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Dragon Executive Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dragon Executive Agent": {
+      "main": [
+        [
+          {
+            "node": "Post Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Delivery": {
+      "main": [
+        [
+          {
+            "node": "Mark Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Failure": {
+      "main": [
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "c4fbb6d9-8128-449b-8a70-3465aecf6967",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
