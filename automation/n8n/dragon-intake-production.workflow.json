@@ -146,7 +146,7 @@
         "model": {
           "__rl": true,
           "mode": "list",
-          "value": "gpt-5.6-sol"
+          "value": "gpt-5-mini"
         },
         "options": {}
       },
@@ -317,7 +317,7 @@
     },
     {
       "parameters": {
-        "content": "## Dragon production controls\n\nAccepts only open GitHub issues carrying `dragon-task` and ignores tasks already marked `dragon-processing` or `dragon-completed`.\n\nRequired credential mappings after import:\n1. Existing GitHub API credential\n2. OpenAI API credential with access to `gpt-5.6-sol`\n\nThe agent uses n8n's dedicated error output so failed model calls go to `dragon-failed` and can never be labeled completed.\n\nPublish only after the end-to-end acceptance test succeeds.",
+        "content": "## Dragon production controls\n\nAccepts only open GitHub issues carrying `dragon-task` and ignores tasks already marked `dragon-processing` or `dragon-completed`.\n\nRequired credential mappings after import:\n1. Existing GitHub API credential\n2. OpenAI API credential with access to `gpt-5-mini`\n\nThe agent uses n8n's dedicated error output so failed model calls go to `dragon-failed` and can never be labeled completed.\n\nPublish only after the end-to-end acceptance test succeeds.",
         "height": 260,
         "width": 420,
         "color": 5
