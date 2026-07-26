@@ -1,6 +1,6 @@
 {
   "name": "Osool Hospitality Hostinger public_html",
-  "version": "7.0.0",
+  "version": "10.0.0",
   "date": "2026-07-26",
   "domain": "https://osoulhospitality.com",
   "routes": [
@@ -15,8 +15,22 @@
     "privacy",
     "terms",
     "accessibility",
-    "en"
+    "en",
+    "command-center",
+    "command-center/app"
   ],
   "form": "submit.php -> info@osoulhospitality.com",
-  "analytics": "disabled"
+  "analytics": "disabled",
+  "command_center": {
+    "mode": "browser-local MVP",
+    "server_storage": "disabled",
+    "features": [
+      "supplier master",
+      "product and normalized price master",
+      "quotation comparison",
+      "contract expiry and risk register",
+      "decision ledger",
+      "JSON backup and restore"
+    ]
+  }
 }
