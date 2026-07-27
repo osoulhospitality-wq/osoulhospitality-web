@@ -1,0 +1,35 @@
+name: Static Site Checks
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+        with:
+          php-version: '8.4'
+      - name: Lint PHP files
+        run: find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 -I{} php -l {}
+
+  internal-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify local href/src references resolve to real files
+        run: python3 scripts/check-internal-links.py
+
+  release-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify shipped files match .checksums.sha256
+        run: sha256sum -c .checksums.sha256
