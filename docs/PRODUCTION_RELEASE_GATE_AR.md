@@ -4,55 +4,60 @@
 
 **Hold for Evidence — ممنوع الدمج أو النشر الإنتاجي قبل إغلاق اختبارات القبول أدناه.**
 
-هذا القرار لا يعني أن التصميم مرفوض؛ بل يعني أن وجود ملفات وتطبيقات غير كافٍ لإثبات التشغيل المتكامل.
+هذا القرار لا يتعلق برفض التصميم؛ بل بأن سلامة ملف JSON أو نجاح استيراده في n8n **ليسا دليلًا كافيًا** على أن آلية منع التكرار تعمل تحت تزامن حقيقي. الإصدار v2 أدناه لم يُختبر بعد بتنفيذ فعلي.
+
+## ما تغيّر في الإصدار v2 (هذه المراجعة)
+
+النسخة السابقة (v1، على هذا الفرع نفسه) كانت لا تزال تفحص التكرار عبر قراءة Labels داخل عقدة Code فقط — وهذا فحص-ثم-كتابة (check-then-write) عرضة لسباق تنفيذ حقيقي: تنفيذان متزامنان يمكن أن يجتازا الفحص في اللحظة نفسها قبل أن يحدّث أي منهما الحالة. v2 يستبدل ذلك بقفل ذري فعلي على مستوى قاعدة البيانات.
+
+| البند | v1 (المرفوض) | v2 (هذه المراجعة) |
+|---|---|---|
+| صلاحية المُرسل | غير موجودة | Allowlist صريحة (`osoulhospitality-wq` حاليًا) |
+| مصفوفة الأحداث | `opened/reopened/labeled` تُعامَل بنفس القاعدة | `labeled` يتحقق من الوسم **المضاف تحديدًا** (`event.label.name`)، و`reopened` لا يُقبل إلا إذا كانت الوسوم النهائية/المشغولة قد أُزيلت فعليًا (إعادة محاولة صريحة) |
+| منع التكرار | فحص Labels داخل Code (سباق ممكن) | مفتاح Idempotency + `INSERT ... ON CONFLICT DO NOTHING` على Supabase — ذري فعليًا على مستوى القاعدة |
+| مفتاح Idempotency | غير موجود | `repository + issueNumber + commandVersion`، حيث `commandVersion = issue.updated_at` (قيمة GitHub نفسها، مستقرة عبر إعادة إرسال نفس الحدث، وتتغير فقط عند تحول حقيقي جديد) |
+| تعديل الوسوم | استبدال كامل قائمة Labels (قد يمسح وسومًا أخرى مثل `bug`) | إضافة/إزالة وسم الحالة فقط عبر REST API مباشرة، بلا مساس بوسوم أخرى |
+| وصف الدور | "Executive Delivery Agent" | "Executive Intake & Drafting Assistant" — دور صياغة أولية فقط، بلا أدوات تنفيذ |
+| تحذير الادعاء | غير موجود | تحذير ثابت (غير مولّد من النموذج) يُلحق بكل تعليق آلي |
+| سجل التدقيق | غير موجود | جدول `dragon_events_log` يسجّل **كل** حدث وارد وسبب قراره (proceed/duplicate/unauthorized/ignored) |
 
 ## مصدر الحقيقة
 
-- الكود والـWorkflows: GitHub.
-- البيانات التشغيلية: Supabase/PostgreSQL.
-- الملفات الأصلية الحساسة: Supabase Storage الخاص.
-- لوحة التشغيل والمراجعة البشرية: Retool.
+- الكود والـWorkflows: GitHub (`automation/n8n/dragon-intake-production.workflow.json`).
+- قفل التكرار وسجل التدقيق: Supabase/PostgreSQL (`automation/sql/dragon_locks.sql`).
 - الأتمتة والتكامل: n8n.
 - أوامر العمل وسجل التسليم غير الحساس: GitHub Issues.
-
-يُمنع تشغيل مخططي قاعدة البيانات الحاليين معًا. يعتمد
-`osoul-v10-command-center/command-center/enterprise/schema.sql`
-كأساس MVP لأنه يحتوي RLS، بينما
-`command-center-v9/database/schema.sql`
-مرجع تصميم موسع فقط إلى حين تحويله إلى migrations متسلسلة.
 
 ## بوابات القبول
 
 | البوابة | الاختبار | معيار النجاح | الحالة |
 |---|---|---|---|
-| G1 GitHub | Issue يحمل `dragon-task` | Webhook يستقبل حدثًا واحدًا فقط | مثبت جزئيًا |
-| G2 n8n | تشغيل Dragon | تسلسل واحد بلا تكرار وبلا عقد معلقة | غير مثبت |
-| G3 OpenAI | استدعاء `gpt-5-mini` | مخرج غير فارغ أو فشل مسجل | غير مثبت |
-| G4 Supabase | تطبيق migration | الجداول + RLS + سياسات Storage دون Security Advisor Critical | غير مثبت |
-| G5 Retool | CRUD بصلاحيات الأدوار | viewer قراءة فقط، analyst إدخال، approver اعتماد | غير مثبت |
-| G6 Audit | تتبع Execution ID | نفس المعرّف ظاهر في GitHub وn8n وSupabase | غير مثبت |
-| G7 Failure | مفتاح/model غير صالح | `dragon-failed` فقط، ولا يظهر `dragon-completed` | غير مثبت |
-| G8 Idempotency | إعادة نفس الحدث | لا تنفيذ ثانٍ ولا تعليق مكرر | غير مثبت |
-| G9 Security | أسرار وصلاحيات | لا أسرار بالواجهة/GitHub، وRLS مفعّل | غير مثبت |
-| G10 Recovery | إعادة المحاولة | إزالة failed وإعادة الوسم تنجح مرة واحدة | غير مثبت |
+| G1 Authority | مُرسل غير مصرح له يضع الوسم | لا استدعاء للنموذج، `unauthorized` مسجَّل في `dragon_events_log` | **غير مثبت — يتطلب تنفيذًا حيًا** |
+| G2 Event matrix | `edited`/أي حدث آخر غير مقبول | يُرفض ويُسجَّل السبب، بلا أي إجراء على الـIssue | **غير مثبت** |
+| G3 Idempotency | إعادة إرسال نفس Webhook | صفر صفوف من `Acquire Lock` في المحاولة الثانية، لا تعليق مكرر | **غير مثبت** |
+| G4 Concurrency | وصول `opened` و`labeled` بالتزامن لنفس التحول | تنفيذ واحد فقط يفوز بالقفل | **غير مثبت — يتطلب محاكاة تزامن حقيقية** |
+| G5 OpenAI | استدعاء `gpt-5-mini` | مخرج غير فارغ أو مسار الخطأ المخصص | **غير مثبت** |
+| G6 Labels | دورة كاملة ناجحة | الوسوم غير المرتبطة بـDragon (مثل `bug`) لا تُمس | **غير مثبت** |
+| G7 Failure | فشل النموذج بعد اكتساب القفل | `dragon-failed` فقط، `dragon_locks.status='failed'`، لا `dragon-completed` | **غير مثبت** |
+| G8 Retry | إزالة `dragon-failed` وإعادة تطبيق `dragon-task` | `commandVersion` جديد، قفل جديد، تنفيذ جديد ناجح | **غير مثبت** |
+| G9 Security | فحص الملف والاعتمادات | لا أسرار مضمّنة، الاعتمادات بالاسم/المعرّف فقط | تم التحقق من الملف نصيًا ✓ — يتطلب أيضًا تدقيق صلاحيات Supabase الفعلية |
+| G10 Audit | تتبع سبب كل حدث | كل حدث وارد له صف في `dragon_events_log` بسبب واضح | **غير مثبت** |
+
+**لا يُعلن Go إنتاجي حتى تنجح G1–G10 فعليًا بأدلة (execution IDs، لقطات سجل Supabase، لقطات n8n) — سلامة JSON وحدها ليست دليلًا.**
 
 ## ترتيب النشر الإلزامي
 
-1. تطبيق مخطط Supabase المعتمد في بيئة تجريبية.
-2. إنشاء bucket خاص للوثائق وسياسات `SELECT/INSERT/UPDATE` اللازمة.
-3. إنشاء مستخدم المالك وربط صف `profiles` يدويًا من جلسة إدارية موثوقة.
-4. ربط Retool بقاعدة البيانات باستخدام حساب أقل صلاحية ممكنة.
-5. استيراد Workflow Dragon وربط GitHub وOpenAI من خزنة n8n.
-6. إضافة تسجيل `execution_id` إلى `audit_events`.
-7. تشغيل G1–G10 في بيئة تجريبية.
-8. نشر Workflow، ثم دمج PR فقط بعد حفظ أدلة النجاح.
+1. تطبيق `automation/sql/dragon_locks.sql` على مشروع Supabase (تجريبي أولًا).
+2. إنشاء اعتماد `httpHeaderAuth` في n8n يحمل `apikey` و`Authorization: Bearer` لمفتاح Supabase service role، وربط متغير البيئة `SUPABASE_URL`.
+3. استيراد `dragon-intake-production.workflow.json` (v2) — **الاستيراد وحده لا يعني النجاح؛ راجع كل عقدة يدويًا للتأكد من توافق إصدار عقدة HTTP Request/Postgres مع نسخة n8n الفعلية لديكم.**
+4. ربط اعتماد GitHub وOpenAI الموجودين فعليًا بالعقد المعنية.
+5. تعطيل Workflow v1 القديم نهائيًا قبل تفعيل v2 (كلاهما ينشئ Webhook لنفس الحدث ويكرر التنفيذ إذا بقيا نشطين معًا).
+6. تنفيذ مصفوفة الاختبارات العشرة في `docs/DRAGON_ACCEPTANCE_TEST_MATRIX_AR.md` كاملة، وتوثيق الأدلة الفعلية لكل بند.
+7. عند نجاح جميع البوابات فقط: دمج PR ثم Publish/Activate في n8n.
 
 ## شروط الإغلاق
 
-- Issue الاختبار يحتوي تعليق قبول وتسليم واحد فقط.
-- التصنيف النهائي واحد فقط: `dragon-completed` أو `dragon-failed`.
-- سجل Supabase يحتوي `execution_id` المطابق.
-- لا توجد Security Advisor findings حرجة.
-- لا يحتوي GitHub أو Retool على service-role key أو OpenAI key.
-- توثيق Rollback: تعطيل Workflow، إبطال الاعتماد المتأثر، وإعادة migration آمنة.
-
+- كل بوابة من G1 إلى G10 موثّقة بدليل فعلي (execution ID، لقطة سجل، أو رابط).
+- لا يبقى أي صف `processing` عالق في `dragon_locks` دون تفسير.
+- لا تظهر أسرار في GitHub أو ملف الاستيراد.
+- توثيق Rollback: تعطيل Workflow، إبطال أي اعتماد متأثر، `DELETE FROM dragon_locks WHERE status='processing' AND locked_at < now() - interval '1 hour'` كإجراء تنظيف يدوي موثّق (وليس تلقائيًا) عند الحاجة فقط.
