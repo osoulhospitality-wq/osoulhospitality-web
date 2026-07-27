@@ -10,6 +10,11 @@
   "theme_color": "#103B34",
   "icons": [
     {
+      "src": "/brand/osool-mark-v8.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
       "src": "/apple-touch-icon-v2.png",
       "sizes": "180x180",
       "type": "image/png"
