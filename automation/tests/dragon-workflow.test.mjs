@@ -128,4 +128,54 @@ assert.match(nodes.get("Post Delivery").parameters.body, /مخرج آلي أول
 assert.match(nodes.get("Post Failure").parameters.body, /مخرج آلي أولي/);
 assert.doesNotMatch(JSON.stringify(workflow), /(sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9_]{20,})/);
 
+
+function connectionTargets(nodeName, outputIndex = 0) {
+  return (workflow.connections[nodeName]?.main?.[outputIndex] ?? []).map((edge) => edge.node);
+}
+
+// A clean eligible issue has no Dragon status labels. Do not call DELETE on
+// labels that are known to be absent: GitHub returns 404 and would abort n8n.
+for (const obsolete of [
+  "Clear Status (pre-processing) 1",
+  "Clear Status (pre-processing) 2",
+  "Clear Status (pre-processing) 3",
+  "Clear Status (completed) 2",
+  "Clear Status (failed) 2",
+]) {
+  assert.equal(nodes.has(obsolete), false, `Obsolete unsafe label-clear node remains: ${obsolete}`);
+}
+assert.deepEqual(connectionTargets("Lock Acquired?"), ["Add dragon-processing"]);
+
+// Every post-lock external step that can fail must terminate the database lock.
+assert.deepEqual(connectionTargets("Add dragon-processing", 1), ["Finalize Lock: failed"]);
+assert.deepEqual(connectionTargets("Post Acceptance", 1), ["Finalize Lock: failed"]);
+assert.deepEqual(connectionTargets("Normalize Delivery", 1), ["Post Failure"]);
+assert.deepEqual(connectionTargets("Post Delivery", 1), ["Finalize Lock: failed"]);
+assert.deepEqual(connectionTargets("Post Failure", 1), ["Finalize Lock: failed"]);
+
+// The lock becomes terminal before best-effort label reconciliation, preventing
+// permanent processing rows when a later GitHub label mutation fails.
+assert.deepEqual(connectionTargets("Post Delivery"), ["Finalize Lock: completed"]);
+assert.deepEqual(connectionTargets("Post Failure"), ["Finalize Lock: failed"]);
+assert.deepEqual(connectionTargets("Finalize Lock: completed"), ["Clear Status (completed) 1"]);
+assert.deepEqual(connectionTargets("Finalize Lock: failed"), ["Clear Status (failed) 1"]);
+assert.deepEqual(connectionTargets("Clear Status (completed) 1"), ["Add dragon-completed"]);
+assert.deepEqual(connectionTargets("Clear Status (completed) 1", 1), ["Add dragon-completed"]);
+assert.deepEqual(connectionTargets("Clear Status (failed) 1"), ["Add dragon-failed"]);
+assert.deepEqual(connectionTargets("Clear Status (failed) 1", 1), ["Add dragon-failed"]);
+
+for (const externalNode of [
+  "Log Decision",
+  "Acquire Lock",
+  "Add dragon-processing",
+  "Post Acceptance",
+  "Post Delivery",
+  "Post Failure",
+  "Finalize Lock: completed",
+  "Finalize Lock: failed",
+]) {
+  assert.equal(nodes.get(externalNode)?.retryOnFail, true, `${externalNode} must retry transient failures`);
+  assert.ok((nodes.get(externalNode)?.maxTries ?? 0) >= 3, `${externalNode} must retry at least three times`);
+}
+
 console.log("PASS: Dragon workflow structural, policy, idempotency, retry, and safety tests");
