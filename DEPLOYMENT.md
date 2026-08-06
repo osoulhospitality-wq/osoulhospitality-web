@@ -4,46 +4,56 @@ Last updated: 2026-08-06 UTC
 
 ## Production Status
 
-The current verified production deployment is live at:
+The verified production website is live on the official domain:
+
+- https://osoulhospitality.com
+- https://www.osoulhospitality.com redirects to https://osoulhospitality.com/
+
+Hostinger is the active production hosting path for the official domain.
+
+## Validation Completed
+
+- Official apex domain: HTTP 200 over HTTPS
+- `www` hostname: redirects to apex and returns HTTP 200
+- Key routes checked:
+  - `/`
+  - `/solutions/`
+  - `/contact/`
+  - `/command-center/`
+  - `/robots.txt`
+  - `/sitemap.xml`
+- PHP contact handler exists and rejects GET with `405 Allow: POST`
+- Empty POST redirects safely to `/contact/?status=incomplete#project-brief`
+- Complete production POST test redirects to `/thank-you/`
+- Security headers present on Hostinger responses:
+  - `Content-Security-Policy`
+  - `X-Content-Type-Options: nosniff`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy`
+  - `X-Frame-Options: SAMEORIGIN`
+  - `Cross-Origin-Opener-Policy: same-origin`
+
+## Contact Form Verification
+
+A single production verification submission was sent through `submit.php` using test data:
+
+- Name: `Codex Verification`
+- Organization: `Osool Hospitality Website QA`
+- Email: `info@osoulhospitality.com`
+- Result: `303` redirect to `/thank-you/`, followed by `200` on the thank-you page
+
+This confirms the visitor flow reaches the success page. Delivery to the mailbox should be confirmed from the `info@osoulhospitality.com` inbox.
+
+## Sites Deployment
+
+A public Sites deployment also exists as a secondary accessible deployment:
 
 - https://osoul-hospitality.zezo-9262.chatgpt.site
 
-Validation completed:
+The official custom domain is not attached to Sites. Pending custom-domain records were removed from Sites to avoid confusion because the official production domain is served by Hostinger.
 
-- Production deployment status: succeeded
-- Public access: enabled
-- Key routes checked: `/`, `/solutions`, `/outputs`, `/about`, `/scenarios`, `/insights`, `/contact`, `/robots.txt`, `/sitemap.xml`
-- Worker errors in recent logs: none
-- Build: passed
-- Lint: passed
-- Production metadata test: passed
+## Operational Notes
 
-## Custom Domain Status
-
-The following custom domains have been attached to the deployment platform and are pending DNS/SSL validation:
-
-- `osoulhospitality.com`
-- `www.osoulhospitality.com`
-
-## Hostinger DNS Records Required
-
-Add these records in Hostinger DNS Zone for `osoulhospitality.com`.
-
-### Apex Domain
-
-| Type | Name / Host | Value / Target |
-| --- | --- | --- |
-| A | `@` | `162.159.143.30` |
-| A | `@` | `172.66.3.26` |
-| TXT | `_openai-site-verification` | `openai-site-verification=7V0DqANH-M7CRe9A5aECTdcnGuFvm2WPA0nbT7LiREI` |
-| TXT | `_cf-custom-hostname` | `2efff8e8-e66f-4a76-8ce1-537aa581b55e` |
-
-### WWW Subdomain
-
-| Type | Name / Host | Value / Target |
-| --- | --- | --- |
-| CNAME | `www` | `custom-domains.chatgpt.site.` |
-| TXT | `_openai-site-verification.www` | `openai-site-verification=LbVxLaqFY-1LFMB3ahdckMwD2Ae5RSbPG5vw_vfY8QQ` |
-| TXT | `_cf-custom-hostname.www` | `28ce4dd3-9fbd-4d71-9e8c-f8e1fb492cd4` |
-
-After DNS propagation, refresh custom domain validation in the deployment platform and verify both hostnames over HTTPS.
+- `robots.txt` points to `https://osoulhospitality.com/sitemap.xml`.
+- Dotfiles such as `/.osool-release.json` return `403 Forbidden` on Hostinger, which is acceptable and safer for public hosting.
+- Keep source, deployment notes, and release changes synchronized in this repository before future uploads to Hostinger.
