@@ -9,8 +9,11 @@ The repository is public, so incoming client emails, names, phone numbers, attac
 ## Files
 
 - `.github/workflows/hostinger-mail-notifications.yml`
+- `.github/workflows/hostinger-mail-tests.yml`
 - `scripts/send_hostinger_notification.py`
 - `scripts/test_send_hostinger_notification.py`
+
+The mail unit tests run in their own workflow so this PR does not modify or conflict with the site's shared `static-site-checks.yml` workflow.
 
 ## Required GitHub configuration
 
@@ -47,8 +50,9 @@ Official references:
 
 ## Security controls
 
-- The workflow checks out `main`, not untrusted pull-request code.
+- The notification workflow checks out `main`, not untrusted pull-request code.
 - It runs automatically only after a failed `Static Site Checks` run.
+- Unit tests run separately and do not need mailbox credentials.
 - It uses Python's standard SMTP library and no third-party mail action.
 - The email contains repository, workflow, conclusion, branch, and run URL only.
 - Client PII remains in the mail/CRM layer, not the public repository.
