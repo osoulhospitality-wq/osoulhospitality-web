@@ -1,72 +1,53 @@
-# دليل نشر Dragon Intake Production (v2)
+# دليل نشر Dragon Intake Production (v3)
 
-> **تحديث v2:** هذا الدليل كان يصف v1 (فحص تكرار عبر Labels فقط، بلا قفل ذري، بلا فحص صلاحية مُرسل). تلك النسخة تحمل سباق تنفيذ حقيقي وتستبدل كامل قائمة Labels عند كل تحديث. v2 أدناه يعالج الاثنين. راجع `docs/PRODUCTION_RELEASE_GATE_AR.md` لجدول المقارنة الكامل.
+> **تحديث v3:** هذه النسخة تثبت ضوابط القفل الذري وسجل التدقيق، وتصحح روابط n8n وسياق القرار وتعليمات منع ادعاء الإنجاز. أي نسخة قديمة تعتمد على فحص Labels فقط أو تعرض 12 عقدة داخل n8n لا تُعد نسخة إنتاجية معتمدة.
 
 ## النتيجة المستهدفة
 
 عند إنشاء أو تصنيف أو إعادة فتح GitHub Issue مفتوح يحمل التصنيف `dragon-task`، من مُرسل مصرّح له فقط:
 
-1. يتحقق من صلاحية المُرسل (Allowlist) ومطابقة الحدث لمصفوفة الأحداث المقبولة.
-2. يبني مفتاح Idempotency (`repository + issueNumber + commandVersion`) ويكتسب قفلًا ذريًا على Supabase قبل أي إجراء آخر — إن كان مُكرَّرًا يتوقف فورًا دون أي تعليق.
-3. يضيف `dragon-processing` (إضافة/إزالة وسم واحد فقط، دون المساس بأي وسم آخر).
-4. يسجل تعليق استلام يتضمن رقم التنفيذ ومفتاح Idempotency.
-5. يرسل المهمة إلى Dragon Intake & Drafting Assistant (بلا أي أداة تنفيذ حقيقية).
-6. ينشر المسودة داخل الـIssue، مع تحذير ثابت أنها مخرج آلي أولي لا يمثل تنفيذًا.
-7. يحول الحالة إلى `dragon-completed` ويُنهي صف القفل بنفس الحالة.
-8. إذا فشل الوكيل، يسجل سبب الفشل، يطبق `dragon-failed` دون ادعاء الإنجاز، وينهي صف القفل بحالة `failed`.
-9. كل حدث وارد — سواء عولج أو رُفض — يُسجَّل في `dragon_events_log` مع سبب القرار.
+1. يتحقق من صلاحية المُرسل ومطابقة الحدث لمصفوفة الأحداث المقبولة.
+2. يبني مفتاح Idempotency (`repository + issueNumber + commandVersion`) ويكتسب قفلًا ذريًا على Supabase قبل أي إجراء آخر.
+3. يسجل كل حدث وارد في `dragon_events_log` مع القرار والسبب.
+4. يضيف أو يزيل وسوم Dragon فقط دون المساس بأي وسوم أخرى.
+5. يسجل تعليق استلام يتضمن رقم التنفيذ ومفتاح Idempotency.
+6. يرسل المهمة إلى Dragon Intake & Drafting Assistant لإنتاج مسودة تنفيذية فقط.
+7. ينشر المسودة داخل الـIssue مع تحذير ثابت بأنها مخرج آلي أولي وليست تنفيذًا خارجيًا.
+8. يحول الحالة إلى `dragon-completed` عند النجاح، أو `dragon-failed` عند الفشل، ويغلق صف القفل بالحالة النهائية.
 
 ## الملفات
 
-- `automation/n8n/dragon-intake-production.workflow.json`: ملف n8n v2 الجاهز للاستيراد.
+- `automation/n8n/dragon-intake-production.workflow.json`: ملف n8n v3 الجاهز للاستيراد.
 - `automation/sql/dragon_locks.sql`: مخطط جدولي القفل وسجل التدقيق على Supabase/Postgres.
-- `docs/DRAGON_DEPLOYMENT_RUNBOOK_AR.md`: هذا الملف.
-- `docs/PRODUCTION_RELEASE_GATE_AR.md`: بوابة الاعتماد G1–G10 وجدول مقارنة v1/v2.
-- `docs/DRAGON_ACCEPTANCE_TEST_MATRIX_AR.md`: خطة الاختبارات العشرة المطلوبة قبل أي Go إنتاجي.
+- `automation/tests/dragon-workflow.test.mjs`: اختبار البنية والسياسات محليًا وعلى GitHub Actions.
+- `docs/DRAGON_ACCEPTANCE_TEST_MATRIX_AR.md`: مصفوفة G1-G10 المطلوبة قبل أي Go إنتاجي.
+- `docs/PRODUCTION_RELEASE_GATE_AR.md`: بوابة القرار الرسمية.
 
 ## ضوابط الأمان
 
-- لا يحتوي أي ملف على Token أو API Key — كل الاعتمادات بالاسم/المعرّف فقط.
-- اعتماد GitHub المطلوب هو الاتصال الناجح الحالي باسم `GitHub account`.
-- يلزم اعتماد OpenAI API داخل n8n باسم `OpenAI account` أو إعادة ربط عقدة النموذج بالاسم الموجود فعليًا.
-- يلزم اعتماد `httpHeaderAuth` جديد يحمل رأسي `apikey` و`Authorization: Bearer` لمفتاح Supabase service role، بالإضافة لمتغير بيئة `SUPABASE_URL` في n8n.
-- **المُرسِلون المصرَّح لهم مُقيَّدون بقائمة صريحة داخل عقدة `Authorize & Classify`** (حاليًا: `osoulhospitality-wq` فقط) — أي توسيع لهذه القائمة يتطلب تعديل الكود ومراجعة.
-- لا تجعل v1 وv2 نشطين في الوقت نفسه؛ كلاهما ينشئ Webhook لنفس الحدث ويكرر التنفيذ. عطّل v1 نهائيًا أولًا.
+- لا يحتوي أي ملف على Token أو API Key؛ كل الاعتمادات placeholders ويجب ربطها داخل n8n فقط.
+- اعتماد GitHub المتوقع داخل n8n: `GitHub account` أو ما يعادله فعليًا.
+- اعتماد OpenAI المتوقع داخل n8n: `OpenAI account` أو ما يعادله فعليًا.
+- يلزم اعتماد Supabase من نوع `httpHeaderAuth` يحمل رأسي `apikey` و`Authorization: Bearer` لمفتاح service role، مع متغير بيئة `SUPABASE_URL`.
+- قائمة المرسلين المصرح لهم موجودة صراحة داخل عقدة `Authorize & Classify`، وحاليًا تقبل `osoulhospitality-wq` فقط.
+- لا تجعل النسخة القديمة والنسخة v3 نشطتين في الوقت نفسه؛ كلاهما قد يستقبل أحداث GitHub نفسها.
 
 ## النشر داخل n8n
 
-1. طبّق `automation/sql/dragon_locks.sql` على مشروع Supabase (تجريبي أولًا).
-2. أنشئ اعتماد `httpHeaderAuth` في n8n لمفتاح Supabase، وعرّف متغير بيئة `SUPABASE_URL`.
-3. افتح Workflows ثم اختر Import from File، واستورد `automation/n8n/dragon-intake-production.workflow.json`.
-4. **راجع كل عقدة HTTP Request يدويًا** — هذا الملف لم يُختبر بعد بالاستيراد الفعلي في n8n؛ تأكد أن نسخة عقدة HTTP Request/GitHub لديكم تدعم نفس بنية المعاملات (typeVersion 4.2).
-5. اربط اعتماد `GitHub account` و`OpenAI account` و`Supabase` بالعقد المعنية.
-6. تأكد أن النموذج `gpt-5-mini` متاح في اعتماد OpenAI؛ إن لم يظهر اختر نموذجًا متاحًا فعليًا وسجّله هنا.
-7. عطّل Workflow v1 نهائيًا.
-8. نفّذ **كامل** مصفوفة الاختبارات العشرة في `DRAGON_ACCEPTANCE_TEST_MATRIX_AR.md` ووثّق الأدلة.
-9. لا تضغط Publish/Activate إلا بعد نجاح جميع بوابات `PRODUCTION_RELEASE_GATE_AR.md`.
-
-## اختبار القبول
-
-استُبدلت هذه الفقرة (اختبار واحد فقط) بمصفوفة كاملة من عشرة اختبارات إلزامية — راجع
-`docs/DRAGON_ACCEPTANCE_TEST_MATRIX_AR.md`. اختبار واحد ناجح لا يكفي لإثبات سلامة القفل
-الذري تحت التزامن أو صلاحية المُرسل أو سلوك إعادة الإرسال.
+1. طبّق `automation/sql/dragon_locks.sql` على Supabase تجريبيًا أولًا.
+2. أنشئ وربط اعتماد Supabase في n8n، وعرّف `SUPABASE_URL`.
+3. استورد `automation/n8n/dragon-intake-production.workflow.json`.
+4. تأكد أن النسخة المستوردة تحتوي 28 عقدة تقريبًا، وأنها تبدأ بـ`Authorize & Classify` ثم `Acquire Lock` ثم مسارات النجاح/الفشل.
+5. اربط اعتمادات GitHub وOpenAI وSupabase بكل عقدة يظهر فيها placeholder مثل `MAP_EXISTING_*`.
+6. تأكد أن النموذج `gpt-5-mini` متاح؛ إن لم يظهر، اختر نموذجًا حديثًا متاحًا وسجّل القرار في مصفوفة الاختبار.
+7. عطّل Workflow القديم قبل تفعيل v3.
+8. نفّذ كامل G1-G10 من `docs/DRAGON_ACCEPTANCE_TEST_MATRIX_AR.md` ووثّق الأدلة.
+9. لا يتم إعلان Production Go إلا بعد نجاح G1-G10 بأدلة من n8n/Supabase/GitHub.
 
 ## ملاحظة تشغيلية مهمة
 
-هذا التدفق ينفذ الاستلام والتحليل وإنتاج مسودة والتسجيل والحالات تلقائيًا فقط. لا يملك أي
-أداة لتنفيذ كود أو إنشاء Pull Requests أو الكتابة إلى `main` — وهذا مقصود، وليس نقصًا
-مؤقتًا: الدور مُعرَّف صراحة كـ"Executive Intake & Drafting Assistant"، لا وكيل تنفيذي.
+Dragon هنا Intake & Drafting Assistant، وليس وكيل تنفيذ يكتب كودًا أو ينشر ملفات أو يدمج PRs. أي تعليق آلي يجب أن يبقى مسودة أو مخرجًا أوليًا ما لم يتضمن دليل تنفيذ خارجي قابل للتحقق.
 
-## حالة التحقق السابقة (v1 — 26 يوليو 2026، متجاوزة الآن)
+## حالة الاعتماد
 
-النقاط التالية وُثّقت أثناء تطوير v1 ولا تزال صحيحة كحقائق تاريخية عن ذلك الإصدار، لكنها **لا
-تنطبق على v2** ولا تُستخدم كدليل قبول له:
-
-- نجح GitHub Trigger في استقبال حدث فعلي وظهر `1 item` في n8n.
-- اعتماد GitHub والـWebhook صالحان.
-- تم إنشاء تصنيفات الحالات الثلاث والتحقق منها عمليًا.
-- صُحح اسم النموذج إلى `gpt-5-mini`، وأزيلت قيمة `temperature`.
-- v1 كان يعامل `dragon-failed` كحالة نهائية أيضًا داخل فحص Labels وحده — وهو تحديدًا الفحص
-  غير الذري الذي استبدله قفل Supabase في v2.
-
-**لا يُعد v2 منشورًا أو ناجحًا إنتاجيًا حتى تنجح مصفوفة الاختبارات العشرة كاملة بأدلة فعلية.**
+GitHub/CI يثبت سلامة الكود والاختبار البنيوي فقط. التفعيل الحي داخل n8n/Supabase يبقى **No-Go** حتى اكتمال G1-G10.
