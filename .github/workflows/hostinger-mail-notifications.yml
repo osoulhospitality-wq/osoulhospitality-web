@@ -1,0 +1,34 @@
+name: Hostinger Mail Notifications
+
+on:
+  workflow_run:
+    workflows: ["Static Site Checks"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion != 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Send operational email through Hostinger SMTP
+        env:
+          HOSTINGER_SMTP_USERNAME: ${{ secrets.HOSTINGER_SMTP_USERNAME }}
+          HOSTINGER_SMTP_PASSWORD: ${{ secrets.HOSTINGER_SMTP_PASSWORD }}
+          OPS_NOTIFICATION_TO: ${{ vars.OPS_NOTIFICATION_TO }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.html_url }}
+          WORKFLOW_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: python3 scripts/send_hostinger_notification.py
