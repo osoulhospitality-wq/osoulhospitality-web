@@ -37,12 +37,13 @@
 1. طبّق `automation/sql/dragon_locks.sql` على Supabase تجريبيًا أولًا.
 2. أنشئ وربط اعتماد Supabase في n8n، وعرّف `SUPABASE_URL`.
 3. استورد `automation/n8n/dragon-intake-production.workflow.json`.
-4. تأكد أن النسخة المستوردة تحتوي 28 عقدة تقريبًا، وأنها تبدأ بـ`Authorize & Classify` ثم `Acquire Lock` ثم مسارات النجاح/الفشل.
+4. تأكد أن النسخة المستوردة تحتوي 23 عقدة، وأنها تبدأ بـ`Authorize & Classify` ثم `Acquire Lock` ثم مسارات النجاح/الفشل.
 5. اربط اعتمادات GitHub وOpenAI وSupabase بكل عقدة يظهر فيها placeholder مثل `MAP_EXISTING_*`.
 6. تأكد أن النموذج `gpt-5-mini` متاح؛ إن لم يظهر، اختر نموذجًا حديثًا متاحًا وسجّل القرار في مصفوفة الاختبار.
 7. عطّل Workflow القديم قبل تفعيل v3.
-8. نفّذ كامل G1-G10 من `docs/DRAGON_ACCEPTANCE_TEST_MATRIX_AR.md` ووثّق الأدلة.
-9. لا يتم إعلان Production Go إلا بعد نجاح G1-G10 بأدلة من n8n/Supabase/GitHub.
+8. تحقق من أن مسارات الخطأ في `Add dragon-processing` و`Post Acceptance` و`Normalize Delivery` و`Post Delivery` تنتهي في `Finalize Lock: failed`، وأن إنهاء القفل يسبق تسوية Labels.
+9. نفّذ كامل G1-G10 من `docs/DRAGON_ACCEPTANCE_TEST_MATRIX_AR.md` ووثّق الأدلة.
+10. لا يتم إعلان Production Go إلا بعد نجاح G1-G10 بأدلة من n8n/Supabase/GitHub.
 
 ## ملاحظة تشغيلية مهمة
 
