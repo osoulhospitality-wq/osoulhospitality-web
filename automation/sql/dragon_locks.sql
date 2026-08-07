@@ -53,11 +53,43 @@ CREATE TABLE IF NOT EXISTS private.dragon_api_keys (
 ALTER TABLE public.dragon_locks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dragon_events_log ENABLE ROW LEVEL SECURITY;
 
-REVOKE ALL ON SCHEMA private FROM PUBLIC, authenticated, service_role;
+-- Header verification is isolated in a SECURITY DEFINER function. This lets
+-- PostgREST's anon role evaluate only a boolean and never read the key registry.
+CREATE OR REPLACE FUNCTION private.dragon_request_authorized()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+  SELECT EXISTS (
+    SELECT 1
+    FROM private.dragon_api_keys AS k
+    WHERE k.active
+      AND k.key_hash = encode(
+        extensions.digest(
+          COALESCE(
+            current_setting('request.headers', true)::jsonb
+              ->> 'x-app-api-key',
+            ''
+          ),
+          'sha256'
+        ),
+        'hex'
+      )
+  );
+$function$;
+
+REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON TABLE private.dragon_api_keys
   FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION private.dragon_request_authorized()
+  FROM PUBLIC, authenticated, service_role;
 GRANT USAGE ON SCHEMA private TO anon;
-GRANT SELECT ON TABLE private.dragon_api_keys TO anon;
+GRANT EXECUTE ON FUNCTION private.dragon_request_authorized() TO anon;
+
+-- Ensure a temporary diagnostic endpoint can never survive deployment.
+DROP FUNCTION IF EXISTS public.dragon_debug_auth();
 
 REVOKE ALL ON TABLE public.dragon_locks
   FROM anon, authenticated, service_role;
@@ -68,16 +100,15 @@ REVOKE ALL ON SEQUENCE public.dragon_locks_id_seq
 REVOKE ALL ON SEQUENCE public.dragon_events_log_id_seq
   FROM anon, authenticated, service_role;
 
--- n8n authenticates as anon with the Supabase publishable key plus the
--- x-app-api-key header. RLS verifies the latter against the private hash table.
+-- n8n authenticates as anon with a Supabase publishable key plus x-app-api-key.
 GRANT SELECT, INSERT ON TABLE public.dragon_locks TO anon;
 GRANT UPDATE (status, finished_at) ON TABLE public.dragon_locks TO anon;
 GRANT SELECT, INSERT ON TABLE public.dragon_events_log TO anon;
 GRANT USAGE, SELECT ON SEQUENCE public.dragon_locks_id_seq TO anon;
 GRANT USAGE, SELECT ON SEQUENCE public.dragon_events_log_id_seq TO anon;
 
--- Keep service_role available for controlled administration and recovery, with
--- no DELETE on either table and no UPDATE on the append-only audit log.
+-- service_role remains available for controlled administration and recovery,
+-- with no DELETE on either table and no UPDATE on the append-only audit log.
 GRANT SELECT, INSERT, UPDATE ON TABLE public.dragon_locks TO service_role;
 GRANT SELECT, INSERT ON TABLE public.dragon_events_log TO service_role;
 GRANT USAGE, SELECT ON SEQUENCE public.dragon_locks_id_seq TO service_role;
@@ -95,22 +126,7 @@ FOR SELECT
 TO anon
 USING (
   repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND EXISTS (
-    SELECT 1
-    FROM private.dragon_api_keys AS k
-    WHERE k.active
-      AND k.key_hash = encode(
-        extensions.digest(
-          COALESCE(
-            ((SELECT current_setting('request.headers', true))::jsonb
-              ->> 'x-app-api-key'),
-            ''
-          ),
-          'sha256'
-        ),
-        'hex'
-      )
-  )
+  AND (SELECT private.dragon_request_authorized())
 );
 
 CREATE POLICY dragon_locks_n8n_insert
@@ -121,22 +137,7 @@ WITH CHECK (
   repository = 'osoulhospitality-wq/osoulhospitality-web'
   AND sender = 'osoulhospitality-wq'
   AND status = 'processing'
-  AND EXISTS (
-    SELECT 1
-    FROM private.dragon_api_keys AS k
-    WHERE k.active
-      AND k.key_hash = encode(
-        extensions.digest(
-          COALESCE(
-            ((SELECT current_setting('request.headers', true))::jsonb
-              ->> 'x-app-api-key'),
-            ''
-          ),
-          'sha256'
-        ),
-        'hex'
-      )
-  )
+  AND (SELECT private.dragon_request_authorized())
 );
 
 CREATE POLICY dragon_locks_n8n_update
@@ -145,43 +146,13 @@ FOR UPDATE
 TO anon
 USING (
   repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND EXISTS (
-    SELECT 1
-    FROM private.dragon_api_keys AS k
-    WHERE k.active
-      AND k.key_hash = encode(
-        extensions.digest(
-          COALESCE(
-            ((SELECT current_setting('request.headers', true))::jsonb
-              ->> 'x-app-api-key'),
-            ''
-          ),
-          'sha256'
-        ),
-        'hex'
-      )
-  )
+  AND (SELECT private.dragon_request_authorized())
 )
 WITH CHECK (
   repository = 'osoulhospitality-wq/osoulhospitality-web'
   AND status IN ('completed', 'failed')
   AND finished_at IS NOT NULL
-  AND EXISTS (
-    SELECT 1
-    FROM private.dragon_api_keys AS k
-    WHERE k.active
-      AND k.key_hash = encode(
-        extensions.digest(
-          COALESCE(
-            ((SELECT current_setting('request.headers', true))::jsonb
-              ->> 'x-app-api-key'),
-            ''
-          ),
-          'sha256'
-        ),
-        'hex'
-      )
-  )
+  AND (SELECT private.dragon_request_authorized())
 );
 
 CREATE POLICY dragon_events_n8n_select
@@ -190,22 +161,7 @@ FOR SELECT
 TO anon
 USING (
   repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND EXISTS (
-    SELECT 1
-    FROM private.dragon_api_keys AS k
-    WHERE k.active
-      AND k.key_hash = encode(
-        extensions.digest(
-          COALESCE(
-            ((SELECT current_setting('request.headers', true))::jsonb
-              ->> 'x-app-api-key'),
-            ''
-          ),
-          'sha256'
-        ),
-        'hex'
-      )
-  )
+  AND (SELECT private.dragon_request_authorized())
 );
 
 CREATE POLICY dragon_events_n8n_insert
@@ -215,22 +171,7 @@ TO anon
 WITH CHECK (
   repository = 'osoulhospitality-wq/osoulhospitality-web'
   AND decision IN ('proceed', 'duplicate', 'unauthorized', 'ignored')
-  AND EXISTS (
-    SELECT 1
-    FROM private.dragon_api_keys AS k
-    WHERE k.active
-      AND k.key_hash = encode(
-        extensions.digest(
-          COALESCE(
-            ((SELECT current_setting('request.headers', true))::jsonb
-              ->> 'x-app-api-key'),
-            ''
-          ),
-          'sha256'
-        ),
-        'hex'
-      )
-  )
+  AND (SELECT private.dragon_request_authorized())
 );
 
 -- Lock acquisition through PostgREST:
