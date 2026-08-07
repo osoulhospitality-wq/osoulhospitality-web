@@ -1,7 +1,7 @@
 {
   "name": "Osool Hospitality Hostinger public_html",
-  "version": "10.0.0",
-  "date": "2026-07-26",
+  "version": "11.0.0",
+  "date": "2026-08-06",
   "domain": "https://osoulhospitality.com",
   "routes": [
     "/",
@@ -22,7 +22,7 @@
   "form": "submit.php -> info@osoulhospitality.com",
   "analytics": "disabled",
   "command_center": {
-    "mode": "browser-local MVP",
+    "mode": "browser-local MVP with enterprise transition pack",
     "server_storage": "disabled",
     "features": [
       "supplier master",
@@ -30,7 +30,22 @@
       "quotation comparison",
       "contract expiry and risk register",
       "decision ledger",
-      "JSON backup and restore"
+      "JSON backup and restore",
+      "local document fingerprinting",
+      "local audit trail",
+      "Supabase enterprise activation pack"
+    ]
+  },
+  "enterprise_activation": {
+    "pack": "command-center/enterprise",
+    "public_upload": false,
+    "requires": [
+      "Supabase project",
+      "owner account",
+      "MFA",
+      "RLS verification",
+      "private storage bucket",
+      "backup and restore test"
     ]
   }
 }
