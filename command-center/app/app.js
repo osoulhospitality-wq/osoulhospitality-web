@@ -1,9 +1,10 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "osoul-command-center-v12";
-  const DRAGON_CACHE_KEY = "osoul-dragon-feed-v12";
-  const DRAGON_API = "https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues?state=all&labels=dragon-task&per_page=50";
+  const APP_VERSION = "13.0.0";
+  const STORAGE_KEY = "osoul-command-center-v13";
+  const DRAGON_CACHE_KEY = "osoul-dragon-feed-v13";
+  const DRAGON_API = "https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues?state=all&labels=dragon-task&per_page=100";
   const DRAGON_ISSUE_API = "https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues";
   const DRAGON_NEW_URL = "https://github.com/osoulhospitality-wq/osoulhospitality-web/issues/new";
   const AUTO_REFRESH_MS = 300000;
@@ -18,14 +19,39 @@
   const dateTime = value => value ? new Intl.DateTimeFormat("ar-SA", {dateStyle:"medium", timeStyle:"short"}).format(new Date(value)) : "—";
   const daysTo = value => Math.ceil((new Date(`${value}T12:00:00`) - new Date()) / 86400000);
   const escape = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[character]));
-  const content = value => escape(value || "لا يوجد محتوى.").replace(/\n/g, "<br>");
-  const blank = () => ({version:12, suppliers:[], products:[], quotes:[], contracts:[], decisions:[], documents:[], audit:[], updatedAt:new Date().toISOString()});
+  const markdown = value => {
+    const safe = escape(value || "لا يوجد محتوى.").replace(/\r/g, "");
+    const lines = safe.split("\n");
+    let list = "", output = [];
+    const flushList = () => {
+      if (!list) return;
+      output.push(`<ul>${list}</ul>`);
+      list = "";
+    };
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      const bullet = trimmed.match(/^[-*]\s+(.+)/);
+      if (bullet) {
+        list += `<li>${bullet[1]}</li>`;
+        return;
+      }
+      flushList();
+      if (!trimmed) return output.push("<br>");
+      const heading = trimmed.match(/^(#{1,4})\s+(.+)/);
+      if (heading) return output.push(`<h${Math.min(heading[1].length + 2, 6)}>${heading[2]}</h${Math.min(heading[1].length + 2, 6)}>`);
+      if (/^---+$/.test(trimmed)) return output.push("<hr>");
+      output.push(`<p>${trimmed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>")}</p>`);
+    });
+    flushList();
+    return output.join("");
+  };
+  const blank = () => ({version:13, suppliers:[], products:[], quotes:[], contracts:[], decisions:[], documents:[], audit:[], updatedAt:new Date().toISOString()});
 
   let state;
   try {
-    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("osoul-command-center-v11") || localStorage.getItem("osoul-command-center-v10");
+    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("osoul-command-center-v12") || localStorage.getItem("osoul-command-center-v11") || localStorage.getItem("osoul-command-center-v10");
     state = {...blank(), ...(JSON.parse(saved) || {})};
-    state.version = 12;
+    state.version = 13;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
     state = blank();
@@ -42,7 +68,7 @@
   };
 
   try {
-    const cached = JSON.parse(localStorage.getItem(DRAGON_CACHE_KEY));
+    const cached = JSON.parse(localStorage.getItem(DRAGON_CACHE_KEY) || localStorage.getItem("osoul-dragon-feed-v12"));
     if (cached?.issues?.length) {
       dragon.issues = cached.issues;
       dragon.lastSync = cached.savedAt;
@@ -53,7 +79,7 @@
   const seed = () => {
     const supplierA = uid(), supplierB = uid(), supplierC = uid(), productA = uid(), productB = uid();
     state = {
-      version:12, documents:[], audit:[], updatedAt:new Date().toISOString(),
+      version:13, documents:[], audit:[], updatedAt:new Date().toISOString(),
       suppliers:[
         {id:supplierA,name:"مورد ألف — تجريبي",cr:"1010XXXXXX",city:"الرياض",status:"approved",coverage:"الرياض",payment:"30 يوم"},
         {id:supplierB,name:"شركة باء — تجريبي",cr:"1011XXXXXX",city:"الرياض",status:"under_review",coverage:"الوسطى",payment:"نقدي"},
@@ -116,6 +142,8 @@
   const labelNames = issue => (issue.labels || []).map(label => typeof label === "string" ? label : label.name);
   const requestStatus = issue => {
     const labels = new Set(labelNames(issue));
+    const terminalCount = Number(labels.has("dragon-failed")) + Number(labels.has("dragon-completed"));
+    if (terminalCount > 1 || (labels.has("dragon-processing") && terminalCount)) return "conflict";
     if (labels.has("dragon-failed")) return "failed";
     if (labels.has("dragon-processing")) return "processing";
     if (labels.has("dragon-completed")) return "completed";
@@ -127,11 +155,23 @@
     processing:{label:"قيد المعالجة", className:"processing"},
     completed:{label:"مكتمل", className:"completed"},
     failed:{label:"متعثر", className:"failed"},
+    conflict:{label:"تعارض حالة", className:"conflict"},
     archived:{label:"مؤرشف", className:"archived"}
   }[status]);
   const isTestRequest = issue => /(?:acceptance|\be2e\b|\btest\b|\bqa\b|smoke|fixture|اختبار|تجريب)/i.test(`${issue.title} ${issue.body || ""}`) && !/\[LIVE-START/i.test(issue.title);
+  const controlValue = (issue, name) => {
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = (issue.body || "").match(new RegExp(`^-\\s*${escapedName}\\s*:\\s*(.+)$`, "im"));
+    return match?.[1]?.trim() || "";
+  };
   const requestCategory = issue => {
     const title = issue.title.toLowerCase(), text = `${issue.title} ${issue.body || ""}`.toLowerCase();
+    const declared = controlValue(issue, "المسار").toLowerCase();
+    if (/سلامة|safety/.test(declared)) return "safety";
+    if (/امتثال|compliance/.test(declared)) return "compliance";
+    if (/عميل|client/.test(declared)) return "client";
+    if (/شراكة|partnership/.test(declared)) return "partnership";
+    if (/استراتيجية|strategy/.test(declared)) return "strategy";
     if (/سلامة|حريق|طوارئ|safety|fire|emergency/.test(title)) return "safety";
     if (/امتثال|ترخيص|رخص|compliance|licen[cs]/.test(title)) return "compliance";
     if (/عميل|فندق|عرض فني|client|customer|hotel/.test(title)) return "client";
@@ -149,9 +189,25 @@
   }[category]);
   const requestPriority = issue => {
     const text = `${issue.title} ${issue.body || ""}`.toLowerCase();
+    const declared = controlValue(issue, "الأولوية").toLowerCase();
+    if (/عاجل|urgent|critical/.test(declared)) return {label:"عاجل", className:"urgent", rank:3};
+    if (/مرتفع|high/.test(declared)) return {label:"مرتفع", className:"high", rank:2};
     if (/عاجل|فوري|الليلة|urgent|critical|emergency/.test(text)) return {label:"عاجل", className:"urgent"};
     if (requestCategory(issue) === "safety" || /قبل التشغيل|قرب الافتتاح|قبل الافتتاح/.test(text)) return {label:"مرتفع", className:"high"};
     return {label:"عادي", className:"normal"};
+  };
+  const requestDueDate = issue => {
+    const value = controlValue(issue, "الموعد المستهدف");
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+  };
+  const requestFlags = issue => {
+    const status = requestStatus(issue), ageMs = Date.now() - new Date(issue.updated_at).getTime();
+    const due = requestDueDate(issue);
+    return {
+      overdue: Boolean(due && new Date(`${due}T23:59:59`) < new Date() && !["completed", "archived"].includes(status)),
+      stale: status === "processing" ? ageMs > 15 * 60 * 1000 : status === "new" ? ageMs > 60 * 60 * 1000 : false,
+      conflict: status === "conflict"
+    };
   };
   const cycleMilliseconds = issue => issue.closed_at ? new Date(issue.closed_at) - new Date(issue.created_at) : null;
   const duration = milliseconds => {
@@ -164,6 +220,24 @@
   };
   const currentRequestScope = () => $("[data-filter=requestScope]")?.value || "operational";
   const scopedRequests = () => currentRequestScope() === "all" ? dragon.issues : dragon.issues.filter(issue => !isTestRequest(issue));
+
+  async function fetchPages(baseUrl, {maxPages = 5, signal} = {}) {
+    const records = [];
+    for (let page = 1; page <= maxPages; page += 1) {
+      const separator = baseUrl.includes("?") ? "&" : "?";
+      const response = await fetch(`${baseUrl}${separator}page=${page}`, {
+        headers:{Accept:"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28"},
+        signal,
+        cache:"no-store"
+      });
+      dragon.rateRemaining = response.headers.get("X-RateLimit-Remaining");
+      if (!response.ok) throw new Error(response.status === 403 ? "تم بلوغ حد التحديث المؤقت" : `تعذر جلب البيانات (${response.status})`);
+      const pageRecords = await response.json();
+      records.push(...pageRecords);
+      if (pageRecords.length < 100) break;
+    }
+    return records;
+  }
 
   async function loadDragon({force = false, quiet = false} = {}) {
     if (!navigator.onLine) {
@@ -182,14 +256,7 @@
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const response = await fetch(DRAGON_API, {
-        headers:{Accept:"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28"},
-        signal:controller.signal,
-        cache:"no-store"
-      });
-      dragon.rateRemaining = response.headers.get("X-RateLimit-Remaining");
-      if (!response.ok) throw new Error(response.status === 403 ? "تم بلوغ حد التحديث المؤقت" : `تعذر جلب البيانات (${response.status})`);
-      const issues = await response.json();
+      const issues = await fetchPages(DRAGON_API, {maxPages:5, signal:controller.signal});
       dragon.issues = issues.filter(issue => !issue.pull_request);
       dragon.lastSync = new Date().toISOString();
       localStorage.setItem(DRAGON_CACHE_KEY, JSON.stringify({savedAt:dragon.lastSync, issues:dragon.issues}));
@@ -221,25 +288,27 @@
       banner.classList.toggle("warning", Boolean(dragon.error));
       const title = banner.querySelector("b"), note = banner.querySelector("small");
       title.textContent = dragon.error ? "تعذر التحديث المباشر" : "مزامنة مباشرة مع Dragon";
-      note.textContent = dragon.error || `تحديث تلقائي كل 5 دقائق${dragon.rateRemaining ? ` • سعة الاتصال المتبقية ${dragon.rateRemaining}` : ""}`;
+      const rateWarning = Number(dragon.rateRemaining) <= 10 ? " • السعة العامة منخفضة" : "";
+      note.textContent = dragon.error || `سجل عام تجريبي • تحديث كل 5 دقائق${dragon.rateRemaining ? ` • سعة الاتصال ${dragon.rateRemaining}` : ""}${rateWarning}`;
     }
   }
 
   function requestMetrics(requests) {
-    const counts = {new:0, processing:0, completed:0, failed:0, archived:0};
+    const counts = {new:0, processing:0, completed:0, failed:0, conflict:0, archived:0};
     requests.forEach(issue => counts[requestStatus(issue)]++);
-    const concluded = counts.completed + counts.failed;
+    const concluded = counts.completed + counts.failed + counts.conflict;
     const success = concluded ? Math.round(counts.completed / concluded * 100) : 0;
     const cycleValues = requests.filter(issue => requestStatus(issue) === "completed").map(cycleMilliseconds).filter(value => value !== null);
     const averageCycle = cycleValues.length ? cycleValues.reduce((total, value) => total + value, 0) / cycleValues.length : null;
-    return {counts, success, averageCycle, total:requests.length};
+    const flags = requests.map(requestFlags);
+    return {counts, success, averageCycle, total:requests.length, overdue:flags.filter(flag => flag.overdue).length, stale:flags.filter(flag => flag.stale).length};
   }
 
   function renderRequests() {
     renderConnection();
     const requests = scopedRequests();
     const metrics = requestMetrics(requests);
-    const navCount = metrics.counts.new + metrics.counts.processing + metrics.counts.failed;
+    const navCount = metrics.counts.new + metrics.counts.processing + metrics.counts.failed + metrics.counts.conflict;
     $("#requestNavCount").textContent = navCount || "✓";
     $("#requestNavCount").classList.toggle("has-work", navCount > 0);
     $("#requestScopeLabel").textContent = currentRequestScope() === "all" ? "جميع الطلبات والاختبارات" : "الطلبات التشغيلية";
@@ -247,13 +316,13 @@
     $("#requestKpis").innerHTML = [
       {label:"إجمالي الطلبات", value:metrics.total, note:"ضمن النطاق المحدد", className:"neutral"},
       {label:"تحت العمل", value:metrics.counts.new + metrics.counts.processing, note:`${metrics.counts.new} جديد • ${metrics.counts.processing} معالجة`, className:"processing"},
-      {label:"مكتملة", value:metrics.counts.completed, note:"آخر حالة نهائية", className:"completed"},
-      {label:"متعثرة", value:metrics.counts.failed, note:metrics.counts.failed ? "تحتاج تدخلًا" : "لا توجد حالات", className:metrics.counts.failed ? "failed" : "completed"},
-      {label:"نسبة النجاح", value:`${metrics.success}%`, note:"من الحالات المنتهية", className:"gold"},
-      {label:"متوسط دورة الطلب", value:duration(metrics.averageCycle), note:"من الإنشاء حتى الإغلاق", className:"neutral"}
+      {label:"مكتملة حاليًا", value:metrics.counts.completed, note:"وفق آخر حالة ظاهرة", className:"completed"},
+      {label:"تحتاج تدخلًا", value:metrics.counts.failed + metrics.counts.conflict + metrics.overdue + metrics.stale, note:`${metrics.counts.failed} فشل • ${metrics.counts.conflict} تعارض • ${metrics.overdue} متأخر`, className:(metrics.counts.failed + metrics.counts.conflict + metrics.overdue + metrics.stale) ? "failed" : "completed"},
+      {label:"نسبة نجاح الحالة النهائية", value:`${metrics.success}%`, note:"لا تشمل محاولات الفشل التاريخية", className:"gold"},
+      {label:"متوسط مدة الإغلاق", value:duration(metrics.averageCycle), note:"إنشاء GitHub ← إغلاقه", className:"neutral"}
     ].map(item => `<article class="request-kpi ${item.className}"><small>${item.label}</small><b>${item.value}</b><span>${item.note}</span></article>`).join("");
 
-    const statusOrder = ["completed", "processing", "new", "failed", "archived"];
+    const statusOrder = ["completed", "processing", "new", "failed", "conflict", "archived"];
     const statusRows = statusOrder.filter(status => metrics.counts[status]).map(status => {
       const info = statusInfo(status), percent = metrics.total ? Math.round(metrics.counts[status] / metrics.total * 100) : 0;
       return `<div class="health-row"><span><i class="status-dot ${info.className}"></i>${info.label}</span><div class="health-track"><i class="${info.className}" style="width:${percent}%"></i></div><b>${metrics.counts[status]}</b></div>`;
@@ -261,13 +330,15 @@
     const categories = ["strategy", "client", "compliance", "safety", "partnership", "general"].map(category => ({category, count:requests.filter(issue => requestCategory(issue) === category).length})).filter(item => item.count);
     $("#deliveryHealth").innerHTML = metrics.total ? `<div class="success-gauge" style="--success:${metrics.success}"><div><b>${metrics.success}%</b><span>نجاح</span></div></div><div class="health-breakdown">${statusRows}</div><div class="category-pills">${categories.map(item => `<span>${categoryInfo(item.category).label}<b>${item.count}</b></span>`).join("")}</div>` : empty("لم تصل طلبات تشغيلية بعد.");
 
-    const attention = requests.filter(issue => ["failed", "processing", "new"].includes(requestStatus(issue))).sort((a, b) => {
-      const order = {failed:0, processing:1, new:2};
-      return order[requestStatus(a)] - order[requestStatus(b)] || new Date(a.created_at) - new Date(b.created_at);
+    const attention = requests.filter(issue => ["failed", "processing", "new", "conflict"].includes(requestStatus(issue)) || requestFlags(issue).overdue || requestFlags(issue).stale).sort((a, b) => {
+      const order = {conflict:0, failed:1, processing:2, new:3};
+      return (order[requestStatus(a)] ?? 4) - (order[requestStatus(b)] ?? 4) || new Date(a.created_at) - new Date(b.created_at);
     }).slice(0, 5);
     $("#attentionList").innerHTML = attention.length ? attention.map(issue => {
       const status = statusInfo(requestStatus(issue));
-      return `<button class="attention-row" type="button" data-request-number="${issue.number}"><span class="status-dot ${status.className}"></span><div><b>#${issue.number} ${escape(issue.title)}</b><small>${status.label} • آخر تحديث ${dateTime(issue.updated_at)}</small></div><em>←</em></button>`;
+      const flags = requestFlags(issue);
+      const flagText = flags.overdue ? " • تجاوز الموعد" : flags.stale ? " • متوقف عن التحديث" : "";
+      return `<button class="attention-row" type="button" data-request-number="${issue.number}"><span class="status-dot ${status.className}"></span><div><b>#${issue.number} ${escape(issue.title)}</b><small>${status.label}${flagText} • آخر تحديث ${dateTime(issue.updated_at)}</small></div><em>←</em></button>`;
     }).join("") : `<div class="all-clear"><span>✓</span><div><b>لا توجد حالات تحتاج تدخلك</b><small>كل الطلبات التشغيلية في حالة نهائية سليمة.</small></div></div>`;
 
     renderRequestTable(requests);
@@ -288,7 +359,8 @@
     }
     const rows = visible.map(issue => {
       const status = statusInfo(requestStatus(issue)), category = categoryInfo(requestCategory(issue)), priority = requestPriority(issue);
-      return `<tr>
+      const flags = requestFlags(issue);
+      return `<tr class="${flags.overdue || flags.stale || flags.conflict ? "needs-attention" : ""}">
         <td><span class="request-id">#${issue.number}</span></td>
         <td><button class="request-title" type="button" data-request-number="${issue.number}"><b>${escape(issue.title.replace(/^\[LIVE-START \d+\]\s*/i, ""))}</b><small>${escape((issue.body || "").replace(/\s+/g, " ").slice(0, 105))}${(issue.body || "").length > 105 ? "…" : ""}</small></button></td>
         <td><span class="category-badge"><i>${category.code}</i>${category.label}</span></td>
@@ -311,9 +383,7 @@
     if (dragon.comments.has(issue.number)) return;
     $("#detailThread").innerHTML = `<div class="loading-state compact"><span></span><b>جاري تحميل الردود…</b></div>`;
     try {
-      const response = await fetch(`${DRAGON_ISSUE_API}/${issue.number}/comments?per_page=100`, {headers:{Accept:"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28"}, cache:"no-store"});
-      if (!response.ok) throw new Error("تعذر تحميل الردود");
-      dragon.comments.set(issue.number, await response.json());
+      dragon.comments.set(issue.number, await fetchPages(`${DRAGON_ISSUE_API}/${issue.number}/comments?per_page=100`, {maxPages:5}));
     } catch (error) {
       dragon.comments.set(issue.number, {error:error.message});
     }
@@ -324,7 +394,7 @@
     const status = statusInfo(requestStatus(issue)), category = categoryInfo(requestCategory(issue)), priority = requestPriority(issue);
     $("#detailHeading").innerHTML = `<small>DRAGON REQUEST #${issue.number}</small><h2>${escape(issue.title.replace(/^\[LIVE-START \d+\]\s*/i, ""))}</h2>`;
     $("#detailMeta").innerHTML = `<span class="request-status ${status.className}"><i></i>${status.label}</span><span class="category-badge"><i>${category.code}</i>${category.label}</span><span class="priority ${priority.className}">${priority.label}</span><span>أُنشئ ${dateTime(issue.created_at)}</span><span>دورة الطلب ${duration(cycleMilliseconds(issue))}</span>`;
-    $("#detailRequest").innerHTML = content(issue.body);
+    $("#detailRequest").innerHTML = markdown(issue.body);
     $("#detailGithubLink").href = issue.html_url;
     const thread = dragon.comments.get(issue.number);
     if (!thread) {
@@ -336,7 +406,21 @@
       return;
     }
     $("#threadCount").textContent = `${thread.length} رد`;
-    $("#detailThread").innerHTML = thread.length ? thread.map((comment, index) => `<article class="thread-item ${index === thread.length - 1 ? "latest" : ""}"><header><div><span class="avatar">${escape((comment.user?.login || "D").slice(0, 1).toUpperCase())}</span><b>${escape(comment.user?.login || "Dragon")}</b>${index === thread.length - 1 ? '<em>أحدث رد</em>' : ""}</div><time>${dateTime(comment.created_at)}</time></header><div class="thread-content">${content(comment.body)}</div></article>`).join("") : empty("لا توجد ردود بعد.");
+    $("#detailThread").innerHTML = thread.length ? thread.map((comment, index) => `<article class="thread-item ${index === thread.length - 1 ? "latest" : ""}"><header><div><span class="avatar">${escape((comment.user?.login || "D").slice(0, 1).toUpperCase())}</span><b>${escape(comment.user?.login || "Dragon")}</b>${index === thread.length - 1 ? '<em>أحدث رد</em>' : ""}</div><time>${dateTime(comment.created_at)}</time></header><div class="thread-content" dir="auto">${markdown(comment.body)}</div></article>`).join("") : empty("لا توجد ردود بعد.");
+    const copyButton = $("#copyLatestResponse");
+    if (copyButton) copyButton.disabled = !thread.length;
+  }
+
+  async function copyLatestResponse() {
+    const thread = dragon.comments.get(dragon.selectedNumber);
+    if (!Array.isArray(thread) || !thread.length) return toast("لا يوجد رد جاهز للنسخ");
+    const latestDelivery = [...thread].reverse().find(comment => /Dragon delivery/i.test(comment.body || "")) || thread.at(-1);
+    try {
+      await navigator.clipboard.writeText(latestDelivery.body || "");
+      toast("تم نسخ أحدث مخرج");
+    } catch {
+      toast("تعذر النسخ من هذا المتصفح");
+    }
   }
 
   function renderBusiness() {
@@ -367,16 +451,21 @@
   }
 
   function renderDashboard() {
-    const expiring = state.contracts.filter(contract => daysTo(contract.endDate) <= 120).sort((a, b) => a.endDate.localeCompare(b.endDate));
+    const expired = state.contracts.filter(contract => daysTo(contract.endDate) < 0);
+    const expiring = state.contracts.filter(contract => daysTo(contract.endDate) >= 0 && daysTo(contract.endDate) <= 120).sort((a, b) => a.endDate.localeCompare(b.endDate));
     const risks = state.contracts.filter(contract => riskScore(contract) >= 6).sort((a, b) => riskScore(b) - riskScore(a));
     const potential = savings().reduce((total, item) => total + item.saving, 0);
     $("#kpis").innerHTML = [
       ["الموردون المعتمدون", state.suppliers.filter(item => item.status === "approved").length, `من أصل ${state.suppliers.length}`],
       ["بنود الأسعار", state.products.length, "Product Master"],
-      ["عقود ≤120 يوم", expiring.length, "تحتاج مراجعة مبكرة"],
+      ["عقود تستحق ≤120 يوم", expiring.length + expired.length, expired.length ? `${expired.length} منتهية • ${expiring.length} قادمة` : "تحتاج مراجعة مبكرة"],
       ["توفير محتمل", money(potential), "غير محقق حتى الاعتماد"]
     ].map(item => `<article class="kpi"><small>${item[0]}</small><b>${item[1]}</b><span>${item[2]}</span></article>`).join("");
-    $("#expiryList").innerHTML = expiring.length ? expiring.map(contract => `<div class="list-row"><div><b>${escape(contract.name)}</b><small>${escape(contract.building)} • ${escape(supplier(contract.supplierId)?.name || "—")}</small></div><span class="badge ${daysTo(contract.endDate) < 60 ? "high" : "medium"}">${daysTo(contract.endDate)} يوم</span></div>`).join("") : empty("لا توجد عقود قريبة.");
+    const watchedContracts = [...expired, ...expiring];
+    $("#expiryList").innerHTML = watchedContracts.length ? watchedContracts.map(contract => {
+      const remaining = daysTo(contract.endDate);
+      return `<div class="list-row"><div><b>${escape(contract.name)}</b><small>${escape(contract.building)} • ${escape(supplier(contract.supplierId)?.name || "—")}</small></div><span class="badge ${remaining < 60 ? "high" : "medium"}">${remaining < 0 ? `منتهي منذ ${Math.abs(remaining)} يوم` : `${remaining} يوم`}</span></div>`;
+    }).join("") : empty("لا توجد عقود قريبة.");
     $("#riskList").innerHTML = risks.length ? risks.map(contract => `<div class="list-row"><div><b>${escape(contract.risk || contract.name)}</b><small>${escape(contract.name)} • الإجراء: مراجعة المختص</small></div><span class="badge ${riskLevel(riskScore(contract))}">${riskLabel(riskScore(contract))} ${riskScore(contract)}</span></div>`).join("") : empty("لا توجد مخاطر مفتوحة.");
     const savingRows = savings();
     $("#savingList").innerHTML = table(["المنتج", "أفضل مورد", "سعر الوحدة", "التوفير المحتمل"], savingRows.map(item => `<tr><td>${escape(item.name)}</td><td>${escape(item.supplier)}</td><td class="money">${money(item.best)}</td><td class="money positive">${money(item.saving)}</td></tr>`));
@@ -468,6 +557,7 @@
   async function registerDocument() {
     const file = $("#documentFile").files[0];
     if (!file) { toast("اختر ملفًا أولًا"); return; }
+    if (file.size > 25 * 1024 * 1024) { toast("الحد الأقصى لحساب البصمة محليًا هو 25 MB"); return; }
     const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
     const hash = [...new Uint8Array(digest)].map(value => value.toString(16).padStart(2, "0")).join("");
     state.documents.push({id:uid(), name:file.name, type:$("#documentType").value, reference:$("#documentReference").value, size:`${(file.size / 1024).toFixed(1)} KB`, mime:file.type, hash, createdAt:today()});
@@ -478,16 +568,40 @@
 
   function submitDragonRequest(form) {
     const data = Object.fromEntries(new FormData(form));
+    if (data.publicDataConsent !== "yes") {
+      toast("يلزم تأكيد خلو الطلب من البيانات الحساسة");
+      return;
+    }
     const categories = {strategy:"استراتيجية", client:"عميل", compliance:"امتثال", safety:"سلامة", partnership:"شراكة", general:"عام"};
     const priorities = {normal:"عادية", high:"مرتفعة", urgent:"عاجلة"};
     const title = `[${categories[data.category]}] ${data.title.trim()}`;
-    const body = `## ملخص الطلب\n${data.details.trim()}\n\n## المخرج المطلوب\n${data.deliverable.trim()}\n\n## بيانات التحكم\n- المسار: ${categories[data.category]}\n- الأولوية: ${priorities[data.priority]}\n- الموعد المستهدف: ${data.dueDate || "غير محدد"}\n- مصدر الطلب: Osoul Command Center v12\n\n## ضوابط التنفيذ\n- افصل الحقائق عن الافتراضات.\n- لا تدّع تنفيذ أي إجراء خارجي دون دليل.\n- وضّح أي معلومات ناقصة أو قرارات تحتاج اعتمادًا.`;
+    const body = `## ملخص الطلب\n${data.details.trim()}\n\n## المخرج المطلوب\n${data.deliverable.trim()}\n\n## بيانات التحكم\n- المسار: ${categories[data.category]}\n- الأولوية: ${priorities[data.priority]}\n- الموعد المستهدف: ${data.dueDate || "غير محدد"}\n- مصدر الطلب: Osoul Command Center v${APP_VERSION}\n- تصنيف البيانات: عام / منزوع الحساسية\n\n## ضوابط التنفيذ\n- افصل الحقائق عن الافتراضات.\n- لا تدّع تنفيذ أي إجراء خارجي دون دليل.\n- وضّح أي معلومات ناقصة أو قرارات تحتاج اعتمادًا.`;
     const url = `${DRAGON_NEW_URL}?${new URLSearchParams({title, body, labels:"dragon-task"})}`;
     window.open(url, "_blank", "noopener");
     form.closest("dialog").close();
     form.reset();
-    toast("تم تجهيز الطلب — راجعه واضغط Submit new issue");
+    toast("تم تجهيز الطلب التجريبي العام — راجعه قبل الإرسال");
   }
+
+  const validateBackup = parsed => {
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const allowed = ["suppliers", "products", "quotes", "contracts", "decisions", "documents", "audit"];
+    const clean = blank();
+    for (const key of allowed) {
+      if (!Array.isArray(parsed[key]) || parsed[key].length > 10000) return null;
+      clean[key] = parsed[key].filter(item => item && typeof item === "object" && !Array.isArray(item));
+    }
+    return clean;
+  };
+
+  const canDelete = (collection, id) => {
+    if (collection === "suppliers") {
+      const linked = state.products.some(item => item.supplierId === id) || state.quotes.some(item => item.supplierId === id) || state.contracts.some(item => item.supplierId === id);
+      if (linked) return "لا يمكن حذف مورد مرتبط بمنتج أو عرض أو عقد";
+    }
+    if (collection === "products" && state.quotes.some(item => item.productId === id)) return "لا يمكن حذف منتج مرتبط بعرض سعر";
+    return "";
+  };
 
   function handleForm(form) {
     const data = Object.fromEntries(new FormData(form)), kind = form.dataset.form;
@@ -526,10 +640,13 @@
     if (action === "exportRequests") exportRequests();
     if (action === "refreshDragon") loadDragon({force:true});
     if (action === "registerDocument") registerDocument();
+    if (action === "copyLatestResponse") copyLatestResponse();
     if (action === "closeRequestDetail") $("#requestDetailDialog").close();
     if (action === "reset" && confirm("حذف جميع البيانات التجارية المحلية من هذا الجهاز؟")) { state = blank(); save("تم مسح البيانات", {action:"مسح", entity:"قاعدة الجهاز"}); }
     const deleteButton = event.target.closest("[data-delete]");
     if (deleteButton && confirm("حذف هذا السجل؟")) {
+      const blocker = canDelete(deleteButton.dataset.delete, deleteButton.dataset.id);
+      if (blocker) { toast(blocker); return; }
       state[deleteButton.dataset.delete] = state[deleteButton.dataset.delete].filter(item => item.id !== deleteButton.dataset.id);
       save("تم حذف السجل", {action:"حذف", entity:deleteButton.dataset.delete, detail:deleteButton.dataset.id});
     }
@@ -542,9 +659,9 @@
   }));
   $("#restoreFile").addEventListener("change", async event => {
     try {
-      const parsed = JSON.parse(await event.target.files[0].text());
-      if (!parsed.suppliers || !parsed.products) throw new Error();
-      state = {...blank(), ...parsed, version:12};
+      const parsed = validateBackup(JSON.parse(await event.target.files[0].text()));
+      if (!parsed) throw new Error();
+      state = {...blank(), ...parsed, version:13};
       save("تمت استعادة النسخة", {action:"استعادة", entity:"نسخة احتياطية"});
     } catch {
       toast("ملف النسخة غير صالح");
