@@ -131,7 +131,12 @@
   }[status]);
   const isTestRequest = issue => /(?:acceptance|\be2e\b|\btest\b|\bqa\b|smoke|fixture|اختبار|تجريب)/i.test(`${issue.title} ${issue.body || ""}`) && !/\[LIVE-START/i.test(issue.title);
   const requestCategory = issue => {
-    const text = `${issue.title} ${issue.body || ""}`.toLowerCase();
+    const title = issue.title.toLowerCase(), text = `${issue.title} ${issue.body || ""}`.toLowerCase();
+    if (/سلامة|حريق|طوارئ|safety|fire|emergency/.test(title)) return "safety";
+    if (/امتثال|ترخيص|رخص|compliance|licen[cs]/.test(title)) return "compliance";
+    if (/عميل|فندق|عرض فني|client|customer|hotel/.test(title)) return "client";
+    if (/شراكة|operator|partnership|market entry|تطوير أعمال/.test(title)) return "partnership";
+    if (/خطة|استراتيجية|إطلاق|strategy|launch|تنفيذ/.test(title)) return "strategy";
     if (/سلامة|حريق|طوارئ|safety|fire|emergency/.test(text)) return "safety";
     if (/امتثال|ترخيص|رخص|compliance|licen[cs]/.test(text)) return "compliance";
     if (/عميل|فندق|عرض فني|client|customer|hotel/.test(text)) return "client";
