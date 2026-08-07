@@ -13,7 +13,7 @@ Hostinger is the active production hosting path for the official domain. Do not 
 
 ## Validation Completed
 
-Latest live verification: 2026-08-07 15:30 UTC.
+Latest live verification: 2026-08-07 15:34 UTC.
 
 - Official apex domain: HTTP 200 over HTTPS
 - `www` hostname: redirects to apex and returns HTTP 301
@@ -25,10 +25,11 @@ Latest live verification: 2026-08-07 15:30 UTC.
   - `/`
   - `/contact/`
   - `/command-center/`
+  - `/command-center/app/`
   - `/sitemap.xml`
-- PHP contact handler exists and rejects GET with `405 Allow: POST`
-- Empty POST redirects safely to `/contact/?status=incomplete#project-brief`
-- Complete production POST test redirects to `/thank-you/`
+- PHP contact handler rejects GET with `405 Allow: POST`
+- Invalid/incomplete POST redirects safely to `/contact/?status=incomplete#project-brief`
+- Complete production POST redirects to `/thank-you/`
 - Security headers present on Hostinger responses:
   - `Content-Security-Policy`
   - `X-Content-Type-Options: nosniff`
@@ -39,14 +40,15 @@ Latest live verification: 2026-08-07 15:30 UTC.
 
 ## Contact Form Verification
 
-A single production verification submission was sent through `submit.php` using test data:
+A fresh production verification submission was sent through `submit.php` using non-sensitive QA data.
 
-- Name: `Codex Verification`
-- Organization: `Osool Hospitality Website QA`
-- Email: `info@osoulhospitality.com`
-- Result: `303` redirect to `/thank-you/`, followed by `200` on the thank-you page
+- Result: `303` redirect to `/thank-you/`
+- Mailbox: `info@osoulhospitality.com`
+- Delivery confirmed in Hostinger Mail: UID `12`
+- Received at: `2026-08-07T15:34:32Z`
+- Sender shown: `Osool Website <info@osoulhospitality.com>`
 
-This confirms the visitor flow reaches the success page. Delivery to the mailbox should be confirmed from the `info@osoulhospitality.com` inbox.
+This confirms the visitor flow reaches the success page and the email reaches the production mailbox.
 
 ## Sites Deployment
 
