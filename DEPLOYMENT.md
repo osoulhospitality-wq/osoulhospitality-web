@@ -2,9 +2,11 @@
 
 Last updated: 2026-08-07 UTC
 
-## Command Center v12
+## Command Center Public Pilot v13
 
-The executive dashboard now reads the public `dragon-task` issue ledger from the project repository, caches the latest successful response in the browser, refreshes every five minutes, and loads issue comments only when a request is opened. The Content Security Policy permits read-only connections to `api.github.com`; no GitHub token or other credential is shipped to the browser. New requests are prepared in the dashboard and finalized through the authenticated GitHub issue form.
+The dashboard reads the public `dragon-task` issue ledger from the project repository and is explicitly classified as a public pilot for sanitized data only. It paginates issue and comment reads, detects conflicting workflow labels, qualifies KPI definitions, highlights overdue or stale work, formats Dragon responses safely, and requires the user to confirm that a new request contains no sensitive data before the authenticated GitHub handoff.
+
+This release is **not approved for real client, supplier, contract, pricing, personal, or confidential information**. Enterprise activation requires Supabase Auth, enforced MFA, verified RLS, private storage, database-generated audit events, retention controls, backup restoration, and negative authorization testing.
 
 ## Production Status
 
@@ -41,6 +43,8 @@ Latest live verification: 2026-08-07 15:34 UTC.
   - `Permissions-Policy`
   - `X-Frame-Options: SAMEORIGIN`
   - `Cross-Origin-Opener-Policy: same-origin`
+  - `Cross-Origin-Resource-Policy: same-origin`
+  - `Strict-Transport-Security`
 
 ## Contact Form Verification
 
