@@ -11,7 +11,7 @@ function redirect_to(string $path): never {
 }
 
 function clean_text(string $value, int $max = 300): string {
-    $value = trim(str_replace(["\r", "\0"], '', $value));
+    $value = trim(str_replace(["\r", "\n", "\0"], '', $value));
     if (function_exists('mb_substr')) {
         return mb_substr($value, 0, $max, 'UTF-8');
     }
@@ -112,6 +112,7 @@ $headers = [
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset=UTF-8',
     'From: Osool Website <info@osoulhospitality.com>',
+    'Sender: info@osoulhospitality.com',
     'X-Mailer: Osool-Hospitality-Website',
 ];
 if ($email !== '') {
@@ -122,7 +123,8 @@ $sent = @mail(
     'info@osoulhospitality.com',
     $subject,
     $body,
-    implode("\r\n", $headers)
+    implode("\r\n", $headers),
+    '-finfo@osoulhospitality.com'
 );
 
 if (!$sent) {
