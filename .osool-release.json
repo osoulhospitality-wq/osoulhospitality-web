@@ -1,6 +1,6 @@
 {
   "name": "Osool Hospitality Hostinger public_html",
-  "version": "12.0.1",
+  "version": "13.0.0",
   "date": "2026-08-07",
   "domain": "https://osoulhospitality.com",
   "routes": [
@@ -22,12 +22,14 @@
   "form": "submit.php -> info@osoulhospitality.com",
   "analytics": "disabled",
   "command_center": {
-    "mode": "hybrid executive dashboard: live Dragon request feed plus browser-local commercial modules",
+    "mode": "public pilot: sanitized Dragon request feed plus browser-local commercial prototypes",
     "server_storage": "disabled",
     "features": [
-      "live Dragon request center",
-      "request status, response thread, filters and executive KPIs",
-      "safe prefilled request creation through authenticated GitHub",
+      "sanitized public Dragon request center",
+      "request status conflict detection, response thread, filters and qualified executive KPIs",
+      "public-data consent gate before authenticated GitHub handoff",
+      "paginated GitHub issue and comment retrieval",
+      "safe formatted response rendering and latest-output copy",
       "supplier master",
       "product and normalized price master",
       "quotation comparison",
@@ -36,7 +38,7 @@
       "JSON backup and restore",
       "local document fingerprinting",
       "local audit trail",
-      "Supabase enterprise activation pack"
+      "multi-tenant Supabase enterprise activation pack with MFA, RLS, approvals and private storage"
     ]
   },
   "enterprise_activation": {
@@ -48,7 +50,9 @@
       "MFA",
       "RLS verification",
       "private storage bucket",
-      "backup and restore test"
+      "backup and restore test",
+      "PDPL data classification and retention decision",
+      "negative authorization and cross-tenant tests"
     ]
   }
 }
