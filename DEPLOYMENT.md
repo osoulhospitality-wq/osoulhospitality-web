@@ -2,6 +2,10 @@
 
 Last updated: 2026-08-07 UTC
 
+## Command Center v12
+
+The executive dashboard now reads the public `dragon-task` issue ledger from the project repository, caches the latest successful response in the browser, refreshes every five minutes, and loads issue comments only when a request is opened. The Content Security Policy permits read-only connections to `api.github.com`; no GitHub token or other credential is shipped to the browser. New requests are prepared in the dashboard and finalized through the authenticated GitHub issue form.
+
 ## Production Status
 
 The verified production website is live on the official domain:

@@ -1,7 +1,7 @@
 {
   "name": "Osool Hospitality Hostinger public_html",
-  "version": "11.0.0",
-  "date": "2026-08-06",
+  "version": "12.0.0",
+  "date": "2026-08-07",
   "domain": "https://osoulhospitality.com",
   "routes": [
     "/",
@@ -22,9 +22,12 @@
   "form": "submit.php -> info@osoulhospitality.com",
   "analytics": "disabled",
   "command_center": {
-    "mode": "browser-local MVP with enterprise transition pack",
+    "mode": "hybrid executive dashboard: live Dragon request feed plus browser-local commercial modules",
     "server_storage": "disabled",
     "features": [
+      "live Dragon request center",
+      "request status, response thread, filters and executive KPIs",
+      "safe prefilled request creation through authenticated GitHub",
       "supplier master",
       "product and normalized price master",
       "quotation comparison",

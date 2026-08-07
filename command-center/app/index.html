@@ -4,38 +4,90 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Osoul Command Center — Enterprise Transition v11</title>
+  <meta name="theme-color" content="#062f2b">
+  <title>مركز قيادة أصول الضيافة — Dragon v12</title>
   <link rel="icon" href="/brand/osool-mark-v8.svg">
-  <link rel="stylesheet" href="./app.css">
+  <link rel="stylesheet" href="./app.css?v=12.0.0">
 </head>
 <body>
   <a class="skip" href="#workspace">انتقل إلى مساحة العمل</a>
   <header class="topbar">
-    <a class="brand" href="/command-center/"><img src="/brand/osool-mark-v8.svg" alt="" width="44" height="44"><span><b>Osoul Command Center</b><small>Procurement & Contract Intelligence</small></span></a>
+    <a class="brand" href="/command-center/" aria-label="أصول الضيافة — مركز القيادة">
+      <img src="/brand/osool-mark-v8.svg" alt="" width="44" height="44">
+      <span><b>أصول الضيافة</b><small>EXECUTIVE COMMAND CENTER</small></span>
+    </a>
     <div class="top-actions">
-      <span class="mode"><i></i> v11 انتقال مؤسسي آمن</span>
-      <button class="ghost" data-action="export">نسخة احتياطية</button>
-      <label class="ghost file-button">استعادة<input id="restoreFile" type="file" accept="application/json"></label>
+      <span class="system-state" id="systemState"><i></i><span>جاري الاتصال</span></span>
+      <span class="last-sync" id="lastSync">آخر مزامنة: —</span>
+      <button class="icon-button" type="button" data-action="refreshDragon" aria-label="تحديث بيانات Dragon" title="تحديث البيانات">↻</button>
+      <button class="ghost desktop-action" type="button" data-action="export">نسخة احتياطية</button>
+      <label class="ghost file-button desktop-action">استعادة<input id="restoreFile" type="file" accept="application/json"></label>
     </div>
   </header>
 
   <div class="layout">
     <nav class="sidebar" aria-label="أقسام المنظومة">
-      <button class="nav-item active" data-view="dashboard"><span>01</span> لوحة القيادة</button>
-      <button class="nav-item" data-view="suppliers"><span>02</span> الموردون</button>
-      <button class="nav-item" data-view="products"><span>03</span> المنتجات والأسعار</button>
-      <button class="nav-item" data-view="quotes"><span>04</span> مقارنة العروض</button>
-      <button class="nav-item" data-view="contracts"><span>05</span> العقود والمخاطر</button>
-      <button class="nav-item" data-view="decisions"><span>06</span> سجل القرارات</button>
-      <button class="nav-item" data-view="documents"><span>07</span> مركز المستندات</button>
-      <button class="nav-item" data-view="audit"><span>08</span> سجل التدقيق</button>
-      <button class="nav-item" data-view="settings"><span>09</span> البيانات والضبط</button>
-      <div class="sidebar-note"><b>تنبيه الخصوصية</b><p>هذه النسخة تحفظ البيانات على هذا الجهاز فقط. لا تستخدمها كأرشيف نهائي للعقود الحساسة.</p></div>
+      <div class="nav-group"><small>التشغيل</small>
+        <button class="nav-item active" data-view="requests"><span>01</span><b>مركز الطلبات</b><em id="requestNavCount">—</em></button>
+        <button class="nav-item" data-view="dashboard"><span>02</span><b>النظرة التنفيذية</b></button>
+      </div>
+      <div class="nav-group"><small>التجارية والأصول</small>
+        <button class="nav-item" data-view="suppliers"><span>03</span><b>الموردون</b></button>
+        <button class="nav-item" data-view="products"><span>04</span><b>المنتجات والأسعار</b></button>
+        <button class="nav-item" data-view="quotes"><span>05</span><b>مقارنة العروض</b></button>
+        <button class="nav-item" data-view="contracts"><span>06</span><b>العقود والمخاطر</b></button>
+      </div>
+      <div class="nav-group"><small>الحوكمة</small>
+        <button class="nav-item" data-view="decisions"><span>07</span><b>سجل القرارات</b></button>
+        <button class="nav-item" data-view="documents"><span>08</span><b>المستندات</b></button>
+        <button class="nav-item" data-view="audit"><span>09</span><b>سجل التدقيق</b></button>
+        <button class="nav-item" data-view="settings"><span>10</span><b>البيانات والضبط</b></button>
+      </div>
+      <div class="sidebar-note"><b>Dragon v3.1</b><p>طلبات GitHub الحقيقية متصلة للعرض والمتابعة. البيانات التجارية تبقى على هذا الجهاز حتى تفعيل الحساب المؤسسي.</p></div>
     </nav>
 
     <main id="workspace" class="workspace">
-      <section class="view active" id="view-dashboard">
-        <div class="page-head"><div><small>EXECUTIVE CONTROL</small><h1>لوحة القيادة</h1><p>صورة تنفيذية للموردين والأسعار والعقود والقرارات.</p></div><button class="primary" data-action="seed">تحميل بيانات العرض</button></div>
+      <section class="view active" id="view-requests">
+        <div class="page-head request-head">
+          <div><small>DRAGON OPERATIONS</small><h1>مركز الطلبات</h1><p>كل طلب، حالته، رد Dragon، وما يحتاج تدخلك في شاشة واحدة.</p></div>
+          <div class="page-actions"><button class="secondary" type="button" data-action="exportRequests">تصدير التقرير</button><button class="primary" type="button" data-open="requestDialog">+ رفع طلب جديد</button></div>
+        </div>
+
+        <div class="connection-banner" id="connectionBanner" aria-live="polite">
+          <div><span class="pulse"></span><b>مزامنة مباشرة مع Dragon</b><small>يتم التحديث تلقائيًا كل 5 دقائق</small></div>
+          <a href="https://github.com/osoulhospitality-wq/osoulhospitality-web/issues?q=is%3Aissue%20label%3Adragon-task" target="_blank" rel="noopener">فتح سجل المصدر ↗</a>
+        </div>
+
+        <div class="request-kpis" id="requestKpis" aria-label="مؤشرات طلبات Dragon"></div>
+
+        <div class="grid request-overview">
+          <article class="panel status-panel">
+            <div class="panel-head"><div><small>DELIVERY HEALTH</small><h2>جودة التسليم</h2></div><span class="metric-note" id="requestScopeLabel">الطلبات التشغيلية</span></div>
+            <div id="deliveryHealth"></div>
+          </article>
+          <article class="panel attention-panel">
+            <div class="panel-head"><div><small>ACTION QUEUE</small><h2>ما يحتاج الانتباه الآن</h2></div></div>
+            <div id="attentionList" class="list"></div>
+          </article>
+        </div>
+
+        <article class="panel requests-panel">
+          <div class="panel-head request-table-head">
+            <div><small>REQUEST LEDGER</small><h2>سجل الطلبات</h2></div>
+            <div class="record-count" id="recordCount">—</div>
+          </div>
+          <div class="toolbar request-toolbar">
+            <label class="search-box"><span>⌕</span><input class="search" data-search="requests" placeholder="ابحث برقم الطلب أو العنوان أو المحتوى" aria-label="بحث الطلبات"></label>
+            <select data-filter="requestStatus" aria-label="تصفية حسب الحالة"><option value="">كل الحالات</option><option value="new">جديد</option><option value="processing">قيد المعالجة</option><option value="completed">مكتمل</option><option value="failed">متعثر</option><option value="archived">مؤرشف</option></select>
+            <select data-filter="requestCategory" aria-label="تصفية حسب المسار"><option value="">كل المسارات</option><option value="safety">السلامة</option><option value="compliance">الامتثال</option><option value="client">العملاء</option><option value="partnership">الشراكات</option><option value="strategy">الاستراتيجية</option><option value="general">عام</option></select>
+            <select data-filter="requestScope" aria-label="نطاق البيانات"><option value="operational">التشغيلية فقط</option><option value="all">تشمل اختبارات QA</option></select>
+          </div>
+          <div id="requestTable" class="table-wrap requests-table" aria-live="polite"></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-dashboard">
+        <div class="page-head"><div><small>EXECUTIVE CONTROL</small><h1>النظرة التنفيذية</h1><p>صورة إدارية للموردين والأسعار والعقود والقرارات.</p></div><button class="primary" type="button" data-action="seed">تحميل بيانات العرض</button></div>
         <div class="kpis" id="kpis"></div>
         <div class="grid two">
           <article class="panel"><div class="panel-head"><div><small>CONTRACT WATCH</small><h2>العقود القادمة للاستحقاق</h2></div></div><div id="expiryList" class="list"></div></article>
@@ -45,71 +97,97 @@
       </section>
 
       <section class="view" id="view-suppliers">
-        <div class="page-head"><div><small>SUPPLIER MASTER</small><h1>الموردون</h1><p>سجل موحد للحالة والوثائق والتغطية والأداء.</p></div><button class="primary" data-open="supplierDialog">إضافة مورد</button></div>
+        <div class="page-head"><div><small>SUPPLIER MASTER</small><h1>الموردون</h1><p>سجل موحد للحالة والوثائق والتغطية والأداء.</p></div><button class="primary" type="button" data-open="supplierDialog">إضافة مورد</button></div>
         <div class="toolbar"><input class="search" data-search="suppliers" placeholder="ابحث بالاسم أو السجل أو المدينة"><select data-filter="supplierStatus"><option value="">كل الحالات</option><option value="approved">معتمد</option><option value="under_review">قيد المراجعة</option><option value="suspended">موقوف</option></select></div>
         <div id="supplierTable" class="table-wrap"></div>
       </section>
 
       <section class="view" id="view-products">
-        <div class="page-head"><div><small>PRODUCT & PRICE MASTER</small><h1>المنتجات والأسعار</h1><p>تطبيع العبوة والحجم للوصول إلى سعر وحدة قابل للمقارنة.</p></div><button class="primary" data-open="productDialog">إضافة منتج/سعر</button></div>
+        <div class="page-head"><div><small>PRODUCT & PRICE MASTER</small><h1>المنتجات والأسعار</h1><p>تطبيع العبوة والحجم للوصول إلى سعر وحدة قابل للمقارنة.</p></div><button class="primary" type="button" data-open="productDialog">إضافة منتج/سعر</button></div>
         <div class="toolbar"><input class="search" data-search="products" placeholder="ابحث بالمنتج أو SKU أو المورد"></div>
         <div id="productTable" class="table-wrap"></div>
       </section>
 
       <section class="view" id="view-quotes">
-        <div class="page-head"><div><small>QUOTE COMPARATOR</small><h1>مقارنة عروض النظافة</h1><p>المقارنة على تكلفة الوحدة القياسية لا سعر العبوة فقط.</p></div><button class="primary" data-open="quoteDialog">إضافة بند عرض</button></div>
+        <div class="page-head"><div><small>QUOTE COMPARATOR</small><h1>مقارنة عروض الأسعار</h1><p>المقارنة على تكلفة الوحدة القياسية لا سعر العبوة فقط.</p></div><button class="primary" type="button" data-open="quoteDialog">إضافة بند عرض</button></div>
         <div class="notice">التكلفة النهائية = السعر − الخصم + التوصيل + الضريبة. التوصية آلية أولية وتحتاج مراجعة الجودة والسكوب.</div>
         <div id="quoteTable" class="table-wrap"></div>
       </section>
 
       <section class="view" id="view-contracts">
-        <div class="page-head"><div><small>CONTRACT CONTROL</small><h1>العقود والمخاطر</h1><p>متابعة التجديد والإشعار وSLA والاستثناءات والإجراءات التصحيحية.</p></div><button class="primary" data-open="contractDialog">إضافة عقد</button></div>
+        <div class="page-head"><div><small>CONTRACT CONTROL</small><h1>العقود والمخاطر</h1><p>متابعة التجديد والإشعار وSLA والاستثناءات والإجراءات التصحيحية.</p></div><button class="primary" type="button" data-open="contractDialog">إضافة عقد</button></div>
         <div id="contractTable" class="table-wrap"></div>
       </section>
 
       <section class="view" id="view-decisions">
-        <div class="page-head"><div><small>DECISION LEDGER</small><h1>سجل القرارات</h1><p>من قرر ماذا، ولماذا، وعلى أي دليل.</p></div><button class="primary" data-open="decisionDialog">تسجيل قرار</button></div>
+        <div class="page-head"><div><small>DECISION LEDGER</small><h1>سجل القرارات</h1><p>من قرر ماذا، ولماذا، وعلى أي دليل.</p></div><button class="primary" type="button" data-open="decisionDialog">تسجيل قرار</button></div>
         <div id="decisionTable" class="table-wrap"></div>
       </section>
 
       <section class="view" id="view-documents">
         <div class="page-head"><div><small>DOCUMENT INTAKE</small><h1>مركز المستندات</h1><p>تسجيل العقود والعروض والفواتير والتحقق من سلامتها قبل المعالجة المركزية.</p></div></div>
-        <div class="notice">في v11 تُحسب بصمة SHA-256 للملف محليًا ويُسجل وصفه فقط. لا يُرفع محتوى الملف إلى الخادم حتى تفعيل التخزين المشفر والصلاحيات.</div>
+        <div class="notice">تُحسب بصمة SHA-256 للملف محليًا ويُسجل وصفه فقط. لا يُرفع محتوى الملف حتى تفعيل التخزين المشفر والصلاحيات.</div>
         <article class="panel">
           <div class="form-grid">
             <label>نوع المستند<select id="documentType"><option>عقد</option><option>عرض سعر</option><option>فاتورة</option><option>سجل تجاري</option><option>شهادة ضريبية</option><option>أخرى</option></select></label>
             <label>المرجع المرتبط<input id="documentReference" placeholder="اسم المورد أو رقم العقد"></label>
             <label class="wide">اختر الملف<input id="documentFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv,.doc,.docx"></label>
           </div>
-          <button class="primary" data-action="registerDocument">تسجيل المستند وحساب البصمة</button>
+          <button class="primary" type="button" data-action="registerDocument">تسجيل المستند وحساب البصمة</button>
         </article>
         <div id="documentTable" class="table-wrap"></div>
       </section>
 
       <section class="view" id="view-audit">
-        <div class="page-head"><div><small>AUDIT TRAIL</small><h1>سجل التدقيق</h1><p>أثر لكل إنشاء أو حذف أو استعادة أو تصدير داخل الجهاز.</p></div><button class="secondary" data-action="exportAudit">تصدير السجل</button></div>
+        <div class="page-head"><div><small>AUDIT TRAIL</small><h1>سجل التدقيق</h1><p>أثر لكل إنشاء أو حذف أو استعادة أو تصدير داخل الجهاز.</p></div><button class="secondary" type="button" data-action="exportAudit">تصدير السجل</button></div>
         <div id="auditTable" class="table-wrap"></div>
       </section>
 
       <section class="view" id="view-settings">
         <div class="page-head"><div><small>DATA CONTROL</small><h1>البيانات والضبط</h1><p>النسخ الاحتياطي والاستعادة وتنظيف بيئة العرض.</p></div></div>
         <div class="grid three">
-          <article class="panel action-card"><h2>تصدير كامل</h2><p>JSON واحد يشمل كل السجلات والتاريخ.</p><button class="primary" data-action="export">تنزيل النسخة</button></article>
-          <article class="panel action-card"><h2>بيانات تجريبية</h2><p>سجلات موسومة للعرض واختبار المحركات.</p><button class="secondary" data-action="seed">إعادة تحميلها</button></article>
-          <article class="panel action-card danger"><h2>مسح الجهاز</h2><p>يحذف بيانات هذه النسخة من المتصفح الحالي.</p><button class="danger-button" data-action="reset">مسح البيانات</button></article>
+          <article class="panel action-card"><h2>تصدير كامل</h2><p>ملف JSON يشمل بيانات الموردين والعقود المحلية.</p><button class="primary" type="button" data-action="export">تنزيل النسخة</button></article>
+          <article class="panel action-card"><h2>بيانات تجريبية</h2><p>سجلات موسومة للعرض واختبار المحركات التجارية.</p><button class="secondary" type="button" data-action="seed">إعادة تحميلها</button></article>
+          <article class="panel action-card danger"><h2>مسح الجهاز</h2><p>يحذف البيانات التجارية المحلية من المتصفح الحالي فقط.</p><button class="danger-button" type="button" data-action="reset">مسح البيانات</button></article>
         </div>
-        <article class="panel"><h2>جاهزية الانتقال المؤسسي v11</h2><ul class="plain-list"><li>مخطط PostgreSQL والصلاحيات وسياسات RLS جاهز ضمن المصدر.</li><li>مركز المستندات يسجل البصمة والبيانات الوصفية محليًا دون رفع المحتوى.</li><li>سجل التدقيق يعمل على الجهاز ويُستبدل بسجل خادمي عند ربط Supabase.</li><li>تفعيل الحسابات والتخزين وOCR يتطلب مفاتيح المشروع واختيار مزود OCR بعد الاختبار.</li></ul></article>
+        <article class="panel"><div class="panel-head"><div><small>INTEGRATION MAP</small><h2>حالة الربط المؤسسي</h2></div><span class="badge">v12</span></div><ul class="plain-list"><li><b>Dragon:</b> متصل بسجل GitHub الحقيقي للعرض والمتابعة والردود.</li><li><b>الموردون والعقود:</b> تخزين محلي آمن للاختبار حتى تفعيل حسابات Supabase وMFA.</li><li><b>المستندات:</b> بصمة محلية دون رفع المحتوى أو الأسرار.</li><li><b>الحوكمة:</b> لا توجد مفاتيح وصول أو بيانات اعتماد داخل المتصفح.</li></ul></article>
       </section>
     </main>
   </div>
 
-  <dialog id="supplierDialog"><form method="dialog" data-form="supplier"><header><h2>إضافة مورد</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>الاسم التجاري<input name="name" required></label><label>رقم السجل<input name="cr"></label><label>المدينة<input name="city" value="الرياض"></label><label>الحالة<select name="status"><option value="under_review">قيد المراجعة</option><option value="approved">معتمد</option><option value="suspended">موقوف</option></select></label><label>التغطية<input name="coverage" placeholder="الرياض، جدة"></label><label>شروط الدفع<input name="payment" placeholder="30 يوم"></label></div><footer><button value="cancel" class="ghost">إلغاء</button><button value="default" class="primary">حفظ</button></footer></form></dialog>
-  <dialog id="productDialog"><form method="dialog" data-form="product"><header><h2>إضافة منتج وسعر</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>SKU<input name="sku" required></label><label>اسم المنتج<input name="name" required></label><label>المورد<select name="supplierId" data-options="suppliers" required></select></label><label>الفئة<input name="category" value="مواد نظافة"></label><label>سعر العبوة (ر.س)<input name="packPrice" type="number" min="0" step=".01" required></label><label>كمية العبوة القياسية<input name="standardQty" type="number" min=".001" step=".001" required></label><label>الوحدة<select name="unit"><option>لتر</option><option>كجم</option><option>قطعة</option></select></label><label>الحد الأدنى<input name="moq" type="number" min="1" value="1"></label></div><footer><button value="cancel" class="ghost">إلغاء</button><button value="default" class="primary">حفظ</button></footer></form></dialog>
-  <dialog id="quoteDialog"><form method="dialog" data-form="quote"><header><h2>إضافة بند عرض</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>المنتج<select name="productId" data-options="products" required></select></label><label>المورد<select name="supplierId" data-options="suppliers" required></select></label><label>الكمية<input name="quantity" type="number" min="1" value="1" required></label><label>سعر العبوة<input name="packPrice" type="number" min="0" step=".01" required></label><label>الخصم<input name="discount" type="number" min="0" step=".01" value="0"></label><label>التوصيل<input name="delivery" type="number" min="0" step=".01" value="0"></label><label>الضريبة %<input name="taxRate" type="number" min="0" step=".01" value="15"></label><label>صلاحية العرض<input name="validUntil" type="date"></label></div><footer><button value="cancel" class="ghost">إلغاء</button><button value="default" class="primary">حفظ ومقارنة</button></footer></form></dialog>
-  <dialog id="contractDialog"><form method="dialog" data-form="contract"><header><h2>إضافة عقد ومخاطرة</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>اسم العقد<input name="name" required></label><label>المورد<select name="supplierId" data-options="suppliers" required></select></label><label>المبنى<input name="building" required></label><label>القيمة السنوية<input name="value" type="number" min="0" required></label><label>تاريخ النهاية<input name="endDate" type="date" required></label><label>مدة الإشعار (يوم)<input name="noticeDays" type="number" min="0" value="90"></label><label>احتمالية الخطر 1–5<input name="probability" type="number" min="1" max="5" value="3"></label><label>أثر الخطر 1–5<input name="impact" type="number" min="1" max="5" value="3"></label><label class="wide">وصف الخطر<input name="risk" placeholder="استثناء قطع رئيسية أو SLA غير واضح"></label></div><footer><button value="cancel" class="ghost">إلغاء</button><button value="default" class="primary">حفظ</button></footer></form></dialog>
-  <dialog id="decisionDialog"><form method="dialog" data-form="decision"><header><h2>تسجيل قرار</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>الموضوع<input name="subject" required></label><label>القرار<select name="decision"><option>اعتماد</option><option>تفاوض</option><option>رفض</option><option>طلب توضيح</option></select></label><label>المعتمد<input name="approver" value="يزيد الجهني" required></label><label>مرجع الدليل<input name="evidence" placeholder="عرض 2026-001"></label><label class="wide">المبررات<textarea name="rationale" required></textarea></label></div><footer><button value="cancel" class="ghost">إلغاء</button><button value="default" class="primary">تسجيل</button></footer></form></dialog>
+  <dialog id="requestDialog" class="request-dialog"><form method="dialog" data-form="request">
+    <header><div><small>NEW DRAGON REQUEST</small><h2>رفع طلب جديد</h2></div><button value="cancel" aria-label="إغلاق">×</button></header>
+    <div class="dialog-intro">سيُجهز الطلب بصيغة تنفيذية، ثم تراجعه وتعتمده في GitHub حفاظًا على الهوية والصلاحيات.</div>
+    <div class="form-grid">
+      <label>المسار<select name="category" required><option value="strategy">استراتيجية وتنفيذ</option><option value="client">عميل وعرض فني</option><option value="compliance">امتثال وترخيص</option><option value="safety">سلامة وتشغيل عاجل</option><option value="partnership">شراكة وتطوير أعمال</option><option value="general">طلب عام</option></select></label>
+      <label>الأولوية<select name="priority" required><option value="normal">عادية</option><option value="high">مرتفعة</option><option value="urgent">عاجلة</option></select></label>
+      <label class="wide">عنوان الطلب<input name="title" required maxlength="140" placeholder="مثال: إعداد نطاق تدقيق جاهزية فندق 120 مفتاحًا"></label>
+      <label>الموعد المستهدف<input name="dueDate" type="date"></label>
+      <label>المخرج المطلوب<input name="deliverable" required placeholder="خطة، خطاب، تحليل، عرض فني..."></label>
+      <label class="wide">التفاصيل والسياق<textarea name="details" required maxlength="5000" placeholder="اكتب الحقائق، الوضع الحالي، القيود، والنتيجة المطلوبة بوضوح"></textarea></label>
+    </div>
+    <footer><button value="cancel" class="ghost dialog-ghost">إلغاء</button><button value="default" class="primary">متابعة واعتماد الطلب ↗</button></footer>
+  </form></dialog>
+
+  <dialog id="requestDetailDialog" class="detail-dialog">
+    <div class="detail-shell">
+      <header class="detail-header"><div id="detailHeading"></div><button type="button" data-action="closeRequestDetail" aria-label="إغلاق">×</button></header>
+      <div class="detail-body">
+        <div class="detail-meta" id="detailMeta"></div>
+        <section class="detail-section"><small>نص الطلب</small><div id="detailRequest" class="content-block"></div></section>
+        <section class="detail-section"><div class="thread-head"><small>سجل المعالجة والردود</small><span id="threadCount"></span></div><div id="detailThread" class="thread"></div></section>
+      </div>
+      <footer class="detail-footer"><a id="detailGithubLink" class="secondary button-link" target="_blank" rel="noopener">فتح الطلب في GitHub ↗</a><button class="primary" type="button" data-action="closeRequestDetail">تم</button></footer>
+    </div>
+  </dialog>
+
+  <dialog id="supplierDialog"><form method="dialog" data-form="supplier"><header><h2>إضافة مورد</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>الاسم التجاري<input name="name" required></label><label>رقم السجل<input name="cr"></label><label>المدينة<input name="city" value="الرياض"></label><label>الحالة<select name="status"><option value="under_review">قيد المراجعة</option><option value="approved">معتمد</option><option value="suspended">موقوف</option></select></label><label>التغطية<input name="coverage" placeholder="الرياض، جدة"></label><label>شروط الدفع<input name="payment" placeholder="30 يوم"></label></div><footer><button value="cancel" class="ghost dialog-ghost">إلغاء</button><button value="default" class="primary">حفظ</button></footer></form></dialog>
+  <dialog id="productDialog"><form method="dialog" data-form="product"><header><h2>إضافة منتج وسعر</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>SKU<input name="sku" required></label><label>اسم المنتج<input name="name" required></label><label>المورد<select name="supplierId" data-options="suppliers" required></select></label><label>الفئة<input name="category" value="مواد نظافة"></label><label>سعر العبوة (ر.س)<input name="packPrice" type="number" min="0" step=".01" required></label><label>كمية العبوة القياسية<input name="standardQty" type="number" min=".001" step=".001" required></label><label>الوحدة<select name="unit"><option>لتر</option><option>كجم</option><option>قطعة</option></select></label><label>الحد الأدنى<input name="moq" type="number" min="1" value="1"></label></div><footer><button value="cancel" class="ghost dialog-ghost">إلغاء</button><button value="default" class="primary">حفظ</button></footer></form></dialog>
+  <dialog id="quoteDialog"><form method="dialog" data-form="quote"><header><h2>إضافة بند عرض</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>المنتج<select name="productId" data-options="products" required></select></label><label>المورد<select name="supplierId" data-options="suppliers" required></select></label><label>الكمية<input name="quantity" type="number" min="1" value="1" required></label><label>سعر العبوة<input name="packPrice" type="number" min="0" step=".01" required></label><label>الخصم<input name="discount" type="number" min="0" step=".01" value="0"></label><label>التوصيل<input name="delivery" type="number" min="0" step=".01" value="0"></label><label>الضريبة %<input name="taxRate" type="number" min="0" step=".01" value="15"></label><label>صلاحية العرض<input name="validUntil" type="date"></label></div><footer><button value="cancel" class="ghost dialog-ghost">إلغاء</button><button value="default" class="primary">حفظ ومقارنة</button></footer></form></dialog>
+  <dialog id="contractDialog"><form method="dialog" data-form="contract"><header><h2>إضافة عقد ومخاطرة</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>اسم العقد<input name="name" required></label><label>المورد<select name="supplierId" data-options="suppliers" required></select></label><label>المبنى<input name="building" required></label><label>القيمة السنوية<input name="value" type="number" min="0" required></label><label>تاريخ النهاية<input name="endDate" type="date" required></label><label>مدة الإشعار (يوم)<input name="noticeDays" type="number" min="0" value="90"></label><label>احتمالية الخطر 1–5<input name="probability" type="number" min="1" max="5" value="3"></label><label>أثر الخطر 1–5<input name="impact" type="number" min="1" max="5" value="3"></label><label class="wide">وصف الخطر<input name="risk" placeholder="استثناء قطع رئيسية أو SLA غير واضح"></label></div><footer><button value="cancel" class="ghost dialog-ghost">إلغاء</button><button value="default" class="primary">حفظ</button></footer></form></dialog>
+  <dialog id="decisionDialog"><form method="dialog" data-form="decision"><header><h2>تسجيل قرار</h2><button value="cancel" aria-label="إغلاق">×</button></header><div class="form-grid"><label>الموضوع<input name="subject" required></label><label>القرار<select name="decision"><option>اعتماد</option><option>تفاوض</option><option>رفض</option><option>طلب توضيح</option></select></label><label>المعتمد<input name="approver" value="يزيد الجهني" required></label><label>مرجع الدليل<input name="evidence" placeholder="عرض 2026-001"></label><label class="wide">المبررات<textarea name="rationale" required></textarea></label></div><footer><button value="cancel" class="ghost dialog-ghost">إلغاء</button><button value="default" class="primary">تسجيل</button></footer></form></dialog>
 
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="./app.js"></script>
+  <script src="./app.js?v=12.0.0"></script>
 </body>
 </html>
