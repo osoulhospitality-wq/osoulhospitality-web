@@ -1,0 +1,989 @@
+{
+  "name": "Dragon Intake Production",
+  "nodes": [
+    {
+      "id": "GitHub Trigger",
+      "name": "GitHub Trigger",
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        0
+      ],
+      "parameters": {
+        "authentication": "accessToken",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "events": [
+          "issues"
+        ],
+        "options": {}
+      },
+      "webhookId": "dragon-intake-production",
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "id": "Authorize & Classify",
+      "name": "Authorize & Classify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const ALLOWED_SENDERS = new Set(['osoulhospitality-wq']);\nconst TERMINAL_OR_BUSY = ['dragon-processing', 'dragon-completed', 'dragon-failed'];\n\nconst event = $json.body && typeof $json.body === 'object' ? $json.body : $json;\nconst issue = event.issue ?? {};\nconst action = String(event.action ?? '').toLowerCase();\nconst sender = event.sender?.login ?? 'unknown';\nconst labels = Array.isArray(issue.labels)\n  ? issue.labels.map((l) => (typeof l === 'string' ? l : l?.name)).filter(Boolean)\n  : [];\nconst addedLabelName = event.label?.name ?? null;\nconst repository = event.repository?.full_name ?? `${event.repository?.owner?.login ?? 'unknown'}/${event.repository?.name ?? 'unknown'}`;\nconst issueNumber = issue.number ?? null;\nconst executionId = String($execution.id);\nconst receivedAt = new Date().toISOString();\n\nfunction reject(reason, decision = 'ignored') {\n  return { decision, reason, repository, issueNumber, action, sender, executionId, receivedAt };\n}\n\nif (!issueNumber) return [{ json: reject('no issue number in payload') }];\n\nif (!ALLOWED_SENDERS.has(sender)) {\n  return [{ json: reject(`sender '${sender}' is not in the authorized allowlist`, 'unauthorized') }];\n}\n\nconst hasDragonTask = labels.includes('dragon-task');\nconst hasTerminalOrBusy = labels.some((l) => TERMINAL_OR_BUSY.includes(l));\n\nlet eligible = false;\nlet reason = '';\n\nif (action === 'opened') {\n  eligible = hasDragonTask && issue.state === 'open' && !hasTerminalOrBusy;\n  reason = eligible ? 'opened with dragon-task already present' : 'opened without a clean dragon-task starting state';\n} else if (action === 'labeled') {\n  eligible = addedLabelName === 'dragon-task' && issue.state === 'open' && !hasTerminalOrBusy;\n  reason = eligible\n    ? 'dragon-task was the specific label just added'\n    : `labeled event ignored (added label was '${addedLabelName}', not a fresh dragon-task application)`;\n} else if (action === 'reopened') {\n  eligible = hasDragonTask && issue.state === 'open' && !hasTerminalOrBusy;\n  reason = eligible\n    ? 'reopened with dragon-task present and no residual terminal/busy label (explicit retry state)'\n    : 'reopened without a cleared terminal/busy label — not treated as an explicit retry';\n} else {\n  reason = `action '${action}' is not in the accepted set (opened, labeled, reopened)`;\n}\n\nif (!eligible) {\n  return [{ json: reject(reason, 'ignored') }];\n}\n\n// commandVersion is GitHub's own issue.updated_at at the moment of this event.\n// It is stable across duplicate/redelivered webhooks of the SAME transition\n// (identical payload => identical updated_at) and changes on any later, genuinely\n// new transition (a later explicit retry has a newer updated_at). This makes the\n// idempotency key derivable without our own counter, so there is no separate\n// race condition in computing it.\nconst commandVersion = issue.updated_at;\nconst idempotencyKey = `${repository}#${issueNumber}@${commandVersion}`;\n\nreturn [{\n  json: {\n    decision: 'proceed',\n    reason,\n    repository,\n    owner: event.repository?.owner?.login ?? 'osoulhospitality-wq',\n    repositoryName: event.repository?.name ?? 'osoulhospitality-web',\n    issueNumber,\n    action,\n    sender,\n    title: issue.title ?? '',\n    body: issue.body ?? '',\n    author: issue.user?.login ?? 'unknown',\n    commandVersion,\n    idempotencyKey,\n    executionId,\n    receivedAt,\n  },\n}];"
+      }
+    },
+    {
+      "id": "Stabilize Command Version",
+      "name": "Stabilize Command Version",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1240,
+        -160
+      ],
+      "parameters": {
+        "jsCode": "const item = { ...$json };\nif (item.decision !== 'proceed') return [{ json: item }];\n\n// GitHub can emit both opened and labeled for the same initial task. Treat both\n// as one initial command. A deliberate close/reopen retry keeps its distinct\n// GitHub updated_at value from Authorize & Classify.\nitem.commandVersion = ['opened', 'labeled'].includes(item.action)\n  ? 'initial'\n  : item.commandVersion;\nitem.idempotencyKey = `${item.repository}#${item.issueNumber}@${item.commandVersion}`;\nreturn [{ json: item }];"
+      }
+    },
+    {
+      "id": "Log Decision",
+      "name": "Log Decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1120,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/dragon_events_log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { repository: $json.repository, issue_number: $json.issueNumber, github_action: $json.action, sender: $json.sender, decision: $json.decision, reason: $json.reason, execution_id: $json.executionId } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MAP_EXISTING_SUPABASE_SERVICE_CREDENTIAL",
+          "name": "Supabase service role (dragon_locks writer)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "Restore Decision Context",
+      "name": "Restore Decision Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -920,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { ...$('Stabilize Command Version').item.json } }];"
+      }
+    },
+    {
+      "id": "Proceed?",
+      "name": "Proceed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.decision }}",
+              "rightValue": "proceed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "Acquire Lock",
+      "name": "Acquire Lock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -640,
+        -160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/dragon_locks?on_conflict=repository,issue_number,command_version",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=representation,resolution=ignore-duplicates"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { repository: $('Stabilize Command Version').item.json.repository, issue_number: $('Stabilize Command Version').item.json.issueNumber, command_version: $('Stabilize Command Version').item.json.commandVersion, execution_id: $('Stabilize Command Version').item.json.executionId, sender: $('Stabilize Command Version').item.json.sender } }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": false
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MAP_EXISTING_SUPABASE_SERVICE_CREDENTIAL",
+          "name": "Supabase service role (dragon_locks writer)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "Lock Acquired?",
+      "name": "Lock Acquired?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ Array.isArray($json.body) ? $json.body.length : (Array.isArray($json) ? $json.length : ($json.id ? 1 : 0)) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "Log Duplicate",
+      "name": "Log Duplicate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        -40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/dragon_events_log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { repository: $('Stabilize Command Version').item.json.repository, issue_number: $('Stabilize Command Version').item.json.issueNumber, github_action: $('Stabilize Command Version').item.json.action, sender: $('Stabilize Command Version').item.json.sender, decision: 'duplicate', reason: 'idempotency key ' + $('Stabilize Command Version').item.json.idempotencyKey + ' already locked by another execution', execution_id: $('Stabilize Command Version').item.json.executionId } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MAP_EXISTING_SUPABASE_SERVICE_CREDENTIAL",
+          "name": "Supabase service role (dragon_locks writer)"
+        }
+      }
+    },
+    {
+      "id": "Add dragon-processing",
+      "name": "Add dragon-processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        -280
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues/{{ $('Authorize & Classify').item.json.issueNumber }}/labels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"labels\": [\"dragon-processing\"] } }}",
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "Post Acceptance",
+      "name": "Post Acceptance",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        -280
+      ],
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Authorize & Classify').item.json.issueNumber }}",
+        "body": "=🐉 **Dragon accepted this task**\n\n- Status: `Processing`\n- Idempotency key: `{{ $('Stabilize Command Version').item.json.idempotencyKey }}`\n- Execution ID: `{{ $('Stabilize Command Version').item.json.executionId }}`\n- Received: `{{ $('Stabilize Command Version').item.json.receivedAt }}`\n\nThe task is now being analyzed and drafted.\n\n---\n⚠️ **مخرج آلي أولي؛ لا يمثل تنفيذًا خارجيًا أو اعتمادًا نهائيًا ما لم يتضمن دليل تنفيذ قابلًا للتحقق (Commit / PR / CI / ملف).**"
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "Dragon Intake Assistant",
+      "name": "Dragon Intake Assistant",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1040,
+        -280
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Repository: {{ $('Authorize & Classify').item.json.repository }}\nIssue: #{{ $('Authorize & Classify').item.json.issueNumber }}\nTitle: {{ $('Authorize & Classify').item.json.title }}\nAuthor: {{ $('Authorize & Classify').item.json.author }}\n\nTask body:\n{{ $('Authorize & Classify').item.json.body }}",
+        "options": {
+          "systemMessage": "You are Dragon, the Executive Intake & Drafting Assistant for Osool Hospitality. You are NOT an execution agent: you have no tools to write code, run tests, deploy, or modify the repository. Treat the GitHub issue as a request for a drafted, implementation-ready response only. Produce a decisive draft in professional Arabic unless the issue explicitly requests another language. Separate verified facts from assumptions. Never use the phrase 'تم التنفيذ' or any equivalent completion claim unless the issue body itself already contains verifiable evidence (a commit SHA, PR link, CI run link, or file path) that the action happened outside this workflow. Do not invent completed actions, credentials, sources, files, tests, approvals, or external side effects. If execution requires access not available inside this workflow, state the exact blocker and the smallest concrete next action a human must take. Structure the response as: Executive outcome; Draft completed in this response; Deliverable; Risks and controls; Next action requiring human execution. Be concise but complete and suitable for an executive audit trail."
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "OpenAI Chat Model",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        -40
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "MAP_EXISTING_OPENAI_CREDENTIAL",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "id": "Normalize Delivery",
+      "name": "Normalize Delivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        -280
+      ],
+      "parameters": {
+        "jsCode": "const source = $json ?? {};\nfunction textFrom(value) {\n  if (typeof value === 'string') return value.trim();\n  if (Array.isArray(value)) return value.map(textFrom).filter(Boolean).join('\\n\\n').trim();\n  if (!value || typeof value !== 'object') return '';\n  for (const key of ['output', 'text', 'content', 'response', 'answer', 'message']) {\n    const candidate = textFrom(value[key]);\n    if (candidate) return candidate;\n  }\n  for (const key of ['messages', 'generations', 'data']) {\n    const candidate = textFrom(value[key]);\n    if (candidate) return candidate;\n  }\n  return '';\n}\nconst delivery = textFrom(source).trim();\nif (!delivery) {\n  throw new Error(`EMPTY_DRAGON_DELIVERY: available keys: ${Object.keys(source).join(', ') || '(none)'}`);\n}\nreturn [{ json: { ...source, delivery, deliveryLength: delivery.length, normalizedAt: new Date().toISOString() } }];"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "Post Delivery",
+      "name": "Post Delivery",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        -280
+      ],
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Authorize & Classify').item.json.issueNumber }}",
+        "body": "=🐉 **Dragon delivery (draft)**\n\n{{ $json.delivery }}\n\n---\nAudit: idempotency key `{{ $('Stabilize Command Version').item.json.idempotencyKey }}` · execution `{{ $('Stabilize Command Version').item.json.executionId }}` · output `{{ $json.deliveryLength }}` characters\n\n---\n⚠️ **مخرج آلي أولي؛ لا يمثل تنفيذًا خارجيًا أو اعتمادًا نهائيًا ما لم يتضمن دليل تنفيذ قابلًا للتحقق (Commit / PR / CI / ملف).**"
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "Clear Status (completed) 1",
+      "name": "Clear Status (completed) 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        -280
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues/{{ $('Authorize & Classify').item.json.issueNumber }}/labels/dragon-processing",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "Add dragon-completed",
+      "name": "Add dragon-completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        -280
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues/{{ $('Authorize & Classify').item.json.issueNumber }}/labels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"labels\": [\"dragon-completed\"] } }}",
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "Finalize Lock: completed",
+      "name": "Finalize Lock: completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2480,
+        -280
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/dragon_locks?repository=eq.{{ encodeURIComponent($('Stabilize Command Version').item.json.repository) }}&issue_number=eq.{{ $('Stabilize Command Version').item.json.issueNumber }}&command_version=eq.{{ encodeURIComponent($('Stabilize Command Version').item.json.commandVersion) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'completed', finished_at: new Date().toISOString() } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MAP_EXISTING_SUPABASE_SERVICE_CREDENTIAL",
+          "name": "Supabase service role (dragon_locks writer)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "Post Failure",
+      "name": "Post Failure",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        240
+      ],
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-wq"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "osoulhospitality-web"
+        },
+        "issueNumber": "={{ $('Authorize & Classify').item.json.issueNumber }}",
+        "body": "=⚠️ **Dragon execution failed safely**\n\nThe task was accepted but the drafting assistant returned an error. No completion claim was made.\n\n- Idempotency key: `{{ $('Stabilize Command Version').item.json.idempotencyKey }}`\n- Execution ID: `{{ $('Stabilize Command Version').item.json.executionId }}`\n- Error: `{{ $json.error?.message || $json.message || 'Unknown agent error' }}`\n\nTo retry: remove terminal/busy labels, close the issue, then reopen it with `dragon-task` present.\n\n---\n⚠️ **مخرج آلي أولي؛ لا يمثل تنفيذًا خارجيًا أو اعتمادًا نهائيًا ما لم يتضمن دليل تنفيذ قابلًا للتحقق (Commit / PR / CI / ملف).**"
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "Clear Status (failed) 1",
+      "name": "Clear Status (failed) 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        240
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues/{{ $('Authorize & Classify').item.json.issueNumber }}/labels/dragon-processing",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "Add dragon-failed",
+      "name": "Add dragon-failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues/{{ $('Authorize & Classify').item.json.issueNumber }}/labels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"labels\": [\"dragon-failed\"] } }}",
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "MAP_EXISTING_GITHUB_CREDENTIAL",
+          "name": "GitHub account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "Finalize Lock: failed",
+      "name": "Finalize Lock: failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        240
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/dragon_locks?repository=eq.{{ encodeURIComponent($('Stabilize Command Version').item.json.repository) }}&issue_number=eq.{{ $('Stabilize Command Version').item.json.issueNumber }}&command_version=eq.{{ encodeURIComponent($('Stabilize Command Version').item.json.commandVersion) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'failed', finished_at: new Date().toISOString() } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MAP_EXISTING_SUPABASE_SERVICE_CREDENTIAL",
+          "name": "Supabase service role (dragon_locks writer)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "Production Notes",
+      "name": "Production Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        -520
+      ],
+      "parameters": {
+        "content": "## Dragon v3 — idempotent, authorized, non-destructive labels\n\n- Sender must be in the allowlist (currently: repo owner only).\n- opened/labeled/reopened matrix enforced in code; every other action and every non-matching label is rejected and logged.\n- Initial opened+labeled events share commandVersion `initial`; a deliberate clean reopen uses GitHub `updated_at` as a new retry cycle.\n- Lock is acquired atomically through Supabase with an explicit composite `on_conflict` target.\n- Status labels are changed individually, so unrelated labels are preserved.\n- Every received event is logged before processing.\n- Role: Executive Intake & Drafting Assistant. No execution tools. Every posted comment carries a fixed disclaimer.\n- Local automated acceptance tests pass; live n8n/Supabase acceptance is still mandatory before activation.\n\nDO NOT ACTIVATE until the live acceptance matrix is complete.",
+        "height": 420,
+        "width": 460,
+        "color": 5
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GitHub Trigger": {
+      "main": [
+        [
+          {
+            "node": "Authorize & Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorize & Classify": {
+      "main": [
+        [
+          {
+            "node": "Stabilize Command Version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stabilize Command Version": {
+      "main": [
+        [
+          {
+            "node": "Log Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Decision": {
+      "main": [
+        [
+          {
+            "node": "Restore Decision Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Decision Context": {
+      "main": [
+        [
+          {
+            "node": "Proceed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proceed?": {
+      "main": [
+        [
+          {
+            "node": "Acquire Lock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Acquire Lock": {
+      "main": [
+        [
+          {
+            "node": "Lock Acquired?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lock Acquired?": {
+      "main": [
+        [
+          {
+            "node": "Add dragon-processing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add dragon-processing": {
+      "main": [
+        [
+          {
+            "node": "Post Acceptance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finalize Lock: failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Acceptance": {
+      "main": [
+        [
+          {
+            "node": "Dragon Intake Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finalize Lock: failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Dragon Intake Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dragon Intake Assistant": {
+      "main": [
+        [
+          {
+            "node": "Normalize Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Delivery": {
+      "main": [
+        [
+          {
+            "node": "Post Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Delivery": {
+      "main": [
+        [
+          {
+            "node": "Finalize Lock: completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finalize Lock: failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Status (completed) 1": {
+      "main": [
+        [
+          {
+            "node": "Add dragon-completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add dragon-completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add dragon-completed": {
+      "main": [
+        []
+      ]
+    },
+    "Post Failure": {
+      "main": [
+        [
+          {
+            "node": "Finalize Lock: failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finalize Lock: failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Status (failed) 1": {
+      "main": [
+        [
+          {
+            "node": "Add dragon-failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add dragon-failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add dragon-failed": {
+      "main": [
+        []
+      ]
+    },
+    "Finalize Lock: completed": {
+      "main": [
+        [
+          {
+            "node": "Clear Status (completed) 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Lock: failed": {
+      "main": [
+        [
+          {
+            "node": "Clear Status (failed) 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "00000000-0000-0000-0000-000000000000",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
