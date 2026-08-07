@@ -108,23 +108,32 @@ $body = implode("\n", [
     'وقت الاستلام: ' . gmdate('Y-m-d H:i:s') . ' UTC',
 ]);
 
+$serverUser = preg_replace('/[^a-zA-Z0-9._-]/', '', get_current_user());
+$serverHost = strtolower((string) gethostname());
+$serverSender = $serverUser !== '' ? $serverUser . '@' . $serverHost : '';
+if (filter_var($serverSender, FILTER_VALIDATE_EMAIL) === false) {
+    $serverSender = '';
+}
+
 $headers = [
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset=UTF-8',
-    'From: Osool Website <info@osoulhospitality.com>',
-    'Sender: info@osoulhospitality.com',
     'X-Mailer: Osool-Hospitality-Website',
 ];
+if ($serverSender !== '') {
+    $headers[] = 'From: Osool Website <' . $serverSender . '>';
+}
 if ($email !== '') {
     $headers[] = 'Reply-To: ' . $email;
+} else {
+    $headers[] = 'Reply-To: info@osoulhospitality.com';
 }
 
 $sent = @mail(
     'info@osoulhospitality.com',
     $subject,
     $body,
-    implode("\r\n", $headers),
-    '-finfo@osoulhospitality.com'
+    implode("\r\n", $headers)
 );
 
 if (!$sent) {
