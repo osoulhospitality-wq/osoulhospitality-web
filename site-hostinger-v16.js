@@ -146,6 +146,111 @@
     host.appendChild(section);
   }
 
+  function installProjectBriefFallback() {
+    var form = document.querySelector('form[action="/submit.php"]');
+    if (!form || form.dataset.osoulStepFallback === "true") return;
+    var fieldsets = Array.prototype.slice.call(form.querySelectorAll("fieldset"));
+    var actions = form.querySelector(".brief-actions");
+    var card = form.closest(".brief-card");
+    if (fieldsets.length < 3 || !actions || !card) return;
+
+    form.dataset.osoulStepFallback = "true";
+    var step = 1;
+    var english = document.documentElement.lang.toLowerCase().indexOf("en") === 0;
+
+    function value(name) {
+      var field = form.elements.namedItem(name);
+      return field && typeof field.value === "string" ? field.value.trim() : "";
+    }
+
+    function valid(targetStep) {
+      if (targetStep === 1) return !!(value("asset_type") && value("city"));
+      if (targetStep === 2) return !!(value("stage") && value("opening_target") && value("units"));
+      var consent = form.elements.namedItem("consent");
+      return !!(
+        value("primary_gap") &&
+        value("urgency") &&
+        value("documents") &&
+        value("requested_support") &&
+        value("name") &&
+        value("organization") &&
+        (value("email") || value("phone")) &&
+        consent &&
+        consent.checked
+      );
+    }
+
+    function renderActions() {
+      actions.innerHTML = "";
+      if (step > 1) {
+        var back = document.createElement("button");
+        back.className = "brief-back";
+        back.type = "button";
+        back.dataset.osoulStepAction = "back";
+        back.textContent = english ? "Previous" : "السابق";
+        actions.appendChild(back);
+      }
+      var primary = document.createElement("button");
+      primary.className = step < 3 ? "brief-next" : "brief-submit";
+      primary.type = step < 3 ? "button" : "submit";
+      primary.dataset.osoulStepAction = step < 3 ? "next" : "submit";
+      primary.disabled = !valid(step);
+      primary.textContent = step < 3 ? (english ? "Next" : "التالي") : (english ? "Send brief" : "إرسال الموجز");
+      actions.appendChild(primary);
+    }
+
+    function refresh() {
+      fieldsets.forEach(function (fieldset, index) {
+        fieldset.hidden = index !== step - 1;
+      });
+      var counter = card.querySelector(".brief-head b");
+      if (counter) counter.textContent = "0" + step + " / 03";
+      card.querySelectorAll(".brief-progress i").forEach(function (item, index) {
+        item.classList.toggle("active", index < step);
+      });
+      renderActions();
+    }
+
+    form.addEventListener("input", function (event) {
+      event.stopPropagation();
+      refresh();
+    }, true);
+    form.addEventListener("change", function (event) {
+      event.stopPropagation();
+      refresh();
+    }, true);
+    form.addEventListener("click", function (event) {
+      var control = event.target.closest("[data-osoul-step-action]");
+      if (!control) return;
+      var action = control.dataset.osoulStepAction;
+      if (action === "next") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (valid(step)) {
+          step = Math.min(3, step + 1);
+          refresh();
+        }
+      } else if (action === "back") {
+        event.preventDefault();
+        event.stopPropagation();
+        step = Math.max(1, step - 1);
+        refresh();
+      }
+    }, true);
+    form.addEventListener("submit", function (event) {
+      var complete = valid(1) && valid(2) && valid(3);
+      if (!complete || !form.checkValidity()) {
+        event.preventDefault();
+        step = !valid(1) ? 1 : (!valid(2) ? 2 : 3);
+        refresh();
+        form.reportValidity();
+      }
+      event.stopPropagation();
+    }, true);
+
+    refresh();
+  }
+
   ["/site-v13.css", "/site-v14.css"].forEach(function (href) {
     if (document.querySelector('link[href="' + href + '"]')) return;
     var link = document.createElement("link");
@@ -162,6 +267,7 @@
   }
   addPrivacySettingsButton();
   addPrivacyDisclosure();
+  installProjectBriefFallback();
   var consent = safeStorageGet();
   var privacySignal = navigator.globalPrivacyControl === true || navigator.doNotTrack === "1";
   if (consent === "accepted" && !privacySignal) {
