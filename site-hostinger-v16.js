@@ -205,6 +205,8 @@
       });
       var counter = card.querySelector(".brief-head b");
       if (counter) counter.textContent = "0" + step + " / 03";
+      var progress = card.querySelector(".brief-progress");
+      if (progress) progress.setAttribute("aria-label", (english ? "Step " : "الخطوة ") + step + (english ? " of 3" : " من 3"));
       card.querySelectorAll(".brief-progress i").forEach(function (item, index) {
         item.classList.toggle("active", index < step);
       });
