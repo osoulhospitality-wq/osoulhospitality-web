@@ -43,7 +43,7 @@ ErrorDocument 404 /404.html
   </IfModule>
 </FilesMatch>
 
-<Files "site-hostinger-v15.js">
+<FilesMatch "^site-hostinger-v1[56]\.js$">
   <IfModule mod_headers.c>
     Header set Cache-Control "no-cache, no-store, must-revalidate"
   </IfModule>
