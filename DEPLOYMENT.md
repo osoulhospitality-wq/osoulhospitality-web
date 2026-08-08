@@ -2,9 +2,26 @@
 
 Last updated: 2026-08-08 UTC
 
+## Website v14 — Bilingual Knowledge Library and Editorial System
+
+Version 14 adds a production-ready bilingual content system: 40 Arabic articles and 40 matched English article pages across five tracks (licensing and compliance, performance and profitability, revenue and sales, development and opening, and ownership/technology/governance). The library includes full-text search, category filters, canonical URLs, reciprocal `hreflang`, Article and breadcrumb structured data, source references and related reading.
+
+The English site is no longer a single landing page. It now includes complete routes for services, outputs, about, decision scenarios, insights, contact, privacy, terms, accessibility and confirmation. The contact handler preserves the visitor's language for validation and success redirects.
+
+The v14 visual layer improves Arabic and English type stacks, body readability, heading hierarchy, colour contrast, focus visibility, reduced-motion support, responsive article layouts and print output. The versioned runtime avoids stale year-long asset caches on Hostinger.
+
+Local release evidence for v14:
+
+- `771` content, bilingual, SEO, claims, form and asset assertions passed.
+- `105` HTML files passed the internal-link resolver.
+- All generated Arabic and English library pages passed `html-validate`.
+- Existing Python notification tests and Dragon workflow tests passed.
+- PHP runtime syntax and live delivery must be rechecked on Hostinger after deployment because PHP is not installed in the local build container.
+- Cloud Browser cannot reach the local-only preview address; live responsive and visual regression checks remain a post-deployment gate.
+
 ## Website v13 — Integrated Tourism Advisory House
 
-The public website now positions Osool Hospitality as a licensed Saudi tourism advisory house combining advisory, execution and intelligence. The home page presents the full lifecycle proposition, six core capability groups, three client journeys and the Advisory–Execution–Intelligence operating model. The services page contains eight complete service families covering strategy, feasibility, licensing, compliance, development, pre-opening, operations, profitability, revenue, sales, owner representation, facilities, people and digital transformation. Arabic copy, calls to action, metadata and brand descriptors were aligned to the new positioning.
+The public website now positions Osool Hospitality as a Saudi tourism advisory house combining advisory, execution and intelligence. The home page presents the full lifecycle proposition, six core capability groups, three client journeys and the Advisory–Execution–Intelligence operating model. The services page contains eight complete service families covering strategy, feasibility, licensing, compliance, development, pre-opening, operations, profitability, revenue, sales, owner representation, facilities, people and digital transformation. Arabic copy, calls to action, metadata and brand descriptors were aligned to the new positioning. No licensing claim is published unless a current licence is evidenced and approved for disclosure.
 
 ## Command Center Public Pilot v13
 

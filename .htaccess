@@ -52,6 +52,7 @@ ErrorDocument 404 /404.html
 </FilesMatch>
 
 RewriteRule ^scripts/ - [F,L]
+RewriteRule ^content/ - [F,L]
 
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml

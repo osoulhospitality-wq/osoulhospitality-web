@@ -29,6 +29,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     exit('Method Not Allowed');
 }
 
+$language = post_value('language', 2);
+$isEnglish = $language === 'en';
+$contactPath = $isEnglish ? '/en/contact/' : '/contact/';
+$thankYouPath = $isEnglish ? '/en/thank-you/' : '/thank-you/';
+
 $currentHost = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $referer = $_SERVER['HTTP_REFERER'] ?? '';
@@ -38,12 +43,12 @@ foreach ([$origin, $referer] as $source) {
     }
     $sourceHost = strtolower((string) parse_url($source, PHP_URL_HOST));
     if ($sourceHost !== '' && $currentHost !== '' && $sourceHost !== $currentHost) {
-        redirect_to('/contact/?status=security#project-brief');
+        redirect_to($contactPath . '?status=security#project-brief');
     }
 }
 
 if (post_value('website', 200) !== '') {
-    redirect_to('/thank-you/');
+    redirect_to($thankYouPath);
 }
 
 $formName = post_value('form_name', 80);
@@ -57,6 +62,7 @@ $primaryGap = post_value('primary_gap', 220);
 $urgency = post_value('urgency', 120);
 $documents = post_value('documents', 160);
 $support = post_value('requested_support', 180);
+$description = post_value('description', 2000);
 $name = post_value('name', 120);
 $organization = post_value('organization', 180);
 $email = post_value('email', 180);
@@ -64,19 +70,19 @@ $phone = post_value('phone', 60);
 
 $required = [$formName, $assetType, $city, $stage, $opening, $units, $primaryGap, $urgency, $documents, $support, $name, $organization];
 if (in_array('', $required, true) || $formName !== 'hospitality_readiness_brief' || $consent !== 'yes') {
-    redirect_to('/contact/?status=incomplete#project-brief');
+    redirect_to($contactPath . '?status=incomplete#project-brief');
 }
 
 if ($email === '' && $phone === '') {
-    redirect_to('/contact/?status=contact#project-brief');
+    redirect_to($contactPath . '?status=contact#project-brief');
 }
 
 if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-    redirect_to('/contact/?status=email#project-brief');
+    redirect_to($contactPath . '?status=email#project-brief');
 }
 
 if ($phone !== '' && !preg_match('/^[0-9+\s()\-]{7,30}$/u', $phone)) {
-    redirect_to('/contact/?status=phone#project-brief');
+    redirect_to($contactPath . '?status=phone#project-brief');
 }
 
 $subjectPlain = 'موجز جاهزية جديد - ' . $organization . ' - ' . $assetType;
@@ -103,6 +109,7 @@ $body = implode("\n", [
     'مدى الاستعجال: ' . $urgency,
     'مشاركة المستندات: ' . $documents,
     'الدعم المطلوب: ' . $support,
+    'سياق إضافي: ' . ($description !== '' ? $description : 'غير مدخل'),
     '',
     'الموافقة على سياسة الخصوصية: نعم',
     'وقت الاستلام: ' . gmdate('Y-m-d H:i:s') . ' UTC',
@@ -137,7 +144,7 @@ $sent = @mail(
 );
 
 if (!$sent) {
-    redirect_to('/contact/?status=send-error#project-brief');
+    redirect_to($contactPath . '?status=send-error#project-brief');
 }
 
-redirect_to('/thank-you/');
+redirect_to($thankYouPath);

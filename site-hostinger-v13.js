@@ -25,7 +25,15 @@
 
   var params = new URLSearchParams(window.location.search);
   var status = params.get("status");
-  var messages = {
+  var englishStatus = document.documentElement.lang && document.documentElement.lang.indexOf("en") === 0;
+  var messages = englishStatus ? {
+    "incomplete": "Some required fields are incomplete. Review the brief and submit again.",
+    "contact": "Enter at least one professional email address or contact number.",
+    "email": "The email address format is not valid.",
+    "phone": "The contact number format is not valid.",
+    "security": "The request source could not be verified. Open the form directly from this website.",
+    "send-error": "The brief could not be sent. Email info@osoulhospitality.com or use WhatsApp."
+  } : {
     "incomplete": "بعض الحقول المطلوبة غير مكتملة. راجع الموجز ثم أعد الإرسال.",
     "contact": "أدخل بريدًا مهنيًا أو رقم تواصل واحدًا على الأقل.",
     "email": "صيغة البريد الإلكتروني غير صحيحة.",
@@ -90,11 +98,13 @@
   }
 
   function addStylesheet() {
-    if (document.querySelector('link[href="/site-v13.css"]')) return;
-    var link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "/site-v13.css";
-    document.head.appendChild(link);
+    ["/site-v13.css", "/site-v14.css"].forEach(function (href) {
+      if (document.querySelector('link[href="' + href + '"]')) return;
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    });
   }
 
   function updateMeta(name, content, property) {
@@ -111,6 +121,10 @@
       node.textContent = english ? "Strategy • Execution • Growth" : "استراتيجية • تنفيذ • نمو";
     });
     if (!english) {
+      var bilingualRoutes = ["/solutions", "/outputs", "/about", "/scenarios", "/insights", "/contact", "/privacy", "/terms", "/accessibility", "/thank-you"];
+      var currentPath = window.location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "") || "/";
+      var englishPath = currentPath === "/" ? "/en/" : (bilingualRoutes.some(function (route) { return currentPath === route || currentPath.indexOf(route + "/") === 0; }) ? "/en" + currentPath + "/" : "/en/");
+      document.querySelectorAll("a.language-link").forEach(function (node) { node.setAttribute("href", englishPath); });
       document.querySelectorAll('a[href="/solutions"]').forEach(function (node) {
         if (node.textContent.trim() === "كيف تبدأ") node.textContent = "الخدمات";
       });
@@ -119,7 +133,7 @@
       });
       document.querySelectorAll(".mobile-menu .mobile-cta").forEach(function (node) { node.textContent = "ابدأ مشروعك"; });
       var footerCopy = document.querySelector(".site-footer .footer-brand > p");
-      if (footerCopy) footerCopy.textContent = "بيت خبرة سعودي مرخص للاستشارات السياحية، يجمع الاستراتيجية والدراسات والامتثال والتطوير والتشغيل وتحسين الربحية، ويقود التنفيذ حتى ظهور نتائج قابلة للقياس.";
+      if (footerCopy) footerCopy.textContent = "بيت خبرة سعودي متخصص في الاستشارات السياحية، يجمع الاستراتيجية والدراسات والامتثال والتطوير والتشغيل وتحسين الربحية، ويقود التنفيذ حتى ظهور نتائج قابلة للقياس.";
     }
   }
 
@@ -129,7 +143,7 @@
     var hero = document.querySelector(".hero");
     if (!hero) return;
     hero.classList.add("osoul-v13-home-hero");
-    setHTML(".hero .eyebrow", "<i></i> بيت خبرة سعودي مرخص للاستشارات السياحية وتطوير منشآت الضيافة");
+    setHTML(".hero .eyebrow", "<i></i> بيت خبرة سعودي متخصص في الاستشارات السياحية وتطوير منشآت الضيافة");
     setHTML(".hero h1", "من الفكرة والتحدي<br><em>إلى أصل ينجح وينمو.</em>");
     setText(".hero-copy > p", "نقدّم الاستراتيجية والدراسات والترخيص والتطوير والتشغيل وتحسين الربحية، ثم نقود التنفيذ من القرار الأول حتى استقرار الأداء—بخبرة ميدانية، بيانات موثقة، ومسؤوليات واضحة.");
     var heroButtons = document.querySelectorAll(".hero-actions a");
@@ -183,7 +197,7 @@
     }
 
     document.title = "أصول الضيافة | بيت خبرة سعودي للاستشارات السياحية والتنفيذ";
-    updateMeta("description", "بيت خبرة سعودي مرخص للاستشارات السياحية يقدم الاستراتيجية ودراسات الجدوى والترخيص والتطوير والتشغيل وتحسين الربحية وتمثيل المالك، ويقود التنفيذ في المملكة العربية السعودية.");
+    updateMeta("description", "بيت خبرة سعودي متخصص في الاستشارات السياحية يقدم الاستراتيجية ودراسات الجدوى والترخيص والتطوير والتشغيل وتحسين الربحية وتمثيل المالك، ويقود التنفيذ في المملكة العربية السعودية.");
     updateMeta("og:title", "أصول الضيافة | استشارات سياحية وتنفيذ من الفكرة إلى النمو", true);
     updateMeta("og:description", "استراتيجية ودراسات وترخيص وتطوير وتشغيل وتحسين ربحية وتمثيل مالك تحت قيادة واحدة.", true);
   }
@@ -210,7 +224,7 @@
     if (intro) intro.classList.add("osoul-v13-page-intro");
     setHTML(".page-intro .eyebrow", "<i></i> من نحن");
     setText(".page-intro h1", "خبرة ميدانية تقود القرار من الاستراتيجية حتى التنفيذ.");
-    setText(".page-intro p", "أصول الضيافة بيت خبرة سعودي مرخص للاستشارات السياحية، بُني لسد الفجوة بين التقرير الاستشاري والواقع التشغيلي. نجمع خبرات السوق والامتثال والتطوير والأداء ضمن قيادة واحدة تخدم المستثمر والمالك والمشغّل.");
+    setText(".page-intro p", "أصول الضيافة بيت خبرة سعودي متخصص في الاستشارات السياحية، بُني لسد الفجوة بين التقرير الاستشاري والواقع التشغيلي. نجمع خبرات السوق والامتثال والتطوير والأداء ضمن قيادة واحدة تخدم المستثمر والمالك والمشغّل.");
     document.title = "عن أصول الضيافة | خبرة سعودية في الاستشارات السياحية والتنفيذ";
   }
 
@@ -226,6 +240,7 @@
   function enhanceEnglish() {
     if (location.pathname.indexOf("/en") !== 0) return;
     document.body.classList.add("english-page");
+    if (location.pathname !== "/en" && location.pathname !== "/en/" && location.pathname !== "/en/index.html") return;
     setText(".english-hero .shell > span", "Saudi tourism advisory, execution and intelligence");
     setHTML(".english-hero h1", "From opportunity and complexity<br><span class=\"osoul-v13-accent\">to a hospitality asset that performs.</span>");
     setText(".english-hero p", "Osool Hospitality brings strategy, feasibility, licensing, development, operations, profitability improvement and owner representation under one accountable Saudi-led advisory platform.");
@@ -240,7 +255,7 @@
     enhanceAbout();
     enhanceContact();
     enhanceEnglish();
-    document.documentElement.setAttribute("data-osoul-version", "13");
+    document.documentElement.setAttribute("data-osoul-version", "14");
   }
 
   if (document.readyState === "loading") {

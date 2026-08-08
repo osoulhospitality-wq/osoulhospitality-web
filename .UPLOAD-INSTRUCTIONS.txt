@@ -1,11 +1,14 @@
-OSOOL HOSPITALITY - HOSTINGER RELEASE 13
+OSOOL HOSPITALITY - HOSTINGER RELEASE 14
 
 1. Back up the existing public_html directory.
 2. Upload the ZIP contents directly into public_html.
 3. Confirm index.html and .htaccess are directly inside public_html.
 4. Confirm PHP mail is enabled and test the contact form.
 5. Clear Hostinger and browser cache.
-6. Verify https://osoulhospitality.com, /contact/, /outputs/, sitemap.xml and robots.txt.
+6. Verify https://osoulhospitality.com, /insights/, /en/, /en/insights/, /contact/, /en/contact/, sitemap.xml and robots.txt.
+7. Test search and all five category filters in both insight libraries.
+8. Open one Arabic article and its English counterpart; verify the language switch preserves the article.
+9. Submit non-sensitive test briefs from Arabic and English; verify language-specific success redirects and mailbox delivery.
 
 The contact form sends to info@osoulhospitality.com through submit.php.
 If PHP mail is disabled, configure SMTP or Hostinger email routing before launching campaigns.
