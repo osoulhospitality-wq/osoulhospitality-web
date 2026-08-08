@@ -47,8 +47,8 @@
     "features": ["search", "category filters", "canonical URLs", "hreflang", "Article JSON-LD", "official source references"]
   },
   "quality_gates": {
-    "release_assertions": 771,
-    "html_files_link_checked": 105,
+    "release_assertions": 796,
+    "html_files_link_checked": 108,
     "generated_html_standard_validation": "pass",
     "automation_tests": "pass",
     "licensing_claim_gate": "pass — no unevidenced licensing claim is published"
@@ -76,7 +76,7 @@
   "enterprise_activation": {
     "pack": "command-center/enterprise",
     "public_upload": true,
-    "database_status": "schema applied; security advisor clean; MFA and RLS enforced",
+    "database_status": "schema applied; security advisor clean; MFA and RLS enforced; no owner user or verified TOTP factor yet",
     "requires": [
       "owner account enrollment",
       "live MFA factor verification",
