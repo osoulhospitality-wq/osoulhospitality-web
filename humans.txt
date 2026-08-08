@@ -1,5 +1,5 @@
 Osool Hospitality
-Saudi owner-side hospitality readiness advisory
+Saudi tourism advisory, execution and intelligence
 Riyadh, Saudi Arabia
 Contact: info@osoulhospitality.com
-Release: 7.0 - 2026-07-26
+Release: 13.0 - 2026-08-08
