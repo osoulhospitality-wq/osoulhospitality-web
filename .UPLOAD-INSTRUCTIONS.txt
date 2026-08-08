@@ -1,4 +1,4 @@
-OSOOL HOSPITALITY - HOSTINGER RELEASE 14
+OSOOL HOSPITALITY - HOSTINGER RELEASE 15
 
 1. Back up the existing public_html directory.
 2. Upload the ZIP contents directly into public_html.

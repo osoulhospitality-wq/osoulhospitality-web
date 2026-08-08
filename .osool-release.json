@@ -1,6 +1,6 @@
 {
   "name": "Osool Hospitality Hostinger public_html",
-  "version": "14.0.0",
+  "version": "15.0.0",
   "date": "2026-08-08",
   "domain": "https://osoulhospitality.com",
   "routes": [
@@ -27,10 +27,18 @@
     "en/accessibility",
     "en/thank-you",
     "command-center",
-    "command-center/app"
+    "command-center/app",
+    "command-center/enterprise"
   ],
   "form": "submit.php -> info@osoulhospitality.com",
-  "analytics": "disabled",
+  "analytics": {
+    "provider": "HubSpot",
+    "portal_id": "149059794",
+    "data_region": "EU1",
+    "mode": "opt-in only",
+    "global_privacy_control": "honored",
+    "non_hubspot_form_capture": "tracking code ready; account setting must remain enabled"
+  },
   "content_library": {
     "articles": 40,
     "languages": ["ar-SA", "en-SA"],
@@ -46,7 +54,7 @@
     "licensing_claim_gate": "pass — no unevidenced licensing claim is published"
   },
   "command_center": {
-    "mode": "public pilot: sanitized Dragon request feed plus browser-local commercial prototypes",
+    "mode": "public pilot plus private Supabase enterprise portal",
     "server_storage": "disabled",
     "features": [
       "sanitized public Dragon request center",
@@ -67,16 +75,15 @@
   },
   "enterprise_activation": {
     "pack": "command-center/enterprise",
-    "public_upload": false,
+    "public_upload": true,
+    "database_status": "schema applied; security advisor clean; MFA and RLS enforced",
     "requires": [
-      "Supabase project",
-      "owner account",
-      "MFA",
-      "RLS verification",
-      "private storage bucket",
+      "owner account enrollment",
+      "live MFA factor verification",
+      "role-based negative test sessions",
       "backup and restore test",
       "PDPL data classification and retention decision",
-      "negative authorization and cross-tenant tests"
+      "cross-border transfer approval for the selected project region"
     ]
   },
   "website_positioning": {

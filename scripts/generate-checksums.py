@@ -7,8 +7,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / ".checksums.sha256"
-EXCLUDED_DIRS = {".git", "__pycache__", "automation", "content", "docs", "scripts"}
-EXCLUDED_FILES = {".checksums.sha256", "DEPLOYMENT.md"}
+EXCLUDED_DIRS = {".git", "__pycache__", "automation", "content", "docs", "node_modules", "scripts", "src"}
+EXCLUDED_FILES = {
+    ".checksums.sha256",
+    ".gitignore",
+    "DEPLOYMENT.md",
+    "package.json",
+    "package-lock.json",
+    "command-center/enterprise/README.md",
+    "command-center/enterprise/config.example.js",
+    "command-center/enterprise/schema.sql",
+}
 
 
 def included(path: Path) -> bool:

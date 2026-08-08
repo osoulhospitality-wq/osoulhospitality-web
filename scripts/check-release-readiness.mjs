@@ -24,7 +24,7 @@ const collectTextFiles = (directory) => {
   }
 };
 collectTextFiles(root);
-const unevidencedLicenceClaim = /بيت خبرة سعودي مرخص|مرخص للاستشارات السياحية|Saudi-licensed tourism advisory house|licensed Saudi tourism advisory house/i;
+const unevidencedLicenceClaim = /بيت خبرة سعودي[^\n<]{0,80}مرخ[ّ]?ص|مرخ[ّ]?ص[^\n<]{0,60}للاستشارات السياحية|Saudi[^\n<]{0,80}licensed[^\n<]{0,80}(?:tourism|hospitality) advisory|licensed Saudi[^\n<]{0,80}(?:tourism|hospitality) advisory/i;
 assert(!releaseTextFiles.some((file) => unevidencedLicenceClaim.test(fs.readFileSync(file, "utf8"))), "Public release contains no unevidenced licensing claim");
 
 assert(articles.length === 40, "Content data contains exactly 40 articles");
@@ -47,7 +47,7 @@ for (const article of articles) {
     assert(html.includes('rel="canonical"'), `${relative} includes a canonical URL`);
     assert((html.match(/hreflang=/g) || []).length === 3, `${relative} includes bilingual hreflang links`);
     assert(html.includes('class="osoul-source-list"'), `${relative} includes source references`);
-    assert(html.includes('/site-hostinger-v14.js'), `${relative} loads the v14 site runtime`);
+    assert(html.includes('/site-hostinger-v15.js'), `${relative} loads the v15 site runtime`);
     if (lang === "en") {
       const arabicChars = (text.match(/[\u0600-\u06ff]/g) || []).length;
       assert(arabicChars <= 20, `${relative} has no untranslated Arabic copy beyond the language switch`);
@@ -87,12 +87,43 @@ const sitemap = read("sitemap.xml");
 assert((sitemap.match(/<url>/g) || []).length === 101, "Sitemap contains 101 public URLs");
 assert((sitemap.match(/\/insights\//g) || []).length === 82, "Sitemap contains both library indexes and 80 article URLs");
 
-for (const asset of ["site-v14.css", "site-hostinger-v14.js", "site-hostinger-v13.js", "insights-v14.js", "brand/osool-mark-v8.svg", "images/hero-riyadh-v8.webp"]) assert(exists(asset), `${asset} exists`);
-const css = read("site-v14.css");
-assert((css.match(/{/g) || []).length === (css.match(/}/g) || []).length, "site-v14.css has balanced braces");
-assert(css.includes("prefers-reduced-motion"), "site-v14.css supports reduced motion");
-assert(css.includes(":focus-visible"), "site-v14.css provides visible keyboard focus");
-assert(css.includes("--osoul-font-ar"), "site-v14.css defines an Arabic font stack");
+for (const asset of ["site-v15.css", "site-hostinger-v15.js", "site-hostinger-v13.js", "insights-v14.js", "brand/osool-mark-v8.svg", "images/hero-riyadh-v8.webp"]) assert(exists(asset), `${asset} exists`);
+const css = read("site-v15.css");
+assert((css.match(/{/g) || []).length === (css.match(/}/g) || []).length, "site-v15.css has balanced braces");
+assert(css.includes("prefers-reduced-motion"), "site-v15.css supports reduced motion");
+assert(css.includes(":focus-visible"), "site-v15.css provides visible keyboard focus");
+assert(css.includes("--osoul-font-ar"), "site-v15.css defines an Arabic font stack");
+const runtime = read("site-hostinger-v15.js");
+assert(runtime.includes('HUBSPOT_PORTAL_ID = "149059794"'), "HubSpot analytics uses the verified portal ID");
+assert(runtime.includes("hubspot-opt-in"), "HubSpot tracking is explicitly opt-in");
+assert(runtime.includes("navigator.globalPrivacyControl"), "Analytics honors Global Privacy Control");
+assert(runtime.includes('["doNotTrack"]'), "Analytics exposes a durable opt-out path");
+assert(runtime.includes('["revokeCookieConsent"]'), "Analytics revokes HubSpot consent cookies");
+assert(css.includes(".osoul-consent-panel"), "Consent panel is styled responsively");
+const headers = read(".htaccess");
+assert(headers.includes("https://js-eu1.hs-scripts.com"), "CSP permits only the configured HubSpot tracking region");
+assert(headers.includes("https://*.hscollectedforms.net"), "CSP permits consented non-HubSpot form capture");
+assert(headers.includes("https://fdkfxlvsluiqrgedokdm.supabase.co"), "CSP permits only the configured Supabase project");
+
+for (const asset of [
+  "command-center/enterprise/index.html",
+  "command-center/enterprise/app.css",
+  "command-center/enterprise/app.bundle.js",
+  "command-center/enterprise/config.js",
+  "command-center/enterprise/schema.sql"
+]) assert(exists(asset), `${asset} exists`);
+const enterpriseHtml = read("command-center/enterprise/index.html");
+const enterpriseBundle = read("command-center/enterprise/app.bundle.js");
+const enterpriseConfig = read("command-center/enterprise/config.js");
+const enterpriseSchema = read("command-center/enterprise/schema.sql");
+assert(enterpriseHtml.includes('name="robots" content="noindex,nofollow,noarchive"'), "Enterprise route is excluded from indexing");
+assert(enterpriseBundle.includes("challengeAndVerify"), "Enterprise client performs the MFA challenge");
+assert(enterpriseBundle.includes("getAuthenticatorAssuranceLevel"), "Enterprise client verifies the AAL level");
+assert(enterpriseSchema.includes("as restrictive for all to authenticated"), "Database MFA policy is restrictive");
+assert(enterpriseSchema.includes("organization_owner_bootstrap"), "Tenant creation bootstraps an owner membership");
+assert(enterpriseSchema.includes("prevent_org_reassignment"), "Tenant reassignment is blocked by database triggers");
+assert(enterpriseSchema.includes("command-center-documents"), "Private document bucket is declared");
+assert(!/service[_-]?role|secret[_-]?key/i.test(enterpriseConfig + enterpriseBundle), "Browser assets contain no service-role or secret key");
 
 if (failures.length) {
   console.error(`FAIL: ${failures.length} of ${checks.length} checks failed`);

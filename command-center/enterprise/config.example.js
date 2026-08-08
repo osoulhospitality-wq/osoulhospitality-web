@@ -1,5 +1,4 @@
-window.OSOUL_ENTERPRISE = {
+window.OSOUL_ENTERPRISE_CONFIG = Object.freeze({
   supabaseUrl: "https://YOUR_PROJECT.supabase.co",
-  supabaseAnonKey: "PUBLIC_ANON_KEY_ONLY",
-  mode: "disabled"
-};
+  supabasePublishableKey: "PUBLIC_PUBLISHABLE_KEY_ONLY"
+});

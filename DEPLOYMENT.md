@@ -2,15 +2,15 @@
 
 Last updated: 2026-08-08 UTC
 
-## Website v14 — Bilingual Knowledge Library and Editorial System
+## Website v15 — CRM, consent-first analytics and enterprise security
 
 Version 14 adds a production-ready bilingual content system: 40 Arabic articles and 40 matched English article pages across five tracks (licensing and compliance, performance and profitability, revenue and sales, development and opening, and ownership/technology/governance). The library includes full-text search, category filters, canonical URLs, reciprocal `hreflang`, Article and breadcrumb structured data, source references and related reading.
 
 The English site is no longer a single landing page. It now includes complete routes for services, outputs, about, decision scenarios, insights, contact, privacy, terms, accessibility and confirmation. The contact handler preserves the visitor's language for validation and success redirects.
 
-The v14 visual layer improves Arabic and English type stacks, body readability, heading hierarchy, colour contrast, focus visibility, reduced-motion support, responsive article layouts and print output. The versioned runtime avoids stale year-long asset caches on Hostinger.
+The v15 layer retains the bilingual editorial system and adds opt-in HubSpot analytics, a persistent privacy-settings control, Global Privacy Control support, a stronger licensing-claim gate, and the Supabase enterprise activation path with database-enforced MFA.
 
-Local release evidence for v14:
+Local release evidence for v15:
 
 - `771` content, bilingual, SEO, claims, form and asset assertions passed.
 - `105` HTML files passed the internal-link resolver.

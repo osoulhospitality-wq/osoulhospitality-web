@@ -44,7 +44,7 @@ function head({ lang, title, description, pathname, alternate, type = "website",
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/site-v13.css">
-  <link rel="stylesheet" href="/site-v14.css">
+  <link rel="stylesheet" href="/site-v15.css">
   <meta name="theme-color" content="#0b3b34">
   ${jsonLd.map((data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>`).join("\n  ")}
 </head>`;
@@ -77,7 +77,7 @@ function footer(lang) {
 </div><div class="shell footer-bottom"><span>© 2026 ${ar ? "أصول الضيافة. جميع الحقوق محفوظة." : "Osool Hospitality. All rights reserved."}</span><span>${ar ? "آخر تحديث: 8 أغسطس 2026." : "Last updated: 8 August 2026."}</span></div></footer>`;
 }
 
-const scripts = (library = false) => `${library ? '<script defer src="/insights-v14.js"></script>' : ""}<script defer src="/site-hostinger-v14.js"></script>`;
+const scripts = (library = false) => `${library ? '<script defer src="/insights-v14.js"></script>' : ""}<script defer src="/site-hostinger-v15.js"></script>`;
 
 function list(items) { return `<ul>${items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>`; }
 
