@@ -8,6 +8,8 @@ header('X-Osool-Lead-Intake: v2');
 
 const SUPABASE_URL = 'https://fdkfxlvsluiqrgedokdm.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hX1nbly1AzEtBhCUWoyrgw_9EU2Bxwr';
+const HUBSPOT_PORTAL_ID = '149059794';
+const HUBSPOT_FORM_ID = 'd176a175-114f-48c9-a2f8-48d4f8418625';
 
 function redirect_to(string $path): never {
     header('Location: ' . $path, true, 303);
@@ -63,6 +65,60 @@ function persist_lead(array $payload): bool {
             'header' => implode("\r\n", $headers),
             'content' => $json,
             'timeout' => 8,
+            'ignore_errors' => true,
+        ],
+    ]);
+    $result = @file_get_contents($url, false, $context);
+    $statusLine = $http_response_header[0] ?? '';
+    return $result !== false && preg_match('/\s2\d\d\s/', $statusLine) === 1;
+}
+
+function submit_to_hubspot(array $fields, string $pageUri, string $pageName): bool {
+    $url = 'https://api.hsforms.com/submissions/v3/integration/submit/'
+        . HUBSPOT_PORTAL_ID . '/' . HUBSPOT_FORM_ID;
+    $payload = [
+        'submittedAt' => (string) round(microtime(true) * 1000),
+        'fields' => [],
+        'context' => [
+            'pageUri' => $pageUri,
+            'pageName' => $pageName,
+        ],
+    ];
+
+    foreach ($fields as $name => $value) {
+        if ($value !== '') {
+            $payload['fields'][] = ['name' => $name, 'value' => $value];
+        }
+    }
+
+    $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($json === false) {
+        return false;
+    }
+
+    $headers = ['Content-Type: application/json'];
+    if (function_exists('curl_init')) {
+        $handle = curl_init($url);
+        curl_setopt_array($handle, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $json,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+        curl_exec($handle);
+        $status = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        curl_close($handle);
+        return $status >= 200 && $status < 300;
+    }
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => implode("\r\n", $headers),
+            'content' => $json,
+            'timeout' => 10,
             'ignore_errors' => true,
         ],
     ]);
@@ -187,6 +243,38 @@ $leadPersisted = persist_lead([
 
 if (!$leadPersisted) {
     error_log('Osool website lead persistence failed.');
+}
+
+$hubspotSubmitted = false;
+if ($email !== '') {
+    $nameParts = preg_split('/\s+/u', trim($name), 2);
+    $firstName = $nameParts[0] ?? $name;
+    $lastName = $nameParts[1] ?? '';
+    $hubspotMessage = implode("\n", [
+        'الجهة: ' . $organization,
+        'نوع الأصل: ' . $assetType,
+        'المدينة: ' . $city,
+        'المرحلة: ' . $stage,
+        'الموعد المستهدف: ' . $opening,
+        'عدد الغرف أو الوحدات: ' . $units,
+        'الفجوة الرئيسية: ' . $primaryGap,
+        'مدى الاستعجال: ' . $urgency,
+        'مشاركة المستندات: ' . $documents,
+        'الدعم المطلوب: ' . $support,
+        'سياق إضافي: ' . ($description !== '' ? $description : 'غير مدخل'),
+        'الموافقة على سياسة الخصوصية: نعم',
+    ]);
+    $hubspotSubmitted = submit_to_hubspot([
+        'firstname' => $firstName,
+        'lastname' => $lastName,
+        'email' => $email,
+        'phone' => $phone,
+        'message' => $hubspotMessage,
+    ], 'https://' . $currentHost . $contactPath, 'Osool Hospitality Website Contact');
+}
+
+if ($email !== '' && !$hubspotSubmitted) {
+    error_log('Osool website HubSpot form submission failed; fallback channels remain active.');
 }
 
 $serverUser = preg_replace('/[^a-zA-Z0-9._-]/', '', get_current_user());
