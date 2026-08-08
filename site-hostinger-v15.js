@@ -3,6 +3,8 @@
   var CONSENT_KEY = "osoul_analytics_consent_v1";
   var HUBSPOT_PORTAL_ID = "149059794";
   var HUBSPOT_SCRIPT = "https://js-eu1.hs-scripts.com/" + HUBSPOT_PORTAL_ID + ".js";
+  var GA4_MEASUREMENT_ID = "G-HY8WJ4SDCM";
+  var GA4_SCRIPT = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA4_MEASUREMENT_ID);
 
   function safeStorageGet() {
     try { return window.localStorage.getItem(CONSENT_KEY); } catch (_) { return null; }
@@ -33,11 +35,38 @@
     window._hsp.push(["revokeCookieConsent"]);
   }
 
+  function loadGA4() {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    window.gtag("js", new Date());
+    window.gtag("consent", "update", { analytics_storage: "granted" });
+    window.gtag("config", GA4_MEASUREMENT_ID, {
+      anonymize_ip: true,
+      allow_google_signals: false,
+      page_location: window.location.href,
+      page_title: document.title
+    });
+    if (document.getElementById("osoul-ga4-loader")) return;
+    var script = document.createElement("script");
+    script.id = "osoul-ga4-loader";
+    script.async = true;
+    script.src = GA4_SCRIPT;
+    script.dataset.osoulAnalytics = "ga4-opt-in";
+    document.head.appendChild(script);
+  }
+
+  function stopGA4() {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    window.gtag("consent", "default", { analytics_storage: "denied" });
+    window["ga-disable-" + GA4_MEASUREMENT_ID] = true;
+  }
+
   function privacyCopy() {
     var english = document.documentElement.lang.toLowerCase().indexOf("en") === 0;
     return english ? {
       title: "Your privacy, your choice",
-      body: "With your permission, Osool Hospitality uses HubSpot analytics to understand visits and improve enquiries. No optional analytics loads before you accept.",
+      body: "With your permission, Osool Hospitality uses Google Analytics 4 and HubSpot analytics to understand visits and improve enquiries. No optional analytics loads before you accept.",
       accept: "Accept analytics",
       reject: "Essential only",
       settings: "Privacy settings",
@@ -45,7 +74,7 @@
       policyHref: "/en/privacy/"
     } : {
       title: "خصوصيتك بقرارك",
-      body: "بعد موافقتك فقط، تستخدم أصول الضيافة تحليلات HubSpot لفهم الزيارات وتحسين طلبات المشاريع. لا تُحمّل التحليلات الاختيارية قبل القبول.",
+      body: "بعد موافقتك فقط، تستخدم أصول الضيافة Google Analytics 4 وتحليلات HubSpot لفهم الزيارات وتحسين طلبات المشاريع. لا تُحمّل التحليلات الاختيارية قبل القبول.",
       accept: "قبول التحليلات",
       reject: "الضروري فقط",
       settings: "إعدادات الخصوصية",
@@ -74,7 +103,13 @@
       if (!button) return;
       var accepted = button.dataset.consent === "accept";
       safeStorageSet(accepted ? "accepted" : "rejected");
-      if (accepted) loadHubSpot(); else stopHubSpot();
+      if (accepted) {
+        loadHubSpot();
+        loadGA4();
+      } else {
+        stopHubSpot();
+        stopGA4();
+      }
       removeConsentPanel();
     });
     document.body.appendChild(panel);
@@ -128,7 +163,12 @@
   addPrivacyDisclosure();
   var consent = safeStorageGet();
   var privacySignal = navigator.globalPrivacyControl === true || navigator.doNotTrack === "1";
-  if (consent === "accepted" && !privacySignal) loadHubSpot();
-  else if (consent === "rejected" || privacySignal) stopHubSpot();
+  if (consent === "accepted" && !privacySignal) {
+    loadHubSpot();
+    loadGA4();
+  } else if (consent === "rejected" || privacySignal) {
+    stopHubSpot();
+    stopGA4();
+  }
   else showConsentPanel();
 })();
