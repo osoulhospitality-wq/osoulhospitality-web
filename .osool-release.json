@@ -1,7 +1,7 @@
 {
   "name": "Osool Hospitality Hostinger public_html",
   "version": "13.0.0",
-  "date": "2026-08-07",
+  "date": "2026-08-08",
   "domain": "https://osoulhospitality.com",
   "routes": [
     "/",
@@ -53,6 +53,25 @@
       "backup and restore test",
       "PDPL data classification and retention decision",
       "negative authorization and cross-tenant tests"
+    ]
+  },
+  "website_positioning": {
+    "model": "integrated Saudi tourism advisory house: advisory, execution and intelligence",
+    "primary_audiences": [
+      "new tourism investors and developers",
+      "existing hospitality assets requiring compliance or performance improvement",
+      "owners requiring operator oversight and asset management",
+      "international operators and advisers entering Saudi Arabia"
+    ],
+    "service_families": [
+      "strategy and feasibility",
+      "licensing, classification and compliance",
+      "development and operational design",
+      "pre-opening and operations",
+      "performance, profitability, contracts and suppliers",
+      "revenue, sales and distribution",
+      "owner representation and asset management",
+      "institutional and digital transformation"
     ]
   }
 }
