@@ -1,6 +1,6 @@
 {
   "name": "Osool Hospitality Hostinger public_html",
-  "version": "13.0.0",
+  "version": "14.0.0",
   "date": "2026-08-08",
   "domain": "https://osoulhospitality.com",
   "routes": [
@@ -16,11 +16,35 @@
     "terms",
     "accessibility",
     "en",
+    "en/solutions",
+    "en/outputs",
+    "en/about",
+    "en/scenarios",
+    "en/insights",
+    "en/contact",
+    "en/privacy",
+    "en/terms",
+    "en/accessibility",
+    "en/thank-you",
     "command-center",
     "command-center/app"
   ],
   "form": "submit.php -> info@osoulhospitality.com",
   "analytics": "disabled",
+  "content_library": {
+    "articles": 40,
+    "languages": ["ar-SA", "en-SA"],
+    "published_pages": 80,
+    "tracks": 5,
+    "features": ["search", "category filters", "canonical URLs", "hreflang", "Article JSON-LD", "official source references"]
+  },
+  "quality_gates": {
+    "release_assertions": 771,
+    "html_files_link_checked": 105,
+    "generated_html_standard_validation": "pass",
+    "automation_tests": "pass",
+    "licensing_claim_gate": "pass — no unevidenced licensing claim is published"
+  },
   "command_center": {
     "mode": "public pilot: sanitized Dragon request feed plus browser-local commercial prototypes",
     "server_storage": "disabled",
