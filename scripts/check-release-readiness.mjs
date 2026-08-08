@@ -102,6 +102,9 @@ assert(runtime.includes('["revokeCookieConsent"]'), "Analytics revokes HubSpot c
 assert(css.includes(".osoul-consent-panel"), "Consent panel is styled responsively");
 const headers = read(".htaccess");
 assert(headers.includes("https://js-eu1.hs-scripts.com"), "CSP permits only the configured HubSpot tracking region");
+assert(headers.includes("https://js-eu1.hs-analytics.net"), "CSP permits HubSpot analytics in the configured EU1 region");
+assert(headers.includes("https://js-eu1.hscollectedforms.net"), "CSP permits consented HubSpot collected-forms code in EU1");
+assert(headers.includes("https://js-eu1.hs-banner.com"), "CSP permits HubSpot consent-banner support code in EU1");
 assert(headers.includes("https://*.hscollectedforms.net"), "CSP permits consented non-HubSpot form capture");
 assert(headers.includes("https://fdkfxlvsluiqrgedokdm.supabase.co"), "CSP permits only the configured Supabase project");
 

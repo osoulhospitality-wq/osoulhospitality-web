@@ -12,12 +12,12 @@ The v15 layer retains the bilingual editorial system and adds opt-in HubSpot ana
 
 Local release evidence for v15:
 
-- `771` content, bilingual, SEO, claims, form and asset assertions passed.
-- `105` HTML files passed the internal-link resolver.
+- `796` content, bilingual, SEO, claims, form, analytics and enterprise-security assertions passed.
+- `108` HTML files passed the internal-link resolver.
 - All generated Arabic and English library pages passed `html-validate`.
 - Existing Python notification tests and Dragon workflow tests passed.
 - PHP runtime syntax and live delivery must be rechecked on Hostinger after deployment because PHP is not installed in the local build container.
-- Cloud Browser cannot reach the local-only preview address; live responsive and visual regression checks remain a post-deployment gate.
+- Live production rendering, consent controls and enterprise-login routing were rechecked in the cloud browser on 2026-08-08 UTC.
 
 ## Website v13 — Integrated Tourism Advisory House
 
@@ -40,7 +40,7 @@ Hostinger is the active production hosting path for the official domain. Do not 
 
 ## Validation Completed
 
-Latest live verification: 2026-08-07 15:34 UTC.
+Latest live verification: 2026-08-08 10:07 UTC.
 
 - Official apex domain: HTTP 200 over HTTPS
 - `www` hostname: redirects to apex and returns HTTP 301
@@ -66,6 +66,27 @@ Latest live verification: 2026-08-07 15:34 UTC.
   - `Cross-Origin-Opener-Policy: same-origin`
   - `Cross-Origin-Resource-Policy: same-origin`
   - `Strict-Transport-Security`
+
+## Consent-first Analytics Verification
+
+HubSpot EU1 analytics was verified against production portal `149059794` on 2026-08-08 UTC.
+
+- Before a visitor decision, no HubSpot script is loaded.
+- Choosing necessary-only keeps HubSpot blocked.
+- Choosing analytics loads the EU1 HubSpot script set.
+- CSP explicitly permits the EU1 tracking, analytics, collected-forms and banner script hosts required after consent.
+- The privacy-settings control remains available after the initial decision.
+- HubSpot account timezone is `Asia/Riyadh`; the account currency remains an administrative UI action to change from USD to SAR.
+
+## Enterprise Command Center Verification
+
+The Supabase project is active and healthy in `ap-northeast-2`. Current production evidence:
+
+- Security advisor: zero findings.
+- Private `command-center-documents` bucket: 25 MB per file with an explicit MIME allowlist.
+- No `anon` table privileges for the enterprise tables.
+- MFA is enforced at the database boundary through restrictive `aal2` policies.
+- No owner user, organization or verified TOTP factor exists yet; the portal must not receive real client or confidential data until the first owner completes sign-in and TOTP enrollment.
 
 ## Contact Form Verification
 
