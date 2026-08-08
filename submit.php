@@ -4,6 +4,7 @@ declare(strict_types=1);
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Cache-Control: no-store, max-age=0');
+header('X-Osool-Lead-Intake: v2');
 
 const SUPABASE_URL = 'https://fdkfxlvsluiqrgedokdm.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hX1nbly1AzEtBhCUWoyrgw_9EU2Bxwr';
