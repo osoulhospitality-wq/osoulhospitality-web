@@ -18,7 +18,7 @@ ErrorDocument 404 /404.html
   Header always set Cross-Origin-Resource-Policy "same-origin"
   Header always set X-Permitted-Cross-Domain-Policies "none"
   Header always set Strict-Transport-Security "max-age=31536000"
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://js-eu1.hs-scripts.com https://js-eu1.hs-analytics.net https://js-eu1.hscollectedforms.net https://js-eu1.hs-banner.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://avatars.githubusercontent.com https://track-eu1.hubspot.com https://*.hubspot.com; font-src 'self' data:; connect-src 'self' https://api.github.com https://fdkfxlvsluiqrgedokdm.supabase.co https://*.hubspot.com https://*.hscollectedforms.net; form-action 'self' https://github.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://js-eu1.hs-scripts.com https://js-eu1.hs-analytics.net https://js-eu1.hscollectedforms.net https://js-eu1.hs-banner.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.google-analytics.com https://region1.google-analytics.com https://avatars.githubusercontent.com https://track-eu1.hubspot.com https://*.hubspot.com; font-src 'self' data:; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://api.github.com https://fdkfxlvsluiqrgedokdm.supabase.co https://*.hubspot.com https://*.hscollectedforms.net; form-action 'self' https://github.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
 </IfModule>
 
 <IfModule mod_expires.c>
@@ -42,6 +42,12 @@ ErrorDocument 404 /404.html
     Header set Cache-Control "public, max-age=31536000, immutable"
   </IfModule>
 </FilesMatch>
+
+<Files "site-hostinger-v15.js">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </IfModule>
+</Files>
 
 <FilesMatch "^\.">
   Require all denied
