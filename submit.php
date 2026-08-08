@@ -5,6 +5,9 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Cache-Control: no-store, max-age=0');
 
+const SUPABASE_URL = 'https://fdkfxlvsluiqrgedokdm.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hX1nbly1AzEtBhCUWoyrgw_9EU2Bxwr';
+
 function redirect_to(string $path): never {
     header('Location: ' . $path, true, 303);
     exit;
@@ -21,6 +24,50 @@ function clean_text(string $value, int $max = 300): string {
 function post_value(string $key, int $max = 300): string {
     $value = $_POST[$key] ?? '';
     return is_string($value) ? clean_text($value, $max) : '';
+}
+
+function persist_lead(array $payload): bool {
+    $url = SUPABASE_URL . '/rest/v1/website_leads';
+    $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($json === false) {
+        return false;
+    }
+
+    $headers = [
+        'apikey: ' . SUPABASE_PUBLISHABLE_KEY,
+        'Authorization: Bearer ' . SUPABASE_PUBLISHABLE_KEY,
+        'Content-Type: application/json',
+        'Prefer: return=minimal',
+    ];
+
+    if (function_exists('curl_init')) {
+        $handle = curl_init($url);
+        curl_setopt_array($handle, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $json,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT => 8,
+        ]);
+        curl_exec($handle);
+        $status = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        curl_close($handle);
+        return $status >= 200 && $status < 300;
+    }
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => implode("\r\n", $headers),
+            'content' => $json,
+            'timeout' => 8,
+            'ignore_errors' => true,
+        ],
+    ]);
+    $result = @file_get_contents($url, false, $context);
+    $statusLine = $http_response_header[0] ?? '';
+    return $result !== false && preg_match('/\s2\d\d\s/', $statusLine) === 1;
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -115,6 +162,32 @@ $body = implode("\n", [
     'وقت الاستلام: ' . gmdate('Y-m-d H:i:s') . ' UTC',
 ]);
 
+$leadPersisted = persist_lead([
+    'form_name' => $formName,
+    'language' => $isEnglish ? 'en' : 'ar',
+    'name' => $name,
+    'organization' => $organization,
+    'email' => $email !== '' ? $email : null,
+    'phone' => $phone !== '' ? $phone : null,
+    'asset_type' => $assetType,
+    'city' => $city,
+    'stage' => $stage,
+    'opening_target' => $opening,
+    'units' => $units,
+    'primary_gap' => $primaryGap,
+    'urgency' => $urgency,
+    'documents' => $documents,
+    'requested_support' => $support,
+    'description' => $description !== '' ? $description : null,
+    'consent' => true,
+    'source' => 'website',
+    'status' => 'new',
+]);
+
+if (!$leadPersisted) {
+    error_log('Osool website lead persistence failed.');
+}
+
 $serverUser = preg_replace('/[^a-zA-Z0-9._-]/', '', get_current_user());
 $serverHost = strtolower((string) gethostname());
 $serverSender = $serverUser !== '' ? $serverUser . '@' . $serverHost : '';
@@ -143,8 +216,12 @@ $sent = @mail(
     implode("\r\n", $headers)
 );
 
-if (!$sent) {
+if (!$sent && !$leadPersisted) {
     redirect_to($contactPath . '?status=send-error#project-brief');
+}
+
+if (!$sent) {
+    error_log('Osool website lead email delivery failed; Supabase persistence succeeded.');
 }
 
 redirect_to($thankYouPath);
