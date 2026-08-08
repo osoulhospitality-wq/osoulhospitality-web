@@ -1,6 +1,10 @@
 # Osool Hospitality Deployment
 
-Last updated: 2026-08-07 UTC
+Last updated: 2026-08-08 UTC
+
+## Website v13 — Integrated Tourism Advisory House
+
+The public website now positions Osool Hospitality as a licensed Saudi tourism advisory house combining advisory, execution and intelligence. The home page presents the full lifecycle proposition, six core capability groups, three client journeys and the Advisory–Execution–Intelligence operating model. The services page contains eight complete service families covering strategy, feasibility, licensing, compliance, development, pre-opening, operations, profitability, revenue, sales, owner representation, facilities, people and digital transformation. Arabic copy, calls to action, metadata and brand descriptors were aligned to the new positioning.
 
 ## Command Center Public Pilot v13
 
