@@ -6,7 +6,7 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 ROOT = Path(__file__).resolve().parent.parent
-OUTPUT = ROOT.parent / "outputs" / "osoul_complete_launch" / "Osool-Hospitality-v14-Hostinger.zip"
+OUTPUT = ROOT.parent / "outputs" / "osoul_complete_launch" / "Osool-Hospitality-v15-Hostinger.zip"
 MANIFEST = ROOT / ".checksums.sha256"
 
 files = [line.split("  ", 1)[1] for line in MANIFEST.read_text(encoding="utf-8").splitlines() if "  " in line]

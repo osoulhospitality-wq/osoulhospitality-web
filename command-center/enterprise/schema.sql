@@ -1,4 +1,4 @@
--- Osoul Command Center v13 enterprise activation schema.
+-- Osoul Command Center v15 enterprise activation schema.
 -- Run in a dedicated Supabase project after reviewing the project region,
 -- Data API exposure, retention policy, and backup plan.
 
@@ -243,6 +243,29 @@ create index request_events_request_time_idx on public.request_events (request_i
 create index approvals_org_status_idx on public.approvals (organization_id, status, requested_at);
 create index documents_org_type_idx on public.documents (organization_id, document_type, created_at desc);
 create index audit_org_time_idx on public.audit_events (organization_id, occurred_at desc);
+create index organizations_created_by_idx on public.organizations (created_by);
+create index suppliers_created_by_idx on public.suppliers (created_by);
+create index products_created_by_idx on public.products (created_by);
+create index products_supplier_idx on public.products (supplier_id);
+create index quotes_created_by_idx on public.quotes (created_by);
+create index quotes_supplier_idx on public.quotes (supplier_id);
+create index quotes_org_document_idx on public.quotes (organization_id, source_document_id);
+create index quote_lines_org_idx on public.quote_lines (organization_id);
+create index quote_lines_product_idx on public.quote_lines (product_id);
+create index quote_lines_org_product_idx on public.quote_lines (organization_id, product_id);
+create index quote_lines_org_quote_idx on public.quote_lines (organization_id, quote_id);
+create index contracts_created_by_idx on public.contracts (created_by);
+create index contracts_org_supplier_idx on public.contracts (organization_id, supplier_id);
+create index requests_requester_idx on public.requests (requester_id);
+create index requests_assigned_to_idx on public.requests (assigned_to);
+create index request_events_actor_idx on public.request_events (actor_id);
+create index request_events_org_request_idx on public.request_events (organization_id, request_id);
+create index decisions_org_idx on public.decisions (organization_id);
+create index decisions_approver_idx on public.decisions (approver_id);
+create index approvals_requested_by_idx on public.approvals (requested_by);
+create index approvals_decided_by_idx on public.approvals (decided_by);
+create index documents_created_by_idx on public.documents (created_by);
+create index audit_events_actor_idx on public.audit_events (actor_id);
 
 create or replace function private.current_org_role(target_org uuid)
 returns public.app_role
@@ -312,6 +335,22 @@ begin
 end;
 $$;
 
+-- Multi-tenant rows never move between organizations after creation. This
+-- closes a subtle cross-tenant reassignment path for users who belong to more
+-- than one organization.
+create or replace function private.prevent_org_reassignment()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.organization_id is distinct from old.organization_id then
+    raise exception 'organization_id is immutable' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
 create trigger suppliers_actor before insert on public.suppliers for each row execute function private.set_created_by();
 create trigger products_actor before insert on public.products for each row execute function private.set_created_by();
 create trigger quotes_actor before insert on public.quotes for each row execute function private.set_created_by();
@@ -322,6 +361,50 @@ create trigger products_updated before update on public.products for each row ex
 create trigger quotes_updated before update on public.quotes for each row execute function private.set_updated_at();
 create trigger contracts_updated before update on public.contracts for each row execute function private.set_updated_at();
 create trigger requests_updated before update on public.requests for each row execute function private.set_updated_at();
+
+create trigger organization_members_org_immutable before update on public.organization_members for each row execute function private.prevent_org_reassignment();
+create trigger suppliers_org_immutable before update on public.suppliers for each row execute function private.prevent_org_reassignment();
+create trigger products_org_immutable before update on public.products for each row execute function private.prevent_org_reassignment();
+create trigger quotes_org_immutable before update on public.quotes for each row execute function private.prevent_org_reassignment();
+create trigger quote_lines_org_immutable before update on public.quote_lines for each row execute function private.prevent_org_reassignment();
+create trigger contracts_org_immutable before update on public.contracts for each row execute function private.prevent_org_reassignment();
+create trigger requests_org_immutable before update on public.requests for each row execute function private.prevent_org_reassignment();
+create trigger request_events_org_immutable before update on public.request_events for each row execute function private.prevent_org_reassignment();
+create trigger decisions_org_immutable before update on public.decisions for each row execute function private.prevent_org_reassignment();
+create trigger approvals_org_immutable before update on public.approvals for each row execute function private.prevent_org_reassignment();
+create trigger documents_org_immutable before update on public.documents for each row execute function private.prevent_org_reassignment();
+
+-- A newly created tenant must immediately have an owner; otherwise its own RLS
+-- boundary would make it unreachable to the creator.
+create or replace function private.bootstrap_org_owner()
+returns trigger
+language plpgsql security definer
+set search_path = ''
+as $$
+declare
+  owner_name text;
+begin
+  select coalesce(
+    nullif(raw_user_meta_data->>'full_name', ''),
+    nullif(email, ''),
+    'Osoul Owner'
+  )
+  into owner_name
+  from auth.users
+  where id = new.created_by;
+
+  insert into public.organization_members (organization_id, user_id, full_name, role, active)
+  values (new.id, new.created_by, coalesce(owner_name, 'Osoul Owner'), 'owner', true)
+  on conflict (organization_id, user_id) do update
+    set role = 'owner', active = true;
+
+  return new;
+end;
+$$;
+
+create trigger organization_owner_bootstrap
+after insert on public.organizations
+for each row execute function private.bootstrap_org_owner();
 
 create or replace function private.append_audit_event()
 returns trigger
@@ -358,6 +441,7 @@ revoke all on schema private from public, anon;
 grant usage on schema private to authenticated;
 revoke execute on all functions in schema private from public, anon;
 grant execute on function private.current_org_role(uuid), private.has_org_access(uuid), private.can_write_org(uuid), private.can_approve_org(uuid) to authenticated;
+revoke create on schema public from public, anon, authenticated;
 
 alter table public.organizations enable row level security;
 alter table public.organization_members enable row level security;
@@ -382,20 +466,34 @@ using (private.current_org_role(id) = 'owner') with check (private.current_org_r
 
 create policy "members read membership" on public.organization_members for select to authenticated
 using (private.has_org_access(organization_id));
-create policy "owners manage membership" on public.organization_members for all to authenticated
+create policy "owners add membership" on public.organization_members for insert to authenticated
+with check (private.current_org_role(organization_id) = 'owner');
+create policy "owners update membership" on public.organization_members for update to authenticated
 using (private.current_org_role(organization_id) = 'owner')
 with check (private.current_org_role(organization_id) = 'owner');
+create policy "owners delete membership" on public.organization_members for delete to authenticated
+using (private.current_org_role(organization_id) = 'owner');
 
 create policy "members read suppliers" on public.suppliers for select to authenticated using (private.has_org_access(organization_id));
-create policy "team manages suppliers" on public.suppliers for all to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team creates suppliers" on public.suppliers for insert to authenticated with check (private.can_write_org(organization_id));
+create policy "team updates suppliers" on public.suppliers for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team deletes suppliers" on public.suppliers for delete to authenticated using (private.can_write_org(organization_id));
 create policy "members read products" on public.products for select to authenticated using (private.has_org_access(organization_id));
-create policy "team manages products" on public.products for all to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team creates products" on public.products for insert to authenticated with check (private.can_write_org(organization_id));
+create policy "team updates products" on public.products for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team deletes products" on public.products for delete to authenticated using (private.can_write_org(organization_id));
 create policy "members read quotes" on public.quotes for select to authenticated using (private.has_org_access(organization_id));
-create policy "team manages quotes" on public.quotes for all to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team creates quotes" on public.quotes for insert to authenticated with check (private.can_write_org(organization_id));
+create policy "team updates quotes" on public.quotes for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team deletes quotes" on public.quotes for delete to authenticated using (private.can_write_org(organization_id));
 create policy "members read quote lines" on public.quote_lines for select to authenticated using (private.has_org_access(organization_id));
-create policy "team manages quote lines" on public.quote_lines for all to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team creates quote lines" on public.quote_lines for insert to authenticated with check (private.can_write_org(organization_id));
+create policy "team updates quote lines" on public.quote_lines for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team deletes quote lines" on public.quote_lines for delete to authenticated using (private.can_write_org(organization_id));
 create policy "members read contracts" on public.contracts for select to authenticated using (private.has_org_access(organization_id));
-create policy "approvers manage contracts" on public.contracts for all to authenticated using (private.can_approve_org(organization_id)) with check (private.can_approve_org(organization_id));
+create policy "approvers create contracts" on public.contracts for insert to authenticated with check (private.can_approve_org(organization_id));
+create policy "approvers update contracts" on public.contracts for update to authenticated using (private.can_approve_org(organization_id)) with check (private.can_approve_org(organization_id));
+create policy "approvers delete contracts" on public.contracts for delete to authenticated using (private.can_approve_org(organization_id));
 create policy "members read requests" on public.requests for select to authenticated using (private.has_org_access(organization_id));
 create policy "team creates requests" on public.requests for insert to authenticated with check (private.can_write_org(organization_id) and requester_id = (select auth.uid()));
 create policy "team updates requests" on public.requests for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
@@ -422,7 +520,7 @@ begin
   ]
   loop
     execute format(
-      'create policy %I on public.%I as restrictive for all to authenticated using ((select auth.jwt()->>''aal'') = ''aal2'') with check ((select auth.jwt()->>''aal'') = ''aal2'')',
+      'create policy %I on public.%I as restrictive for all to authenticated using (((select auth.jwt())->>''aal'') = ''aal2'') with check (((select auth.jwt())->>''aal'') = ''aal2'')',
       'mfa required', table_name
     );
   end loop;
@@ -447,6 +545,7 @@ on conflict (id) do update set public = false, file_size_limit = excluded.file_s
 create policy "members read private documents" on storage.objects for select to authenticated
 using (
   bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
   and private.has_org_access(
     case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
       then ((storage.foldername(name))[1])::uuid else null end
@@ -456,6 +555,7 @@ using (
 create policy "team uploads private documents" on storage.objects for insert to authenticated
 with check (
   bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
   and private.can_write_org(
     case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
       then ((storage.foldername(name))[1])::uuid else null end
@@ -466,16 +566,25 @@ with check (
 create policy "approvers manage private documents" on storage.objects for update to authenticated
 using (
   bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
   and private.can_approve_org(
     case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
       then ((storage.foldername(name))[1])::uuid else null end
   )
 )
-with check (bucket_id = 'command-center-documents');
+with check (
+  bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
+  and private.can_approve_org(
+    case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      then ((storage.foldername(name))[1])::uuid else null end
+  )
+);
 
 create policy "owners delete private documents" on storage.objects for delete to authenticated
 using (
   bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
   and private.current_org_role(
     case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
       then ((storage.foldername(name))[1])::uuid else null end

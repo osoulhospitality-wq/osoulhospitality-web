@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ar-SA" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>الدخول المؤسسي | Osoul Command Center</title>
+  <meta name="description" content="بوابة مؤسسية خاصة لمركز قيادة أصول الضيافة، محمية بتسجيل الدخول والتحقق متعدد العوامل.">
+  <link rel="icon" href="/brand/osool-mark-v8.svg">
+  <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
+  <link rel="stylesheet" href="/command-center/enterprise/app.css">
+  <script src="/command-center/enterprise/config.js" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#enterprise-app">انتقل إلى بوابة الدخول</a>
+  <header class="enterprise-header">
+    <a href="/command-center/" class="enterprise-brand" aria-label="العودة إلى مركز القيادة">
+      <img src="/brand/osool-mark-v8.svg" width="52" height="52" alt="">
+      <span><strong>Osoul Command Center</strong><small>Enterprise Secure Access</small></span>
+    </a>
+    <span class="security-badge">MFA + RLS</span>
+  </header>
+
+  <main id="enterprise-app" class="enterprise-shell">
+    <section class="enterprise-intro" aria-labelledby="enterprise-title">
+      <p class="eyebrow">بيئة مؤسسية خاصة</p>
+      <h1 id="enterprise-title">بيانات العمل لا تظهر إلا بعد تحقق <em>aal2</em>.</h1>
+      <p>تسجيل الدخول وحده لا يكفي. تطبق قاعدة البيانات عزل المنشآت والصلاحيات والتحقق متعدد العوامل على كل جدول وملف خاص.</p>
+      <ul class="security-list">
+        <li><strong>عزل متعدد العملاء</strong><span>سياسات RLS مرتبطة بعضوية المنشأة.</span></li>
+        <li><strong>تحقق متعدد العوامل</strong><span>تطبيق مصادقة TOTP مطلوب للوصول.</span></li>
+        <li><strong>تخزين خاص</strong><span>ملفات PDF وOffice غير عامة ومقيّدة بالمنشأة.</span></li>
+      </ul>
+    </section>
+
+    <section class="access-card" aria-live="polite">
+      <div id="app-status" class="app-status" role="status">جارٍ التحقق من الجلسة الآمنة…</div>
+
+      <form id="sign-in-view" class="app-view" hidden>
+        <p class="step-label">الخطوة 1 من 2</p>
+        <h2>تسجيل الدخول</h2>
+        <p class="muted">الوصول بدعوة فقط. استخدم حسابك المؤسسي المعتمد.</p>
+        <label for="email">البريد الإلكتروني</label>
+        <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required>
+        <label for="password">كلمة المرور</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" minlength="10" required>
+        <button class="primary-action" type="submit">متابعة آمنة</button>
+      </form>
+
+      <form id="mfa-verify-view" class="app-view" hidden>
+        <p class="step-label">الخطوة 2 من 2</p>
+        <h2>رمز التحقق</h2>
+        <p class="muted">أدخل الرمز المؤقت المكون من 6 أرقام من تطبيق المصادقة.</p>
+        <label for="mfa-code">رمز TOTP</label>
+        <input id="mfa-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        <button class="primary-action" type="submit">تحقق وافتح المركز</button>
+        <button class="text-action js-sign-out" type="button">تسجيل الخروج</button>
+      </form>
+
+      <div id="mfa-enroll-view" class="app-view" hidden>
+        <p class="step-label">إعداد أمني لمرة واحدة</p>
+        <h2>فعّل تطبيق المصادقة</h2>
+        <p class="muted">امسح الرمز عبر تطبيق مصادقة موثوق، ثم أدخل الرمز الظاهر فيه.</p>
+        <button id="start-enrollment" class="primary-action" type="button">إنشاء رمز MFA</button>
+        <div id="enrollment-details" hidden>
+          <img id="totp-qr" class="totp-qr" alt="رمز QR لإضافة حساب أصول إلى تطبيق المصادقة">
+          <details><summary>تعذر مسح الرمز؟</summary><code id="totp-secret"></code></details>
+          <form id="mfa-enroll-form">
+            <label for="enroll-code">رمز التأكيد</label>
+            <input id="enroll-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+            <button class="primary-action" type="submit">تأكيد وتفعيل MFA</button>
+          </form>
+        </div>
+        <button class="text-action js-sign-out" type="button">تسجيل الخروج</button>
+      </div>
+
+      <div id="dashboard-view" class="app-view" hidden>
+        <div class="dashboard-head">
+          <div><p class="step-label">جلسة موثقة aal2</p><h2>لوحة الجاهزية</h2></div>
+          <button class="text-action js-sign-out" type="button">خروج</button>
+        </div>
+        <p id="session-identity" class="muted"></p>
+        <div id="organization-empty" hidden>
+          <p>لا توجد منشأة مرتبطة بهذا الحساب بعد. أنشئ مساحة أصول الأولى.</p>
+          <form id="create-organization-form">
+            <label for="organization-name">اسم المنشأة</label>
+            <input id="organization-name" name="name" type="text" minlength="2" maxlength="180" value="أصول الضيافة" required>
+            <button class="primary-action" type="submit">إنشاء المساحة المؤسسية</button>
+          </form>
+        </div>
+        <div id="organization-dashboard" hidden>
+          <label for="organization-select">المنشأة</label>
+          <select id="organization-select"></select>
+          <div id="kpi-grid" class="kpi-grid"></div>
+          <p class="privacy-note">البيانات المعروضة خاضعة للصلاحيات وسجل التدقيق. لا تشارك لقطات الشاشة أو الملفات خارج القنوات المعتمدة.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="enterprise-footer"><span>© 2026 أصول الضيافة</span><a href="/privacy/">الخصوصية</a><a href="/command-center/">النسخة العامة</a></footer>
+  <noscript>يتطلب الدخول الآمن تفعيل JavaScript في المتصفح.</noscript>
+</body>
+</html>
