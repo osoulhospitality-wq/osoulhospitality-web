@@ -1,0 +1,40 @@
+name: Riyadh Legacy Target Revalidation
+
+on:
+  push:
+    branches:
+      - sales-intelligence-research-20260816
+    paths:
+      - 'scripts/enrich_legacy_targets.py'
+      - 'scripts/enrich_sales_intel.py'
+      - 'seeds/old221.json.gz.b64'
+      - '.github/workflows/sales-intelligence-legacy-revalidation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: '1'
+
+jobs:
+  revalidate-targets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml tldextract dnspython
+      - name: Revalidate legacy targets
+        run: python scripts/enrich_legacy_targets.py
+      - name: Upload revalidated records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riyadh-legacy-targets-revalidated
+          path: legacy_enriched/
+          if-no-files-found: warn
+          retention-days: 7
