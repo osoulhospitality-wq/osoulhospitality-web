@@ -15,12 +15,9 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from urllib.parse import urlparse
 
 from enrich_sales_intel import (
-    OUT as EVENT_OUT,
     ORGANIZER,
-    SOCIAL,
     bing_search,
     clean,
     crawl_official_site,
@@ -55,7 +52,9 @@ SECTOR_MAP = {
 
 
 def load_seed() -> list[dict]:
-    raw = gzip.decompress(base64.b64decode(SEED.read_text(encoding="utf-8")))
+    value = "".join(SEED.read_text(encoding="utf-8").split())
+    value += "=" * (-len(value) % 4)
+    raw = gzip.decompress(base64.b64decode(value))
     return json.loads(raw.decode("utf-8"))
 
 
@@ -81,7 +80,7 @@ def linkedin_company_search(name: str) -> str:
     return ""
 
 
-def demand_search(name: str, sector: str) -> dict:
+def demand_search(name: str) -> dict:
     queries = [
         f'"{name}" Riyadh project contract 2026',
         f'"{name}" Riyadh office expansion Saudi 2025 2026',
@@ -89,25 +88,25 @@ def demand_search(name: str, sector: str) -> dict:
         f'"{name}" Riyadh jobs project manager 2026',
     ]
     for q in queries:
-        results = bing_search(q, 8)
-        for r in results:
+        for r in bing_search(q, 8):
             text = clean(r.get("title", "") + " " + r.get("snippet", ""))
             low = text.lower()
             if "riyadh" not in low and "الرياض" not in text:
                 continue
-            if not any(k in low for k in ("project", "contract", "office", "riyadh", "event", "conference", "exhibition", "expansion", "jobs", "opening", "headquarters", "regional headquarters", "partnership")):
-                continue
-            return {"description": text[:900], "source": r.get("url", ""), "search_source": r.get("search_url", ""), "query": q}
+            if any(k in low for k in ("project", "contract", "office", "event", "conference", "exhibition", "expansion", "jobs", "opening", "headquarters", "regional headquarters", "partnership")):
+                return {"description": text[:900], "source": r.get("url", ""), "search_source": r.get("search_url", ""), "query": q}
     return {}
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
     if not rows:
-        path.write_text("", encoding="utf-8"); return
+        path.write_text("", encoding="utf-8")
+        return
     fields = list(dict.fromkeys(k for row in rows for k in row.keys()))
     with path.open("w", newline="", encoding="utf-8-sig") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
-        w.writeheader(); w.writerows(rows)
+        w.writeheader()
+        w.writerows(rows)
 
 
 def enrich(record: dict) -> dict:
@@ -127,13 +126,12 @@ def enrich(record: dict) -> dict:
                 people.append(p)
             if len(people) >= 3:
                 break
-    signal = demand_search(name, target_sector)
+    signal = demand_search(name)
     site_active = bool(site.get("site_status") and site.get("site_status") < 400 and website)
     company_match = bool(site.get("company_match") or (email and root_domain(email_domain(email)) == root_domain(website)))
     email_ok = bool(email and mx_valid(email_domain(email)))
     named = bool(people)
     source_count = len({x for x in [website, signal.get("source"), people[0].get("source") if people else ""] if x})
-
     demand_score = 27 if signal else 8
     fit_score = 18 if target_sector in {
         "المقاولات والهندسة والمشاريع", "الشركات الاستشارية والخدمات المهنية", "الفعاليات والمعارض والمؤتمرات",
@@ -172,36 +170,40 @@ def enrich(record: dict) -> dict:
 
 def main() -> None:
     seed = load_seed()
-    # Deduplicate by normalized name.
-    unique = []
-    seen = set()
-    for r in seed:
-        key = norm_company(r.get("اسم الحساب", ""))
+    unique, seen = [], set()
+    for record in seed:
+        key = norm_company(record.get("اسم الحساب", ""))
         if key and key not in seen:
-            seen.add(key); unique.append(r)
+            seen.add(key)
+            unique.append(record)
     print(f"LEGACY REVALIDATION START {len(unique)}", flush=True)
     rows = []
     with ThreadPoolExecutor(max_workers=6) as pool:
-        futures = {pool.submit(enrich, r): r for r in unique}
-        for idx, fut in enumerate(as_completed(futures), 1):
+        futures = {pool.submit(enrich, record): record for record in unique}
+        for idx, future in enumerate(as_completed(futures), 1):
             try:
-                rows.append(fut.result())
+                rows.append(future.result())
             except Exception as exc:
-                bad = dict(futures[fut]); bad.update({"data_quality":"Review", "qualification_reason":f"error:{type(exc).__name__}", "last_verified":time.strftime("%Y-%m-%d")}); rows.append(bad)
+                failed = dict(futures[future])
+                failed.update({"data_quality":"Review", "qualification_reason":f"error:{type(exc).__name__}", "last_verified":time.strftime("%Y-%m-%d")})
+                rows.append(failed)
             if idx % 20 == 0:
                 print(f"LEGACY PROGRESS {idx}/{len(unique)} {dict(Counter(x.get('data_quality') for x in rows))}", flush=True)
     rows.sort(key=lambda x: (-int(x.get("score") or 0), x.get("اسم الحساب", "")))
     accepted = [x for x in rows if x.get("data_quality") in {"Gold", "Platinum"}]
     rejected = [x for x in rows if x.get("data_quality") not in {"Gold", "Platinum"}]
-    contacts=[]
-    for a in accepted:
+    contacts = []
+    for account in accepted:
         for n in (1,2,3):
-            if a.get(f"person_{n}_name"):
-                contacts.append({"account_name":a.get("اسم الحساب"),"person_name":a.get(f"person_{n}_name"),"role":a.get(f"person_{n}_role"),"linkedin":a.get(f"person_{n}_linkedin"),"source":a.get(f"person_{n}_source"),"last_verified":a.get("last_verified")})
-    write_csv(OUT/"legacy_all.csv",rows); write_csv(OUT/"legacy_gold_platinum.csv",accepted); write_csv(OUT/"legacy_review_rejected.csv",rejected); write_csv(OUT/"legacy_decision_makers.csv",contacts)
-    diag={"researched":len(rows),"accepted":len(accepted),"rejected":len(rejected),"contacts":len(contacts),"quality":dict(Counter(x.get("data_quality") for x in rows)),"sector_accepted":dict(Counter(x.get("target_sector") for x in accepted))}
-    (OUT/"diagnostics.json").write_text(json.dumps(diag,ensure_ascii=False,indent=2),encoding="utf-8")
-    print(json.dumps(diag,ensure_ascii=False),flush=True)
+            if account.get(f"person_{n}_name"):
+                contacts.append({"account_name":account.get("اسم الحساب"),"person_name":account.get(f"person_{n}_name"),"role":account.get(f"person_{n}_role"),"linkedin":account.get(f"person_{n}_linkedin"),"source":account.get(f"person_{n}_source"),"last_verified":account.get("last_verified")})
+    write_csv(OUT/"legacy_all.csv",rows)
+    write_csv(OUT/"legacy_gold_platinum.csv",accepted)
+    write_csv(OUT/"legacy_review_rejected.csv",rejected)
+    write_csv(OUT/"legacy_decision_makers.csv",contacts)
+    diagnostics={"researched":len(rows),"accepted":len(accepted),"rejected":len(rejected),"contacts":len(contacts),"quality":dict(Counter(x.get("data_quality") for x in rows)),"sector_accepted":dict(Counter(x.get("target_sector") for x in accepted))}
+    (OUT/"diagnostics.json").write_text(json.dumps(diagnostics,ensure_ascii=False,indent=2),encoding="utf-8")
+    print(json.dumps(diagnostics,ensure_ascii=False),flush=True)
 
 
 if __name__ == "__main__":
