@@ -1,0 +1,32 @@
+name: Riyadh Dynamic Directory API Discovery
+
+on:
+  push:
+    branches:
+      - sales-intelligence-research-20260816
+    paths:
+      - 'scripts/discover_dynamic_apis.py'
+      - '.github/workflows/sales-intelligence-dynamic-api-discovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover-public-apis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests beautifulsoup4 lxml
+      - run: python scripts/discover_dynamic_apis.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riyadh-dynamic-api-discovery
+          path: dynamic_api_discovery/
+          if-no-files-found: warn
+          retention-days: 7
