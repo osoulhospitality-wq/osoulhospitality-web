@@ -1,0 +1,37 @@
+name: Riyadh Sales Intelligence Source Explorer
+
+on:
+  push:
+    branches:
+      - sales-intelligence-research-20260816
+    paths:
+      - 'scripts/explore_sales_sources.py'
+      - '.github/workflows/sales-intelligence-source-explorer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  explore-public-official-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+      - name: Explore official sources
+        run: python scripts/explore_sales_sources.py
+      - name: Upload exploration output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riyadh-sales-source-exploration
+          path: source_exploration/
+          if-no-files-found: warn
+          retention-days: 7
