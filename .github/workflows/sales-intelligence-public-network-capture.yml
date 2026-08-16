@@ -1,0 +1,34 @@
+name: Riyadh Public Directory Network Capture
+
+on:
+  push:
+    branches:
+      - sales-intelligence-research-20260816
+    paths:
+      - 'scripts/capture_public_directory_network.py'
+      - '.github/workflows/sales-intelligence-public-network-capture.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          pip install playwright
+          playwright install chromium --with-deps
+      - run: python scripts/capture_public_directory_network.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riyadh-public-directory-network
+          path: public_directory_network/
+          if-no-files-found: warn
+          retention-days: 7
