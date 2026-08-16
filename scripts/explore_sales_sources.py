@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Explore public official directories and capture links/frames/network endpoints.
 No authentication, form submission, or personal-data collection is performed.
+Each source is isolated so one unstable page cannot abort the complete run.
 """
 from __future__ import annotations
 
@@ -8,7 +9,6 @@ import asyncio
 import json
 import re
 from pathlib import Path
-from urllib.parse import urljoin
 
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
@@ -22,10 +22,22 @@ SOURCES = [
     ("visit_saudi_partners", "https://partner.visitsaudi.com/en/partner-tools/directory.html"),
     ("gov_agencies", "https://my.gov.sa/en/agencies"),
     ("saudi_event_show", "https://informaconnect.com/saudi-event-show/"),
+    ("saudi_event_show_exhibitors", "https://informaconnect.com/saudi-event-show/sponsors-and-exhibitors/"),
     ("saudi_film_confex", "https://saudifilmconfex.com/"),
+    ("pif_portfolio", "https://www.pif.gov.sa/en/our-investments/our-portfolio/"),
+    ("leap", "https://onegiantleap.com/"),
 ]
 
-KEYWORDS = re.compile(r"api|exhibit|partner|supplier|provider|director|agency|agencies|company|companies|search|graphql|json", re.I)
+KEYWORDS = re.compile(r"api|exhibit|partner|supplier|provider|director|agency|agencies|company|companies|search|graphql|json|portfolio", re.I)
+
+
+async def stable_content(page) -> str:
+    for _ in range(8):
+        try:
+            return await page.content()
+        except Exception:
+            await page.wait_for_timeout(1200)
+    return ""
 
 
 async def main() -> None:
@@ -47,37 +59,52 @@ async def main() -> None:
 
             page.on("response", on_response)
             status = "ok"
+            error = ""
             try:
-                await page.goto(url, wait_until="networkidle", timeout=90000)
-            except PlaywrightTimeoutError:
-                status = "timeout"
-            await page.wait_for_timeout(5000)
-            try:
-                await page.mouse.wheel(0, 6000)
-                await page.wait_for_timeout(2500)
-            except Exception:
-                pass
-            html = await page.content()
-            links = await page.locator("a").evaluate_all("els => els.map(e => ({text:(e.innerText||'').trim(), href:e.href})).filter(x=>x.href)")
-            frames = [f.url for f in page.frames]
-            buttons = await page.locator("button").evaluate_all("els => els.map(e => (e.innerText||e.getAttribute('aria-label')||'').trim()).filter(Boolean)")
+                try:
+                    await page.goto(url, wait_until="domcontentloaded", timeout=80000)
+                except PlaywrightTimeoutError:
+                    status = "timeout"
+                await page.wait_for_timeout(4500)
+                for _ in range(4):
+                    try:
+                        await page.mouse.wheel(0, 5000)
+                        await page.wait_for_timeout(1200)
+                    except Exception:
+                        break
+                html = await stable_content(page)
+                try:
+                    links = await page.locator("a").evaluate_all("els => els.map(e => ({text:(e.innerText||'').trim(), href:e.href})).filter(x=>x.href)")
+                except Exception:
+                    links = []
+                try:
+                    buttons = await page.locator("button").evaluate_all("els => els.map(e => (e.innerText||e.getAttribute('aria-label')||'').trim()).filter(Boolean)")
+                except Exception:
+                    buttons = []
+                frames = [f.url for f in page.frames]
+                try:
+                    title = await page.title()
+                except Exception:
+                    title = ""
+            except Exception as exc:
+                status = "error"
+                error = repr(exc)
+                html, links, buttons, frames, title = "", [], [], [], ""
             record = {
-                "name": name,
-                "url": url,
-                "status": status,
-                "title": await page.title(),
-                "frames": frames,
-                "links": links,
-                "buttons": buttons,
+                "name": name, "url": url, "status": status, "error": error, "title": title,
+                "frames": frames, "links": links, "buttons": buttons,
                 "network": list({x['url']: x for x in network}.values()),
             }
             (OUT / f"{name}.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
-            (OUT / f"{name}.html").write_text(html, encoding="utf-8")
-            summary.append({"name": name, "status": status, "links": len(links), "frames": len(frames), "network": len(record['network'])})
-            print(summary[-1], flush=True)
+            if html:
+                (OUT / f"{name}.html").write_text(html, encoding="utf-8")
+            item = {"name": name, "status": status, "links": len(links), "frames": len(frames), "network": len(record["network"]), "error": error}
+            summary.append(item)
+            (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(item, flush=True)
             await page.close()
         await browser.close()
-    (OUT / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(summary, ensure_ascii=False), flush=True)
 
 
 if __name__ == "__main__":
