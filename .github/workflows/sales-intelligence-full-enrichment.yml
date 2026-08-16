@@ -1,0 +1,46 @@
+name: Riyadh Sales Intelligence Full Enrichment
+
+on:
+  push:
+    branches:
+      - sales-intelligence-research-20260816
+    paths:
+      - 'scripts/sales_intel_scrape.py'
+      - 'scripts/enrich_sales_intel.py'
+      - '.github/workflows/sales-intelligence-full-enrichment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: '1'
+
+jobs:
+  build-public-qualified-dataset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 lxml playwright tldextract dnspython
+          playwright install chromium --with-deps
+      - name: Collect official event profiles
+        run: python scripts/sales_intel_scrape.py
+      - name: Enrich and qualify public business records
+        run: python scripts/enrich_sales_intel.py
+      - name: Upload full enriched dataset
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riyadh-sales-intelligence-enriched
+          path: |
+            sales_intel_output/
+            sales_intel_enriched/
+          if-no-files-found: warn
+          retention-days: 7
