@@ -109,6 +109,12 @@ assert((sitemap.match(/<url>/g) || []).length === 100, "Sitemap contains 100 pub
 assert(!sitemap.includes("/command-center/"), "Sitemap excludes the noindex Command Center");
 assert((sitemap.match(/\/insights\//g) || []).length === 82, "Sitemap contains both library indexes and 80 article URLs");
 
+assert(exists("scripts/check-production-health.mjs"), "Production health checker is version controlled");
+assert(exists(".github/workflows/production-health.yml"), "Scheduled production health workflow is version controlled");
+const productionHealth = read("scripts/check-production-health.mjs");
+assert(productionHealth.includes("Supabase public-read isolation"), "Production health verifies lead-data isolation");
+assert(productionHealth.includes("lead endpoint contract"), "Production health verifies the non-writing lead endpoint contract");
+
 for (const asset of ["site-v15.css", "site-hostinger-v16.js", "site-hostinger-v13.js", "insights-v14.js", "brand/osool-mark-v8.svg", "images/hero-riyadh-v8.webp"]) assert(exists(asset), `${asset} exists`);
 const css = read("site-v15.css");
 assert((css.match(/{/g) || []).length === (css.match(/}/g) || []).length, "site-v15.css has balanced braces");
