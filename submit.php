@@ -390,4 +390,5 @@ if (!$sent) {
     error_log('Osool website lead email delivery failed; Supabase persistence succeeded.');
 }
 
-redirect_to($thankYouPath);
+$receipt = bin2hex(random_bytes(8));
+redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($receipt));

@@ -73,6 +73,17 @@ for (const relative of englishCore) {
   assert(arabicChars <= 20, `${relative} contains no untranslated Arabic copy beyond the switch`);
 }
 
+const arabicCore = ["solutions", "outputs", "about", "scenarios", "contact", "privacy", "terms", "accessibility"];
+for (const slug of arabicCore) {
+  const relative = `${slug}/index.html`;
+  const html = read(relative);
+  const canonical = `https://osoulhospitality.com/${slug}/`;
+  assert(html.includes(`<meta property="og:url" content="${canonical}"/>`), `${relative} has its own Open Graph URL`);
+  assert(html.includes(`<link rel="canonical" href="${canonical}"/>`), `${relative} uses the final slash canonical`);
+  assert((html.match(/hreflang=/g) || []).length === 3, `${relative} has reciprocal bilingual hreflang`);
+  assert(html.includes(`hreflang="en-SA" href="https://osoulhospitality.com/en/${slug}/"`), `${relative} links to its English alternate`);
+}
+
 const form = read("en/contact/index.html");
 const formNames = ["form_name", "language", "asset_type", "city", "stage", "opening_target", "units", "primary_gap", "urgency", "documents", "requested_support", "name", "organization", "email", "phone", "consent", "website"];
 for (const field of formNames) assert(form.includes(`name="${field}"`), `English form includes ${field}`);
@@ -82,9 +93,20 @@ const handler = read("submit.php");
 assert(handler.includes("$contactPath = $isEnglish ? '/en/contact/' : '/contact/';"), "Form handler supports English validation redirects");
 assert(handler.includes("$thankYouPath = $isEnglish ? '/en/thank-you/' : '/thank-you/';"), "Form handler supports English success redirects");
 assert(handler.includes("$description = post_value('description', 2000);"), "Form handler includes the optional project context in the email");
+assert(handler.includes("bin2hex(random_bytes(8))"), "Successful form redirects include a one-time analytics receipt");
+assert(handler.includes("?submitted=1&receipt="), "Successful form redirects identify a validated submission");
+
+for (const relative of ["thank-you/index.html", "en/thank-you/index.html"]) {
+  const html = read(relative);
+  assert(/name="robots" content="noindex,\s*nofollow/.test(html), `${relative} is excluded from indexing`);
+  assert(html.includes("/site-hostinger-v16.js"), `${relative} loads the lead-event runtime`);
+}
+const robots = read("robots.txt");
+assert(!robots.includes("thank-you"), "robots.txt lets crawlers see thank-you noindex directives");
 
 const sitemap = read("sitemap.xml");
-assert((sitemap.match(/<url>/g) || []).length === 101, "Sitemap contains 101 public URLs");
+assert((sitemap.match(/<url>/g) || []).length === 100, "Sitemap contains 100 public URLs");
+assert(!sitemap.includes("/command-center/"), "Sitemap excludes the noindex Command Center");
 assert((sitemap.match(/\/insights\//g) || []).length === 82, "Sitemap contains both library indexes and 80 article URLs");
 
 for (const asset of ["site-v15.css", "site-hostinger-v16.js", "site-hostinger-v13.js", "insights-v14.js", "brand/osool-mark-v8.svg", "images/hero-riyadh-v8.webp"]) assert(exists(asset), `${asset} exists`);
@@ -99,6 +121,8 @@ assert(runtime.includes("hubspot-opt-in"), "HubSpot tracking is explicitly opt-i
 assert(runtime.includes("navigator.globalPrivacyControl"), "Analytics honors Global Privacy Control");
 assert(runtime.includes('["doNotTrack"]'), "Analytics exposes a durable opt-out path");
 assert(runtime.includes('["revokeCookieConsent"]'), "Analytics revokes HubSpot consent cookies");
+assert(runtime.includes('window.gtag("event", "generate_lead"'), "GA4 receives the recommended generate_lead event");
+assert(runtime.includes('window["ga-disable-" + GA4_MEASUREMENT_ID] = false'), "GA4 resumes immediately after renewed consent");
 assert(css.includes(".osoul-consent-panel"), "Consent panel is styled responsively");
 const headers = read(".htaccess");
 assert(headers.includes("https://js-eu1.hs-scripts.com"), "CSP permits only the configured HubSpot tracking region");
@@ -115,10 +139,12 @@ for (const asset of [
   "command-center/enterprise/config.js",
   "command-center/enterprise/schema.sql"
 ]) assert(exists(asset), `${asset} exists`);
+const commandCenterHtml = read("command-center/index.html");
 const enterpriseHtml = read("command-center/enterprise/index.html");
 const enterpriseBundle = read("command-center/enterprise/app.bundle.js");
 const enterpriseConfig = read("command-center/enterprise/config.js");
 const enterpriseSchema = read("command-center/enterprise/schema.sql");
+assert(commandCenterHtml.includes('name="robots" content="noindex,nofollow,noarchive"'), "Command Center landing route is excluded from indexing");
 assert(enterpriseHtml.includes('name="robots" content="noindex,nofollow,noarchive"'), "Enterprise route is excluded from indexing");
 assert(enterpriseBundle.includes("challengeAndVerify"), "Enterprise client performs the MFA challenge");
 assert(enterpriseBundle.includes("getAuthenticatorAssuranceLevel"), "Enterprise client verifies the AAL level");

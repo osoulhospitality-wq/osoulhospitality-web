@@ -1,5 +1,3 @@
 User-agent: *
 Allow: /
-Disallow: /thank-you/
-Disallow: /en/thank-you/
 Sitemap: https://osoulhospitality.com/sitemap.xml

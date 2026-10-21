@@ -16,6 +16,32 @@
     document.cookie = "osoul_analytics_consent=" + encodeURIComponent(value) + "; Path=/; Max-Age=31536000; SameSite=Lax; Secure";
   }
 
+  function safeSessionGet(key) {
+    try { return window.sessionStorage.getItem(key); } catch (_) { return null; }
+  }
+
+  function safeSessionSet(key, value) {
+    try { window.sessionStorage.setItem(key, value); } catch (_) {}
+  }
+
+  function trackLeadSuccess() {
+    var path = window.location.pathname.replace(/\/+$/, "");
+    if (path !== "/thank-you" && path !== "/en/thank-you") return;
+    var params = new URLSearchParams(window.location.search);
+    var receipt = params.get("receipt") || "";
+    if (params.get("submitted") !== "1" || !/^[a-f0-9]{16}$/.test(receipt)) return;
+    var storageKey = "osoul_generate_lead_" + receipt;
+    if (safeSessionGet(storageKey) === "sent") return;
+    window.gtag("event", "generate_lead", {
+      method: "website_form",
+      language: path.indexOf("/en/") === 0 ? "en" : "ar"
+    });
+    safeSessionSet(storageKey, "sent");
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+
   function loadHubSpot() {
     if (document.getElementById("hs-script-loader")) return;
     window._hsq = window._hsq || [];
@@ -37,6 +63,7 @@
   }
 
   function loadGA4() {
+    window["ga-disable-" + GA4_MEASUREMENT_ID] = false;
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
     window.gtag("js", new Date());
@@ -47,6 +74,7 @@
       page_location: window.location.href,
       page_title: document.title
     });
+    trackLeadSuccess();
     if (document.getElementById("osoul-ga4-loader")) return;
     var script = document.createElement("script");
     script.id = "osoul-ga4-loader";
