@@ -174,7 +174,7 @@
         value("requested_support") &&
         value("name") &&
         value("organization") &&
-        (value("email") || value("phone")) &&
+        value("email") &&
         consent &&
         consent.checked
       );
@@ -250,6 +250,13 @@
       event.stopPropagation();
     }, true);
 
+    var emailField = form.elements.namedItem("email");
+    if (emailField) {
+      emailField.required = true;
+      emailField.setAttribute("aria-required", "true");
+    }
+    var hint = form.querySelector(".form-hint");
+    if (hint) hint.textContent = english ? "A professional email is required; phone is optional." : "البريد المهني مطلوب، ورقم التواصل اختياري.";
     refresh();
   }
 

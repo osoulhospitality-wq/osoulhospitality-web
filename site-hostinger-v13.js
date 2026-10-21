@@ -28,14 +28,18 @@
   var englishStatus = document.documentElement.lang && document.documentElement.lang.indexOf("en") === 0;
   var messages = englishStatus ? {
     "incomplete": "Some required fields are incomplete. Review the brief and submit again.",
-    "contact": "Enter at least one professional email address or contact number.",
+    "contact": "Enter a professional email address.",
+    "email-required": "A professional email address is required so your enquiry can be tracked and answered.",
+    "rate-limit": "Too many requests were received. Wait 15 minutes, then try again.",
     "email": "The email address format is not valid.",
     "phone": "The contact number format is not valid.",
     "security": "The request source could not be verified. Open the form directly from this website.",
     "send-error": "The brief could not be sent. Email info@osoulhospitality.com or use WhatsApp."
   } : {
     "incomplete": "بعض الحقول المطلوبة غير مكتملة. راجع الموجز ثم أعد الإرسال.",
-    "contact": "أدخل بريدًا مهنيًا أو رقم تواصل واحدًا على الأقل.",
+    "contact": "أدخل بريدًا مهنيًا.",
+    "email-required": "البريد المهني مطلوب حتى يمكن متابعة الطلب والرد عليه.",
+    "rate-limit": "تم استلام محاولات كثيرة. انتظر 15 دقيقة ثم حاول مرة أخرى.",
     "email": "صيغة البريد الإلكتروني غير صحيحة.",
     "phone": "صيغة رقم التواصل غير صحيحة.",
     "security": "تعذر التحقق من مصدر الطلب. أعد فتح النموذج من الموقع مباشرة.",

@@ -4,7 +4,12 @@
   "version": "15.0.0",
   "type": "module",
   "scripts": {
-    "build:enterprise": "esbuild command-center/enterprise/src/app.js --bundle --minify --format=iife --platform=browser --target=es2020 --outfile=command-center/enterprise/app.bundle.js"
+    "build:enterprise": "esbuild command-center/enterprise/src/app.js --bundle --minify --format=iife --platform=browser --target=es2020 --outfile=command-center/enterprise/app.bundle.js",
+    "test": "npm run test:release && npm run test:dragon && npm run test:links && npm run test:mail",
+    "test:release": "node scripts/check-release-readiness.mjs",
+    "test:dragon": "node --test automation/tests/dragon-workflow.test.mjs",
+    "test:links": "python3 scripts/check-internal-links.py",
+    "test:mail": "python3 -m unittest scripts/test_send_hostinger_notification.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.2"
