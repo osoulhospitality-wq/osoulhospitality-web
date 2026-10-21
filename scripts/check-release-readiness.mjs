@@ -47,7 +47,7 @@ for (const article of articles) {
     assert(html.includes('rel="canonical"'), `${relative} includes a canonical URL`);
     assert((html.match(/hreflang=/g) || []).length === 3, `${relative} includes bilingual hreflang links`);
     assert(html.includes('class="osoul-source-list"'), `${relative} includes source references`);
-    assert(html.includes('/site-hostinger-v15.js'), `${relative} loads the v15 site runtime`);
+    assert(html.includes('/site-hostinger-v16.js'), `${relative} loads the v16 site runtime`);
     if (lang === "en") {
       const arabicChars = (text.match(/[\u0600-\u06ff]/g) || []).length;
       assert(arabicChars <= 20, `${relative} has no untranslated Arabic copy beyond the language switch`);
@@ -87,13 +87,13 @@ const sitemap = read("sitemap.xml");
 assert((sitemap.match(/<url>/g) || []).length === 101, "Sitemap contains 101 public URLs");
 assert((sitemap.match(/\/insights\//g) || []).length === 82, "Sitemap contains both library indexes and 80 article URLs");
 
-for (const asset of ["site-v15.css", "site-hostinger-v15.js", "site-hostinger-v13.js", "insights-v14.js", "brand/osool-mark-v8.svg", "images/hero-riyadh-v8.webp"]) assert(exists(asset), `${asset} exists`);
+for (const asset of ["site-v15.css", "site-hostinger-v16.js", "site-hostinger-v13.js", "insights-v14.js", "brand/osool-mark-v8.svg", "images/hero-riyadh-v8.webp"]) assert(exists(asset), `${asset} exists`);
 const css = read("site-v15.css");
 assert((css.match(/{/g) || []).length === (css.match(/}/g) || []).length, "site-v15.css has balanced braces");
 assert(css.includes("prefers-reduced-motion"), "site-v15.css supports reduced motion");
 assert(css.includes(":focus-visible"), "site-v15.css provides visible keyboard focus");
 assert(css.includes("--osoul-font-ar"), "site-v15.css defines an Arabic font stack");
-const runtime = read("site-hostinger-v15.js");
+const runtime = read("site-hostinger-v16.js");
 assert(runtime.includes('HUBSPOT_PORTAL_ID = "149059794"'), "HubSpot analytics uses the verified portal ID");
 assert(runtime.includes("hubspot-opt-in"), "HubSpot tracking is explicitly opt-in");
 assert(runtime.includes("navigator.globalPrivacyControl"), "Analytics honors Global Privacy Control");
