@@ -21,6 +21,25 @@
     started.name = "started_at";
     started.value = String(Date.now());
     form.appendChild(started);
+
+    var idempotencyKey = null;
+    try { idempotencyKey = window.sessionStorage.getItem("osoul_lead_submission_token_v1"); } catch (_) {}
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idempotencyKey || "")) {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        idempotencyKey = window.crypto.randomUUID();
+      } else {
+        idempotencyKey = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (character) {
+          var random = Math.floor(Math.random() * 16);
+          return (character === "x" ? random : (random & 3) | 8).toString(16);
+        });
+      }
+      try { window.sessionStorage.setItem("osoul_lead_submission_token_v1", idempotencyKey); } catch (_) {}
+    }
+    var idempotency = document.createElement("input");
+    idempotency.type = "hidden";
+    idempotency.name = "idempotency_key";
+    idempotency.value = idempotencyKey;
+    form.appendChild(idempotency);
   }
 
   var params = new URLSearchParams(window.location.search);

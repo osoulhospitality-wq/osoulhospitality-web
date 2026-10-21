@@ -4,7 +4,8 @@ declare(strict_types=1);
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Cache-Control: no-store, max-age=0');
-header('X-Osool-Lead-Intake: v2');
+header_remove('X-Powered-By');
+header('X-Osool-Lead-Intake: v3');
 
 const SUPABASE_URL = 'https://fdkfxlvsluiqrgedokdm.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hX1nbly1AzEtBhCUWoyrgw_9EU2Bxwr';
@@ -42,17 +43,27 @@ function uuid_v4(): string {
         . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20, 12);
 }
 
-function rate_limit_exceeded(string $clientAddress): bool {
+function log_event(string $event, array $context = []): void {
+    $record = array_merge([
+        'service' => 'osoul-lead-intake',
+        'event' => $event,
+        'time' => gmdate('c'),
+    ], $context);
+    error_log((string) json_encode($record, JSON_UNESCAPED_SLASHES));
+}
+
+function rate_limit_exceeded(string $clientAddress): ?bool {
     $key = hash('sha256', $clientAddress !== '' ? $clientAddress : 'unknown');
     $path = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'osoul-lead-' . $key . '.json';
     $handle = @fopen($path, 'c+');
     if ($handle === false) {
-        error_log('Osool website rate-limit store unavailable.');
-        return false;
+        log_event('rate_limit_store_unavailable');
+        return null;
     }
     if (!flock($handle, LOCK_EX)) {
         fclose($handle);
-        return false;
+        log_event('rate_limit_store_lock_failed');
+        return null;
     }
     $raw = stream_get_contents($handle);
     $decoded = is_string($raw) && $raw !== '' ? json_decode($raw, true) : [];
@@ -71,6 +82,27 @@ function rate_limit_exceeded(string $clientAddress): bool {
     flock($handle, LOCK_UN);
     fclose($handle);
     return $exceeded;
+}
+
+function claim_submission(string $submissionId): ?bool {
+    $directory = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR);
+    $path = $directory . DIRECTORY_SEPARATOR . 'osoul-submission-' . hash('sha256', $submissionId) . '.lock';
+    if (is_file($path) && filemtime($path) !== false && filemtime($path) < time() - 86400) {
+        @unlink($path);
+    }
+    $handle = @fopen($path, 'x');
+    if ($handle === false) {
+        return is_file($path) ? false : null;
+    }
+    fwrite($handle, (string) time());
+    fclose($handle);
+    return true;
+}
+
+function release_submission_claim(string $submissionId): void {
+    $path = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR)
+        . DIRECTORY_SEPARATOR . 'osoul-submission-' . hash('sha256', $submissionId) . '.lock';
+    @unlink($path);
 }
 
 function persist_lead(array $payload): bool {
@@ -211,7 +243,12 @@ if ($startedAt <= 0 || $elapsedMilliseconds < 3000 || $elapsedMilliseconds > 864
     redirect_to($contactPath . '?status=security#project-brief');
 }
 
-if (rate_limit_exceeded((string) ($_SERVER['REMOTE_ADDR'] ?? ''))) {
+$rateLimitExceeded = rate_limit_exceeded((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+if ($rateLimitExceeded === null) {
+    http_response_code(503);
+    redirect_to($contactPath . '?status=send-error#project-brief');
+}
+if ($rateLimitExceeded) {
     http_response_code(429);
     header('Retry-After: ' . RATE_LIMIT_WINDOW_SECONDS);
     redirect_to($contactPath . '?status=rate-limit#project-brief');
@@ -233,6 +270,7 @@ $name = post_value('name', 120);
 $organization = post_value('organization', 180);
 $email = post_value('email', 180);
 $phone = post_value('phone', 60);
+$submittedIdempotencyKey = strtolower(post_value('idempotency_key', 36));
 
 $required = [$formName, $assetType, $city, $stage, $opening, $units, $primaryGap, $urgency, $documents, $support, $name, $organization];
 if (in_array('', $required, true) || $formName !== 'hospitality_readiness_brief' || $consent !== 'yes') {
@@ -249,6 +287,21 @@ if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
 
 if ($phone !== '' && !preg_match('/^[0-9+\s()\-]{7,30}$/u', $phone)) {
     redirect_to($contactPath . '?status=phone#project-brief');
+}
+
+$submissionId = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $submittedIdempotencyKey) === 1
+    ? $submittedIdempotencyKey
+    : uuid_v4();
+$claim = claim_submission($submissionId);
+if ($claim === null) {
+    log_event('idempotency_store_unavailable', ['submission_id' => $submissionId]);
+    http_response_code(503);
+    redirect_to($contactPath . '?status=send-error#project-brief');
+}
+if ($claim === false) {
+    log_event('duplicate_submission_suppressed', ['submission_id' => $submissionId]);
+    $receipt = bin2hex(random_bytes(8));
+    redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($receipt));
 }
 
 $subjectPlain = 'موجز جاهزية جديد - ' . $organization . ' - ' . $assetType;
@@ -281,7 +334,6 @@ $body = implode("\n", [
     'وقت الاستلام: ' . gmdate('Y-m-d H:i:s') . ' UTC',
 ]);
 
-$submissionId = uuid_v4();
 $leadPayload = [
     'submission_id' => $submissionId,
     'form_name' => $formName,
@@ -336,7 +388,7 @@ if ($email !== '') {
 }
 
 if ($email !== '' && !$hubspotSubmitted) {
-    error_log('Osool website HubSpot form submission failed; fallback channels remain active.');
+    log_event('hubspot_submission_failed', ['submission_id' => $submissionId]);
 }
 
 $serverUser = preg_replace('/[^a-zA-Z0-9._-]/', '', get_current_user());
@@ -379,16 +431,29 @@ $leadPayload['processing_error'] = (!$hubspotSubmitted || !$sent)
 $leadPersisted = persist_lead($leadPayload);
 
 if (!$leadPersisted) {
-    error_log('Osool website lead persistence failed for submission ' . $submissionId . '.');
+    log_event('lead_persistence_failed', ['submission_id' => $submissionId]);
 }
 
 if (!$sent && !$hubspotSubmitted && !$leadPersisted) {
+    release_submission_claim($submissionId);
+    log_event('all_delivery_channels_failed', ['submission_id' => $submissionId]);
     redirect_to($contactPath . '?status=send-error#project-brief');
 }
 
 if (!$sent) {
-    error_log('Osool website lead email delivery failed; Supabase persistence succeeded.');
+    log_event('email_delivery_failed', [
+        'submission_id' => $submissionId,
+        'lead_persisted' => $leadPersisted,
+        'hubspot_submitted' => $hubspotSubmitted,
+    ]);
 }
+
+log_event('submission_completed', [
+    'submission_id' => $submissionId,
+    'lead_persisted' => $leadPersisted,
+    'hubspot_submitted' => $hubspotSubmitted,
+    'email_sent' => $sent,
+]);
 
 $receipt = bin2hex(random_bytes(8));
 redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($receipt));

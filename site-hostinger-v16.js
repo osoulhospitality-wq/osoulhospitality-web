@@ -24,6 +24,14 @@
     try { window.sessionStorage.setItem(key, value); } catch (_) {}
   }
 
+  function clearCompletedLeadToken() {
+    var path = window.location.pathname.replace(/\/+$/, "");
+    if (path !== "/thank-you" && path !== "/en/thank-you") return;
+    var params = new URLSearchParams(window.location.search);
+    if (params.get("submitted") !== "1") return;
+    try { window.sessionStorage.removeItem("osoul_lead_submission_token_v1"); } catch (_) {}
+  }
+
   function trackLeadSuccess() {
     var path = window.location.pathname.replace(/\/+$/, "");
     if (path !== "/thank-you" && path !== "/en/thank-you") return;
@@ -297,7 +305,7 @@
   });
   if (!document.querySelector('script[data-osoul-enhancer="14"]')) {
     var script = document.createElement("script");
-    script.src = "/site-hostinger-v13.js?v=14";
+    script.src = "/site-hostinger-v13.js?v=15";
     script.defer = true;
     script.dataset.osoulEnhancer = "14";
     document.head.appendChild(script);
@@ -305,6 +313,7 @@
   addPrivacySettingsButton();
   addPrivacyDisclosure();
   installProjectBriefFallback();
+  clearCompletedLeadToken();
   var consent = safeStorageGet();
   var privacySignal = navigator.globalPrivacyControl === true || navigator.doNotTrack === "1";
   if (consent === "accepted" && !privacySignal) {
