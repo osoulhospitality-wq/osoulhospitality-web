@@ -192,6 +192,7 @@
 
     form.dataset.osoulStepFallback = "true";
     var step = 1;
+    var renderedStep = 0;
     var english = document.documentElement.lang.toLowerCase().indexOf("en") === 0;
 
     function value(name) {
@@ -217,6 +218,11 @@
     }
 
     function renderActions() {
+      if (renderedStep === step) {
+        var current = actions.querySelector('[data-osoul-step-action="next"], [data-osoul-step-action="submit"]');
+        if (current) { current.disabled = !valid(step); return; }
+      }
+      renderedStep = step;
       actions.innerHTML = "";
       if (step > 1) {
         var back = document.createElement("button");
@@ -305,7 +311,7 @@
   });
   if (!document.querySelector('script[data-osoul-enhancer="14"]')) {
     var script = document.createElement("script");
-    script.src = "/site-hostinger-v13.js?v=15";
+    script.src = "/site-hostinger-v13.js?v=20261025";
     script.defer = true;
     script.dataset.osoulEnhancer = "14";
     document.head.appendChild(script);

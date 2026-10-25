@@ -46,6 +46,9 @@
   var status = params.get("status");
   var englishStatus = document.documentElement.lang && document.documentElement.lang.indexOf("en") === 0;
   var messages = englishStatus ? {
+    "processing": "Your request is still being processed. Please wait before submitting again.",
+    "review-required": "Your request needs a delivery check. Contact info@osoulhospitality.com before submitting again.",
+    "idempotency-conflict": "This submission reference was already used with different details. Contact info@osoulhospitality.com to check the request before trying again.",
     "incomplete": "Some required fields are incomplete. Review the brief and submit again.",
     "contact": "Enter a professional email address.",
     "email-required": "A professional email address is required so your enquiry can be tracked and answered.",
@@ -55,6 +58,9 @@
     "security": "The request source could not be verified. Open the form directly from this website.",
     "send-error": "The brief could not be sent. Email info@osoulhospitality.com or use WhatsApp."
   } : {
+    "processing": "طلبك لا يزال قيد المعالجة. يرجى الانتظار قبل إعادة الإرسال.",
+    "review-required": "يحتاج طلبك إلى التحقق من وصوله. تواصل مع info@osoulhospitality.com قبل إعادة الإرسال.",
+    "idempotency-conflict": "استُخدم مرجع الإرسال مع بيانات مختلفة. تواصل مع info@osoulhospitality.com للتحقق من الطلب قبل المحاولة مجددًا.",
     "incomplete": "بعض الحقول المطلوبة غير مكتملة. راجع الموجز ثم أعد الإرسال.",
     "contact": "أدخل بريدًا مهنيًا.",
     "email-required": "البريد المهني مطلوب حتى يمكن متابعة الطلب والرد عليه.",
@@ -136,7 +142,7 @@
     if (meta) meta.setAttribute("content", content);
   }
 
-  function enhanceCommon() {
+  function enhanceCommon(preserveContent) {
     var english = document.documentElement.lang && document.documentElement.lang.indexOf("en") === 0;
     var header = document.querySelector(".site-header");
     if (header) header.classList.add("osoul-v13-header");
@@ -151,12 +157,14 @@
       document.querySelectorAll('a[href="/solutions"]').forEach(function (node) {
         if (node.textContent.trim() === "كيف تبدأ") node.textContent = "الخدمات";
       });
+      if (!preserveContent) {
       document.querySelectorAll(".header-actions .button-small").forEach(function (node) {
         node.innerHTML = 'ابدأ مشروعك <span aria-hidden="true">←</span>';
       });
       document.querySelectorAll(".mobile-menu .mobile-cta").forEach(function (node) { node.textContent = "ابدأ مشروعك"; });
       var footerCopy = document.querySelector(".site-footer .footer-brand > p");
-      if (footerCopy) footerCopy.textContent = "بيت خبرة سعودي متخصص في الاستشارات السياحية، يجمع الاستراتيجية والدراسات والامتثال والتطوير والتشغيل وتحسين الربحية، ويقود التنفيذ حتى ظهور نتائج قابلة للقياس.";
+      if (footerCopy) footerCopy.textContent = "إدارة وتنسيق خدمات المرافق والدعم التشغيلي لمنشآت الضيافة، بعقود حسب الاحتياج وتكليفات استشارية مستقلة ونطاق ومسؤوليات واضحة.";
+      }
     }
   }
 
@@ -272,12 +280,25 @@
 
   function applyEnhancements() {
     addStylesheet();
-    enhanceCommon();
-    enhanceHome();
-    enhanceSolutions();
-    enhanceAbout();
-    enhanceContact();
-    enhanceEnglish();
+    var preserveContent = document.documentElement.getAttribute("data-osoul-content-version") === "2026-10-services";
+    enhanceCommon(preserveContent);
+    if (!preserveContent) {
+      enhanceHome();
+      enhanceSolutions();
+      enhanceAbout();
+      enhanceContact();
+      enhanceEnglish();
+    } else {
+      // Keep presentational hooks without replacing versioned editorial content.
+      if ((document.documentElement.lang || "").indexOf("en") === 0) document.body.classList.add("english-page");
+      if (location.pathname === "/" || location.pathname === "/index.html") {
+        document.body.classList.add("osoul-v13-home");
+        var hero = document.querySelector(".hero");
+        if (hero) hero.classList.add("osoul-v13-home-hero");
+      }
+      var intro = document.querySelector(".page-intro");
+      if (intro) intro.classList.add("osoul-v13-page-intro");
+    }
     document.documentElement.setAttribute("data-osoul-version", "14");
   }
 
