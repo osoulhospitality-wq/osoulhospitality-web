@@ -15,7 +15,7 @@ jobs:
         with:
           php-version: '8.4'
       - name: Lint PHP files
-        run: find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 -I{} php -l {}
+        run: find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 php -n -l
 
       - name: Test request state and concurrent duplicate handling
         run: |
