@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / ".checksums.sha256"
-EXCLUDED_DIRS = {".git", "__pycache__", "automation", "content", "docs", "node_modules", "scripts", "src"}
+EXCLUDED_DIRS = {".openai", "security-tests", "tests", ".git", "__pycache__", "automation", "content", "docs", "node_modules", "scripts", "src"}
 EXCLUDED_FILES = {
     ".checksums.sha256",
     ".gitignore",

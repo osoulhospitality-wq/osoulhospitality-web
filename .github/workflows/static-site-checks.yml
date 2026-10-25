@@ -18,7 +18,9 @@ jobs:
         run: find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 -I{} php -l {}
 
       - name: Test request state and concurrent duplicate handling
-        run: python3 scripts/test_lead_state.py
+        run: |
+          python3 scripts/test_lead_state.py
+          python3 -m unittest discover -s server/tests -p 'test_*.py' -v
 
   business-lifecycle:
     runs-on: ubuntu-latest

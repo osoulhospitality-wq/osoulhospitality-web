@@ -93,7 +93,7 @@ const handler = read("submit.php");
 assert(handler.includes("$contactPath = $isEnglish ? '/en/contact/' : '/contact/';"), "Form handler supports English validation redirects");
 assert(handler.includes("$thankYouPath = $isEnglish ? '/en/thank-you/' : '/thank-you/';"), "Form handler supports English success redirects");
 assert(handler.includes("$description = post_value('description', 2000);"), "Form handler includes the optional project context in the email");
-assert(read("server/lead-state.php").includes("bin2hex(random_bytes(8))") && handler.includes("$claim[\'receipt\']"), "Successful form redirects reuse the stored one-time analytics receipt");
+assert(read("server/intake-pipeline.php").includes("bin2hex(random_bytes(8))") && handler.includes("$result[\'receipt\']"), "Successful form redirects reuse the stored one-time analytics receipt");
 assert(handler.includes("?submitted=1&receipt="), "Successful form redirects identify a validated submission");
 
 for (const relative of ["thank-you/index.html", "en/thank-you/index.html"]) {

@@ -6,7 +6,7 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Cache-Control: no-store, max-age=0');
 header_remove('X-Powered-By');
 header('X-Osool-Lead-Intake: v4');
-require_once __DIR__ . '/server/lead-state.php';
+require_once __DIR__ . '/server/intake-pipeline.php';
 
 const SUPABASE_URL = 'https://fdkfxlvsluiqrgedokdm.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hX1nbly1AzEtBhCUWoyrgw_9EU2Bxwr';
@@ -276,21 +276,6 @@ $fingerprint = hash('sha256', (string) json_encode([
     $language, $formName, $assetType, $city, $stage, $opening, $units,
     $primaryGap, $urgency, $documents, $support, $description, $name, $organization, $email, $phone, $consent,
 ], JSON_UNESCAPED_UNICODE));
-$claim = lead_state_claim($submissionId, $fingerprint);
-if ($claim['status'] === 'unavailable') {
-    log_event('idempotency_store_unavailable', ['submission_id' => $submissionId]);
-    redirect_to($contactPath . '?status=send-error#project-brief');
-}
-if ($claim['status'] === 'completed') {
-    log_event('duplicate_submission_suppressed', ['submission_id' => $submissionId]);
-    redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($claim['receipt']));
-}
-if ($claim['status'] !== 'claimed') {
-    $status = $claim['status'] === 'conflict' ? 'idempotency-conflict' : $claim['status'];
-    log_event('submission_not_confirmed', ['submission_id' => $submissionId, 'state' => $status]);
-    redirect_to($contactPath . '?status=' . rawurlencode($status) . '#project-brief');
-}
-
 $subjectPlain = 'موجز جاهزية جديد - ' . $organization . ' - ' . $assetType;
 $subject = function_exists('mb_encode_mimeheader')
     ? mb_encode_mimeheader($subjectPlain, 'UTF-8', 'B', "\r\n")
@@ -346,7 +331,7 @@ $leadPayload = [
     'status' => 'new',
 ];
 
-$hubspotSubmitted = false;
+$crmAdapter = static function () use ($email, $name, $organization, $assetType, $city, $stage, $opening, $units, $primaryGap, $urgency, $documents, $support, $description, $phone, $currentHost, $contactPath): string {
 if ($email !== '') {
     $nameParts = preg_split('/\s+/u', trim($name), 2);
     $firstName = $nameParts[0] ?? $name;
@@ -365,18 +350,17 @@ if ($email !== '') {
         'سياق إضافي: ' . ($description !== '' ? $description : 'غير مدخل'),
         'الموافقة على سياسة الخصوصية: نعم',
     ]);
-    $hubspotSubmitted = submit_to_hubspot([
+    return submit_to_hubspot([
         'firstname' => $firstName,
         'lastname' => $lastName,
         'email' => $email,
         'phone' => $phone,
         'message' => $hubspotMessage,
-    ], 'https://' . $currentHost . $contactPath, 'Osool Hospitality Website Contact');
+    ], 'https://' . $currentHost . $contactPath, 'Osool Hospitality Website Contact') ? 'accepted' : 'unknown';
 }
 
-if ($email !== '' && !$hubspotSubmitted) {
-    log_event('hubspot_submission_failed', ['submission_id' => $submissionId]);
-}
+return 'failed';
+};
 
 $serverUser = preg_replace('/[^a-zA-Z0-9._-]/', '', get_current_user());
 $serverHost = strtolower((string) gethostname());
@@ -399,52 +383,33 @@ if ($email !== '') {
     $headers[] = 'Reply-To: info@osoulhospitality.com';
 }
 
-$sent = @mail(
-    'info@osoulhospitality.com',
-    $subject,
-    $body,
-    implode("\r\n", $headers)
-);
-
-$leadPayload['hubspot_status'] = $hubspotSubmitted ? 'submitted' : 'failed';
-$leadPayload['email_status'] = $sent ? 'sent' : 'failed';
-$leadPayload['last_attempt_at'] = gmdate('c');
-$leadPayload['processing_error'] = (!$hubspotSubmitted || !$sent)
-    ? implode('; ', array_filter([
-        !$hubspotSubmitted ? 'hubspot_submission_failed' : '',
-        !$sent ? 'email_delivery_failed' : '',
-    ]))
-    : null;
-$leadPersisted = persist_lead($leadPayload);
-
-if (!$leadPersisted) {
-    log_event('lead_persistence_failed', ['submission_id' => $submissionId]);
-}
-
-if (!$sent && !$hubspotSubmitted && !$leadPersisted) {
-    lead_state_finish($submissionId, $fingerprint, false);
-    log_event('all_delivery_channels_failed', ['submission_id' => $submissionId]);
-    redirect_to($contactPath . '?status=review-required#project-brief');
-}
-
-if (!$sent) {
-    log_event('email_delivery_failed', [
-        'submission_id' => $submissionId,
-        'lead_persisted' => $leadPersisted,
-        'hubspot_submitted' => $hubspotSubmitted,
-    ]);
-}
-
-log_event('submission_completed', [
-    'submission_id' => $submissionId,
-    'lead_persisted' => $leadPersisted,
-    'hubspot_submitted' => $hubspotSubmitted,
-    'email_sent' => $sent,
+$result = intake_process($submissionId, $fingerprint, [
+    'crm' => $crmAdapter,
+    'mail' => static function () use ($subject, $body, $headers): string {
+        return @mail('info@osoulhospitality.com', $subject, $body, implode("\r\n", $headers))
+            ? 'accepted' : 'failed';
+    },
+    'database' => static function (array $channels) use ($leadPayload): string {
+        $leadPayload['hubspot_status'] = $channels['crm']['status'] === 'accepted' ? 'submitted' : 'failed';
+        $leadPayload['email_status'] = $channels['mail']['status'] === 'accepted' ? 'sent' : 'failed';
+        $leadPayload['last_attempt_at'] = gmdate('c');
+        $leadPayload['processing_error'] = implode('; ', array_filter([
+            $channels['crm']['status'] !== 'accepted' ? 'crm_' . $channels['crm']['status'] : '',
+            $channels['mail']['status'] !== 'accepted' ? 'mail_' . $channels['mail']['status'] : '',
+        ])) ?: null;
+        return persist_lead($leadPayload) ? 'accepted' : 'unknown';
+    },
 ]);
-
-if (!lead_state_finish($submissionId, $fingerprint, true)) {
-    log_event('completion_state_write_failed', ['submission_id' => $submissionId]);
-    redirect_to($contactPath . '?status=review-required#project-brief');
+log_event('intake_outcome', [
+    'submission_id' => $submissionId, 'status' => $result['status'],
+    'channels' => $result['channels'] ?? [], 'needs_review' => $result['needs_review'] ?? true,
+    'duplicate' => $result['duplicate'] ?? false,
+]);
+if ($result['status'] === 'completed') {
+    redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($result['receipt']));
 }
-$receipt = $claim['receipt'];
-redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($receipt));
+$status = match ($result['status']) {
+    'conflict' => 'idempotency-conflict', 'processing' => 'processing',
+    'unavailable' => 'send-error', default => 'review-required',
+};
+redirect_to($contactPath . '?status=' . rawurlencode($status) . '#project-brief');
