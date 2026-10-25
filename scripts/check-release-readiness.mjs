@@ -93,7 +93,7 @@ const handler = read("submit.php");
 assert(handler.includes("$contactPath = $isEnglish ? '/en/contact/' : '/contact/';"), "Form handler supports English validation redirects");
 assert(handler.includes("$thankYouPath = $isEnglish ? '/en/thank-you/' : '/thank-you/';"), "Form handler supports English success redirects");
 assert(handler.includes("$description = post_value('description', 2000);"), "Form handler includes the optional project context in the email");
-assert(handler.includes("bin2hex(random_bytes(8))"), "Successful form redirects include a one-time analytics receipt");
+assert(read("server/lead-state.php").includes("bin2hex(random_bytes(8))") && handler.includes("$claim[\'receipt\']"), "Successful form redirects reuse the stored one-time analytics receipt");
 assert(handler.includes("?submitted=1&receipt="), "Successful form redirects identify a validated submission");
 
 for (const relative of ["thank-you/index.html", "en/thank-you/index.html"]) {
@@ -160,9 +160,17 @@ assert(enterpriseSchema.includes("prevent_org_reassignment"), "Tenant reassignme
 assert(enterpriseSchema.includes("command-center-documents"), "Private document bucket is declared");
 assert(!/service[_-]?role|secret[_-]?key/i.test(enterpriseConfig + enterpriseBundle), "Browser assets contain no service-role or secret key");
 
+// Public pages are static HTML; stale React bootstrap must never overwrite releases.
+for (const page of ["index.html", "contact/index.html", "solutions/index.html", "en/index.html", "en/contact/index.html", "en/solutions/index.html"]) {
+  const html = fs.readFileSync(path.join(root, page), "utf8");
+  assert(!html.includes('id="_R_"'), page + ": no stale hydration bootstrap");
+  assert(!html.includes('__VINEXT_RSC'), page + ": no stale RSC payload");
+}
+
 if (failures.length) {
   console.error(`FAIL: ${failures.length} of ${checks.length} checks failed`);
   failures.forEach((item) => console.error(`- ${item}`));
   process.exit(1);
 }
 console.log(`PASS: ${checks.length} release-readiness assertions succeeded.`);
+

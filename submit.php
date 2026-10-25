@@ -5,7 +5,8 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Cache-Control: no-store, max-age=0');
 header_remove('X-Powered-By');
-header('X-Osool-Lead-Intake: v3');
+header('X-Osool-Lead-Intake: v4');
+require_once __DIR__ . '/server/lead-state.php';
 
 const SUPABASE_URL = 'https://fdkfxlvsluiqrgedokdm.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hX1nbly1AzEtBhCUWoyrgw_9EU2Bxwr';
@@ -82,27 +83,6 @@ function rate_limit_exceeded(string $clientAddress): ?bool {
     flock($handle, LOCK_UN);
     fclose($handle);
     return $exceeded;
-}
-
-function claim_submission(string $submissionId): ?bool {
-    $directory = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR);
-    $path = $directory . DIRECTORY_SEPARATOR . 'osoul-submission-' . hash('sha256', $submissionId) . '.lock';
-    if (is_file($path) && filemtime($path) !== false && filemtime($path) < time() - 86400) {
-        @unlink($path);
-    }
-    $handle = @fopen($path, 'x');
-    if ($handle === false) {
-        return is_file($path) ? false : null;
-    }
-    fwrite($handle, (string) time());
-    fclose($handle);
-    return true;
-}
-
-function release_submission_claim(string $submissionId): void {
-    $path = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR)
-        . DIRECTORY_SEPARATOR . 'osoul-submission-' . hash('sha256', $submissionId) . '.lock';
-    @unlink($path);
 }
 
 function persist_lead(array $payload): bool {
@@ -292,16 +272,23 @@ if ($phone !== '' && !preg_match('/^[0-9+\s()\-]{7,30}$/u', $phone)) {
 $submissionId = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $submittedIdempotencyKey) === 1
     ? $submittedIdempotencyKey
     : uuid_v4();
-$claim = claim_submission($submissionId);
-if ($claim === null) {
+$fingerprint = hash('sha256', (string) json_encode([
+    $language, $formName, $assetType, $city, $stage, $opening, $units,
+    $primaryGap, $urgency, $documents, $support, $description, $name, $organization, $email, $phone, $consent,
+], JSON_UNESCAPED_UNICODE));
+$claim = lead_state_claim($submissionId, $fingerprint);
+if ($claim['status'] === 'unavailable') {
     log_event('idempotency_store_unavailable', ['submission_id' => $submissionId]);
-    http_response_code(503);
     redirect_to($contactPath . '?status=send-error#project-brief');
 }
-if ($claim === false) {
+if ($claim['status'] === 'completed') {
     log_event('duplicate_submission_suppressed', ['submission_id' => $submissionId]);
-    $receipt = bin2hex(random_bytes(8));
-    redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($receipt));
+    redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($claim['receipt']));
+}
+if ($claim['status'] !== 'claimed') {
+    $status = $claim['status'] === 'conflict' ? 'idempotency-conflict' : $claim['status'];
+    log_event('submission_not_confirmed', ['submission_id' => $submissionId, 'state' => $status]);
+    redirect_to($contactPath . '?status=' . rawurlencode($status) . '#project-brief');
 }
 
 $subjectPlain = 'موجز جاهزية جديد - ' . $organization . ' - ' . $assetType;
@@ -435,9 +422,9 @@ if (!$leadPersisted) {
 }
 
 if (!$sent && !$hubspotSubmitted && !$leadPersisted) {
-    release_submission_claim($submissionId);
+    lead_state_finish($submissionId, $fingerprint, false);
     log_event('all_delivery_channels_failed', ['submission_id' => $submissionId]);
-    redirect_to($contactPath . '?status=send-error#project-brief');
+    redirect_to($contactPath . '?status=review-required#project-brief');
 }
 
 if (!$sent) {
@@ -455,5 +442,9 @@ log_event('submission_completed', [
     'email_sent' => $sent,
 ]);
 
-$receipt = bin2hex(random_bytes(8));
+if (!lead_state_finish($submissionId, $fingerprint, true)) {
+    log_event('completion_state_write_failed', ['submission_id' => $submissionId]);
+    redirect_to($contactPath . '?status=review-required#project-brief');
+}
+$receipt = $claim['receipt'];
 redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($receipt));

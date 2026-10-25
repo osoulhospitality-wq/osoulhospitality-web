@@ -126,7 +126,7 @@ await check("Supabase public-read isolation", async () => {
     requireCondition(Array.isArray(rows) && rows.length === 0, "anonymous role can read website lead rows");
     return "anonymous query returns zero rows under RLS";
   }
-  requireCondition([401, 403, 404].includes(response.status), `unexpected Data API status ${response.status}`);
+  requireCondition([401, 403].includes(response.status), `unexpected Data API status ${response.status}`);
   return `anonymous read rejected with ${response.status}`;
 });
 
