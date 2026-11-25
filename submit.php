@@ -84,25 +84,16 @@ function rate_limit_exceeded(string $clientAddress): ?bool {
     return $exceeded;
 }
 
-function claim_submission(string $submissionId): ?bool {
+function open_submission_lock(string $submissionId) {
     $directory = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR);
     $path = $directory . DIRECTORY_SEPARATOR . 'osoul-submission-' . hash('sha256', $submissionId) . '.lock';
-    if (is_file($path) && filemtime($path) !== false && filemtime($path) < time() - 86400) {
-        @unlink($path);
-    }
-    $handle = @fopen($path, 'x');
-    if ($handle === false) {
-        return is_file($path) ? false : null;
-    }
-    fwrite($handle, (string) time());
-    fclose($handle);
-    return true;
+    return @fopen($path, 'c+');
 }
 
-function release_submission_claim(string $submissionId): void {
-    $path = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR)
-        . DIRECTORY_SEPARATOR . 'osoul-submission-' . hash('sha256', $submissionId) . '.lock';
-    @unlink($path);
+function save_submission_receipt($handle, string $receipt): bool {
+    $record = time() . ':' . $receipt;
+    return rewind($handle) && ftruncate($handle, 0)
+        && fwrite($handle, $record) === strlen($record) && fflush($handle);
 }
 
 function persist_lead(array $payload): bool {
@@ -292,16 +283,20 @@ if ($phone !== '' && !preg_match('/^[0-9+\s()\-]{7,30}$/u', $phone)) {
 $submissionId = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $submittedIdempotencyKey) === 1
     ? $submittedIdempotencyKey
     : uuid_v4();
-$claim = claim_submission($submissionId);
-if ($claim === null) {
+$submissionLock = open_submission_lock($submissionId);
+if ($submissionLock === false || !flock($submissionLock, LOCK_EX | LOCK_NB)) {
     log_event('idempotency_store_unavailable', ['submission_id' => $submissionId]);
-    http_response_code(503);
     redirect_to($contactPath . '?status=send-error#project-brief');
 }
-if ($claim === false) {
+$savedReceipt = stream_get_contents($submissionLock);
+if (is_string($savedReceipt)
+    && preg_match('/^(\d+):([a-f0-9]{16})$/D', $savedReceipt, $receiptParts) === 1
+    && (int) $receiptParts[1] >= time() - 86400) {
     log_event('duplicate_submission_suppressed', ['submission_id' => $submissionId]);
-    $receipt = bin2hex(random_bytes(8));
-    redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($receipt));
+    redirect_to($thankYouPath . '?submitted=1&receipt=' . $receiptParts[2]);
+}
+if ($savedReceipt === false || (ctype_digit($savedReceipt) && (int) $savedReceipt >= time() - 86400)) {
+    redirect_to($contactPath . '?status=send-error#project-brief');
 }
 
 $subjectPlain = 'موجز جاهزية جديد - ' . $organization . ' - ' . $assetType;
@@ -435,7 +430,6 @@ if (!$leadPersisted) {
 }
 
 if (!$sent && !$hubspotSubmitted && !$leadPersisted) {
-    release_submission_claim($submissionId);
     log_event('all_delivery_channels_failed', ['submission_id' => $submissionId]);
     redirect_to($contactPath . '?status=send-error#project-brief');
 }
@@ -456,4 +450,7 @@ log_event('submission_completed', [
 ]);
 
 $receipt = bin2hex(random_bytes(8));
+if (!save_submission_receipt($submissionLock, $receipt)) {
+    log_event('receipt_storage_failed', ['submission_id' => $submissionId]);
+}
 redirect_to($thankYouPath . '?submitted=1&receipt=' . rawurlencode($receipt));
