@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/command-center/enterprise/app.css">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=16" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=17" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#enterprise-app">انتقل إلى بوابة الدخول</a>
@@ -114,6 +114,32 @@
           <label for="organization-select">المنشأة</label>
           <select id="organization-select"></select>
           <div id="kpi-grid" class="kpi-grid"></div>
+          <details id="facility-operations">
+            <summary>إدارة المرافق والأصول</summary>
+            <p id="facility-status" role="status"></p>
+            <form id="facility-form">
+              <label>اسم المنشأة <input name="name" required minlength="2" maxlength="180"></label>
+              <button type="submit">إضافة منشأة</button>
+            </form>
+            <form id="asset-form">
+              <label>المنشأة <select name="facility_id" required></select></label>
+              <label>رمز الأصل <input name="asset_code" required maxlength="80"></label>
+              <label>اسم الأصل <input name="name" required minlength="2" maxlength="180"></label>
+              <button type="submit">إضافة أصل</button>
+            </form>
+            <form id="work-order-form">
+              <label>الأصل <select name="asset_id" required></select></label>
+              <label>وصف أمر العمل <input name="summary" required minlength="2" maxlength="300"></label>
+              <button type="submit">فتح أمر عمل</button>
+            </form>
+            <form id="visit-form">
+              <label>أمر العمل قيد التنفيذ <select name="work_order_id" required></select></label>
+              <label>نتيجة الزيارة <input name="findings" required minlength="2" maxlength="3000"></label>
+              <button type="submit">تسجيل الزيارة</button>
+            </form>
+            <h3>أوامر العمل والزيارات</h3>
+            <ul id="facility-work-orders"></ul>
+          </details>
           <p class="privacy-note">البيانات المعروضة خاضعة للصلاحيات وسجل التدقيق. لا تشارك لقطات الشاشة أو الملفات خارج القنوات المعتمدة.</p>
         </div>
       </div>

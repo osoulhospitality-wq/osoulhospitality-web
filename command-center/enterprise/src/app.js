@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { setupFacilityOperations } from "./facility-operations.js";
 
 const config = window.OSOUL_ENTERPRISE_CONFIG || {};
 const requiredKeys = ["supabaseUrl", "supabasePublishableKey"];
@@ -227,6 +228,7 @@ if (!configReady) {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
     global: { headers: { "X-Client-Info": "osoul-command-center-v15" } }
   });
+  setupFacilityOperations(supabase);
 
   const recoveryButton = document.querySelector("#show-password-recovery");
   recoveryButton.disabled = false;
