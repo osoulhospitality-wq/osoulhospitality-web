@@ -155,8 +155,12 @@
         node.innerHTML = 'ابدأ مشروعك <span aria-hidden="true">←</span>';
       });
       document.querySelectorAll(".mobile-menu .mobile-cta").forEach(function (node) { node.textContent = "ابدأ مشروعك"; });
-      var footerCopy = document.querySelector(".site-footer .footer-brand > p");
-      if (footerCopy) footerCopy.textContent = "بيت خبرة سعودي متخصص في الاستشارات السياحية، يجمع الاستراتيجية والدراسات والامتثال والتطوير والتشغيل وتحسين الربحية، ويقود التنفيذ حتى ظهور نتائج قابلة للقياس.";
+    }
+    var footerCopy = document.querySelector(".site-footer .footer-brand > p");
+    if (footerCopy) {
+      footerCopy.textContent = english
+        ? "We manage facilities and assets for hotels and serviced apartments, from maintenance and daily services to suppliers and service quality."
+        : "ندير مرافق وأصول الفنادق والشقق المخدومة، ونتابع الصيانة والخدمات اليومية والموردين وجودة التنفيذ.";
     }
   }
 
