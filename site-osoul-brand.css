@@ -205,14 +205,14 @@ html[data-osoul-public-brand] .osoul-fm-hero::after {
 
 html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy {
   max-inline-size: min(48%, 41rem);
-  padding-block: clamp(3.65rem, 8vw, 7rem);
+  padding-block: clamp(3.35rem, 6vw, 5.25rem);
 }
 
 html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1 {
   color: #fffdf6;
-  max-inline-size: 15ch;
+  max-inline-size: 100%;
   margin: .5em 0 .45em;
-  font-size: clamp(2.55rem, 4.9vw, 5rem);
+  font-size: clamp(2.5rem, 4.4vw, 4.5rem);
   line-height: 1.12;
   font-weight: 820;
   text-wrap: balance;
@@ -512,7 +512,7 @@ html[data-osoul-public-brand] .contact-page-layout {
 }
 
 html[data-osoul-public-brand] main:has(.quick-enquiry) > :is(.page-intro, .osoul-static-hero) {
-  padding-block: clamp(2rem, 4.5vw, 4.5rem);
+  padding-block: clamp(1.4rem, 4vw, 3.5rem);
 }
 
 html[data-osoul-public-brand] :is(.contact-page, .osoul-static-section:has(.quick-enquiry)) {
@@ -785,12 +785,8 @@ html[data-osoul-public-brand] .osoul-consent-actions .osoul-consent-accept {
     padding-block: clamp(2.5rem, 7vw, 4.4rem) clamp(1.25rem, 3.7vw, 2.5rem);
   }
 
-  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1 {
-    max-inline-size: 19ch;
-  }
-
   html[data-osoul-public-brand][lang^="ar"] .osoul-fm-hero .osoul-fm-copy h1 {
-    max-inline-size: 15ch;
+    max-inline-size: min(100%, 18ch);
   }
 
   html[data-osoul-public-brand] :is(.contact-page-layout, .contact-layout, .osoul-fm-service-intro, div.osoul-fm-operations, .osoul-fm-operations > .shell:has(.osoul-fm-operations-photo)) {
@@ -819,7 +815,10 @@ html[data-osoul-public-brand] .osoul-consent-actions .osoul-consent-accept {
     font-size: .62rem;
   }
 
-  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1,
+  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1 {
+    font-size: clamp(1.82rem, 8vw, 3rem);
+  }
+
   html[data-osoul-public-brand][lang^="ar"] .osoul-fm-hero .osoul-fm-copy h1 {
     font-size: clamp(2.15rem, 8.7vw, 3.15rem);
   }
