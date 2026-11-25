@@ -224,3 +224,64 @@ a { text-underline-offset: .22em; }
   .osoul-article-layout { display: block; padding: 1rem 0; }
   a { color: black; text-decoration: none; }
 }
+
+/* Facilities brand surfaces and text contrast */
+:root {
+  --osoul-brand-gold-light: #e8c88d;
+  --osoul-brand-gold-dark: #765218;
+  --osoul-brand-on-dark: #f6f3eb;
+}
+
+.page-intro {
+  padding-block: clamp(3.2rem, 7vw, 5.75rem);
+}
+.page-intro h1, .contact-section .contact-copy h2 {
+  color: #fff;
+}
+.page-intro p, .contact-section .contact-copy > p {
+  color: var(--osoul-brand-on-dark);
+}
+.page-intro .eyebrow, .contact-section .kicker-light,
+.osoul-fm-hero .osoul-fm-eyebrow {
+  color: var(--osoul-brand-gold-light);
+}
+.osoul-fm-hero .osoul-fm-copy h1 {
+  max-inline-size: 15ch;
+  font-size: clamp(2.45rem, 5.4vw, 4.5rem);
+  line-height: 1.16;
+}
+html[lang^="en"] .osoul-fm-hero .osoul-fm-copy h1 {
+  max-inline-size: 17ch;
+}
+html[lang^="ar"] .osoul-fm-copy h1,
+html[lang^="ar"] .page-intro h1 {
+  letter-spacing: normal;
+}
+.site-header .brand-lockup small, .english-header .brand-lockup small {
+  color: var(--osoul-brand-gold-dark);
+}
+.site-footer .brand-lockup-inverse small {
+  color: var(--osoul-brand-gold-light);
+}
+.site-header .header-actions .button-small,
+.english-header .header-actions .button-small,
+.osoul-fm-actions .osoul-fm-cta {
+  background: var(--osoul-brand-gold-light);
+  color: var(--osoul-ink);
+}
+.site-header .header-actions .button-small:hover,
+.english-header .header-actions .button-small:hover,
+.osoul-fm-actions .osoul-fm-cta:hover {
+  background: #f2d7a1;
+  color: var(--osoul-ink);
+}
+
+@media (max-width: 540px) {
+  .page-intro h1 {
+    margin-block: 0 .8rem;
+    font-size: clamp(2rem, 8vw, 2.6rem);
+  }
+  .osoul-fm-hero .osoul-fm-copy h1 {
+    font-size: clamp(2.2rem, 8.5vw, 2.75rem);
+  }
+}

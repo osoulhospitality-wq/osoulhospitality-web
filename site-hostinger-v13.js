@@ -121,7 +121,7 @@
   }
 
   function addStylesheet() {
-    ["/site-v13.css", "/site-v14.css"].forEach(function (href) {
+    ["/site-v13.css", "/site-v14.css?v=2"].forEach(function (href) {
       if (document.querySelector('link[href="' + href + '"]')) return;
       var link = document.createElement("link");
       link.rel = "stylesheet";
@@ -151,11 +151,18 @@
       document.querySelectorAll('a[href="/solutions"]').forEach(function (node) {
         if (node.textContent.trim() === "كيف تبدأ") node.textContent = "الخدمات";
       });
-      document.querySelectorAll(".header-actions .button-small").forEach(function (node) {
-        node.innerHTML = 'ابدأ مشروعك <span aria-hidden="true">←</span>';
-      });
-      document.querySelectorAll(".mobile-menu .mobile-cta").forEach(function (node) { node.textContent = "ابدأ مشروعك"; });
     }
+    document.querySelectorAll(".header-actions .button-small, .mobile-menu .mobile-cta").forEach(function (node) {
+      node.textContent = english ? "Request a service quote" : "اطلب عرض خدمة";
+    });
+    document.querySelectorAll(".site-header a, .english-header a, .site-footer a").forEach(function (node) {
+      var path = (node.getAttribute("href") || "").replace(/\/$/, "");
+      if (path === "/outputs" || path === "/en/outputs") {
+        node.textContent = english ? "Operations reports" : "تقارير التشغيل";
+      } else if (path === "/scenarios" || path === "/en/scenarios") {
+        node.textContent = english ? "Operations examples" : "أمثلة تشغيلية";
+      }
+    });
     var footerCopy = document.querySelector(".site-footer .footer-brand > p");
     if (footerCopy) {
       footerCopy.textContent = english
