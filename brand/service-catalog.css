@@ -1,0 +1,76 @@
+.osoul-service-catalog {
+  padding-block: clamp(2rem, 5vw, 4.5rem);
+  background: var(--osoul-paper);
+  color: var(--osoul-ink);
+}
+.osoul-service-jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-block-end: clamp(2.5rem, 6vw, 4.75rem);
+}
+.osoul-service-jumps a {
+  display: inline-block;
+  padding: .65rem 1rem;
+  border: 1px solid #c7b58f;
+  border-radius: .4rem;
+  background: #fff;
+  color: var(--osoul-pine);
+  font-weight: 700;
+  text-underline-offset: .2em;
+}
+.osoul-service-jumps a:hover { text-decoration: underline; }
+.osoul-service-group { scroll-margin-block-start: 7rem; }
+.osoul-service-group + .osoul-service-group {
+  margin-block-start: clamp(3rem, 7vw, 5.5rem);
+  padding-block-start: clamp(1.75rem, 4vw, 3.25rem);
+  border-block-start: 1px solid #d8cbb1;
+}
+.osoul-service-group header { margin-block-end: 1.4rem; }
+.osoul-service-group h2 {
+  margin: 0 0 .35rem;
+  color: var(--osoul-pine);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.2;
+}
+.osoul-service-group header p,
+.osoul-service-note {
+  max-inline-size: 65ch;
+  margin: 0;
+  color: #375048;
+  line-height: 1.75;
+}
+.osoul-service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(.8rem, 2vw, 1.4rem);
+}
+.osoul-service-card {
+  overflow: hidden;
+  border: 1px solid #d8cbb1;
+  border-radius: .65rem;
+  background: #fff;
+}
+.osoul-service-card img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #e4ded1;
+}
+.osoul-service-card div { padding: 1.15rem; }
+.osoul-service-card h3 {
+  margin: 0 0 .35rem;
+  color: var(--osoul-pine);
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  line-height: 1.35;
+}
+.osoul-service-card p { margin: 0; line-height: 1.75; }
+.osoul-service-note { margin-block-start: 2rem; }
+@media (max-width: 850px) {
+  .osoul-service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 540px) {
+  .osoul-service-grid { grid-template-columns: 1fr; }
+}
