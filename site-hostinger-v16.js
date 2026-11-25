@@ -103,7 +103,7 @@
     var english = document.documentElement.lang.toLowerCase().indexOf("en") === 0;
     return english ? {
       title: "Your privacy, your choice",
-      body: "With your permission, Osool Hospitality uses Google Analytics 4 and HubSpot analytics to understand visits and improve enquiries. No optional analytics loads before you accept.",
+      body: "With your permission, Google Analytics and HubSpot help us improve the enquiry experience.",
       accept: "Accept analytics",
       reject: "Essential only",
       settings: "Privacy settings",
@@ -111,7 +111,7 @@
       policyHref: "/en/privacy/"
     } : {
       title: "خصوصيتك بقرارك",
-      body: "بعد موافقتك فقط، تستخدم أصول الضيافة Google Analytics 4 وتحليلات HubSpot لفهم الزيارات وتحسين طلبات المشاريع. لا تُحمّل التحليلات الاختيارية قبل القبول.",
+      body: "بموافقتك، نستخدم تحليلات Google وHubSpot لتحسين تجربة طلب الخدمة.",
       accept: "قبول التحليلات",
       reject: "الضروري فقط",
       settings: "إعدادات الخصوصية",
