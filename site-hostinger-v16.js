@@ -355,7 +355,7 @@
     });
   }
 
-  ["/site-v13.css", "/site-v14.css?v=3"].forEach(function (href) {
+  ["/site-v13.css", "/site-v14.css?v=4"].forEach(function (href) {
     if (document.querySelector('link[href="' + href + '"]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
@@ -364,7 +364,7 @@
   });
   if (!document.querySelector('script[data-osoul-enhancer="14"]')) {
     var script = document.createElement("script");
-    script.src = "/site-hostinger-v13.js?v=20";
+    script.src = "/site-hostinger-v13.js?v=21";
     script.defer = true;
     script.dataset.osoulEnhancer = "14";
     document.head.appendChild(script);
