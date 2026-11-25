@@ -141,7 +141,7 @@
     var header = document.querySelector(".site-header");
     if (header) header.classList.add("osoul-v13-header");
     document.querySelectorAll(".brand-lockup small").forEach(function (node) {
-      node.textContent = english ? "Strategy • Execution • Growth" : "استراتيجية • تنفيذ • نمو";
+      node.textContent = english ? "Facilities & asset management" : "إدارة المرافق والأصول";
     });
     if (!english) {
       var bilingualRoutes = ["/solutions", "/outputs", "/about", "/scenarios", "/insights", "/contact", "/privacy", "/terms", "/accessibility", "/thank-you"];

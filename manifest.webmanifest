@@ -1,13 +1,13 @@
 {
-  "name": "أصول الضيافة",
+  "name": "أصول الضيافة لإدارة المرافق والأصول",
   "short_name": "أصول",
-  "description": "بيت خبرة سعودي للاستشارات السياحية والتطوير والتشغيل وتحسين الربحية",
+  "description": "شريك تشغيلي لمُلّاك الفنادق والشقق المخدومة ومشغّليها. نتابع الموردين والعقود والصيانة، ونوثّق جودة التنفيذ عبر نظام أصول.",
   "lang": "ar-SA",
   "dir": "rtl",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FDFBF7",
-  "theme_color": "#103B34",
+  "background_color": "#F6F3EB",
+  "theme_color": "#10332B",
   "icons": [
     {
       "src": "/brand/osool-mark-v8.svg",
