@@ -273,11 +273,15 @@
   function applyEnhancements() {
     addStylesheet();
     enhanceCommon();
-    enhanceHome();
-    enhanceSolutions();
-    enhanceAbout();
-    enhanceContact();
-    enhanceEnglish();
+    if (document.documentElement.dataset.osoulFacilitiesBrand !== "true") {
+      enhanceHome();
+      enhanceSolutions();
+      enhanceAbout();
+      enhanceContact();
+      enhanceEnglish();
+    } else if (document.documentElement.lang.startsWith("en")) {
+      document.body.classList.add("english-page");
+    }
     document.documentElement.setAttribute("data-osoul-version", "14");
   }
 
