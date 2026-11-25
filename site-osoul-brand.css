@@ -208,11 +208,11 @@ html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy {
   padding-block: clamp(3.35rem, 6vw, 5.25rem);
 }
 
-html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1 {
+html[data-osoul-public-brand][lang] .osoul-fm-hero .osoul-fm-copy h1 {
   color: #fffdf6;
   max-inline-size: 100%;
   margin: .5em 0 .45em;
-  font-size: clamp(2.5rem, 4.4vw, 4.5rem);
+  font-size: clamp(2.5rem, 4.05vw, 3.6rem);
   line-height: 1.12;
   font-weight: 820;
   text-wrap: balance;
@@ -815,7 +815,7 @@ html[data-osoul-public-brand] .osoul-consent-actions .osoul-consent-accept {
     font-size: .62rem;
   }
 
-  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1 {
+  html[data-osoul-public-brand][lang] .osoul-fm-hero .osoul-fm-copy h1 {
     font-size: clamp(1.82rem, 8vw, 3rem);
   }
 
