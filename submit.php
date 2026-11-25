@@ -279,15 +279,25 @@ if (in_array('', $required, true) || $formName !== 'hospitality_readiness_brief'
     redirect_to($contactPath . '?status=incomplete#project-brief');
 }
 
-if ($email === '') {
-    redirect_to($contactPath . '?status=email-required#project-brief');
+if ($email === '' && (!$quick || $phone === '')) {
+    $status = $quick ? 'contact-required' : 'email-required';
+    redirect_to($contactPath . '?status=' . $status . '#project-brief');
 }
 
 if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
     redirect_to($contactPath . '?status=email#project-brief');
 }
 
-if ($phone !== '' && !preg_match('/^[0-9+\s()\-]{7,30}$/u', $phone)) {
+if ($quick && $phone !== '') {
+    $asciiPhone = strtr($phone, array_combine(
+        preg_split('//u', '٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹', -1, PREG_SPLIT_NO_EMPTY),
+        str_split('01234567890123456789')
+    ));
+    $phone = preg_replace('/[\s()\-]+/u', '', $asciiPhone) ?? '';
+    if (!preg_match('/^\+?[0-9]{7,15}$/D', $phone)) {
+        redirect_to($contactPath . '?status=phone#project-brief');
+    }
+} elseif ($phone !== '' && !preg_match('/^[0-9+\s()\-]{7,30}$/u', $phone)) {
     redirect_to($contactPath . '?status=phone#project-brief');
 }
 
@@ -434,12 +444,13 @@ $sent = @mail(
     implode("\r\n", $headers)
 );
 
-$leadPayload['hubspot_status'] = $hubspotSubmitted ? 'submitted' : 'failed';
+$hubspotFailed = $email !== '' && !$hubspotSubmitted;
+$leadPayload['hubspot_status'] = $email === '' ? 'not_attempted' : ($hubspotSubmitted ? 'submitted' : 'failed');
 $leadPayload['email_status'] = $sent ? 'sent' : 'failed';
 $leadPayload['last_attempt_at'] = gmdate('c');
-$leadPayload['processing_error'] = (!$hubspotSubmitted || !$sent)
+$leadPayload['processing_error'] = ($hubspotFailed || !$sent)
     ? implode('; ', array_filter([
-        !$hubspotSubmitted ? 'hubspot_submission_failed' : '',
+        $hubspotFailed ? 'hubspot_submission_failed' : '',
         !$sent ? 'email_delivery_failed' : '',
     ]))
     : null;

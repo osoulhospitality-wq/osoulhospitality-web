@@ -84,14 +84,18 @@ for (const slug of arabicCore) {
   assert(html.includes(`hreflang="en-SA" href="https://osoulhospitality.com/en/${slug}/"`), `${relative} links to its English alternate`);
 }
 
-const formNames = ["form_name", "language", "brief_mode", "requested_support", "name", "email", "consent", "website"];
+const formNames = ["form_name", "language", "brief_mode", "requested_support", "name", "phone", "email", "consent", "website"];
 for (const relative of ["index.html", "contact/index.html", "en/contact/index.html"]) {
   const html = read(relative);
   const form = html.match(/<form\b[^>]*data-quick-enquiry[\s\S]*?<\/form>/)?.[0] || "";
-  for (const field of formNames) assert(form.includes(`name="${field}"`), `${relative} quick form includes ${field}`);
+  for (const field of formNames) assert(form.split(`name="${field}"`).length === 2, `${relative} quick form includes exactly one ${field}`);
   assert(form.includes(`name="language" value="${relative.startsWith("en/") ? "en" : "ar"}"`), `${relative} identifies its return language`);
   const required = [...form.matchAll(/<(?:input|select)\b[^>]*name="([^"]+)"[^>]*\brequired\b/g)].map((field) => field[1]).sort();
-  assert(required.join(",") === "consent,email,name,requested_support", `${relative} requires only the three enquiry fields and consent`);
+  assert(required.join(",") === "consent,name,phone,requested_support", `${relative} requires the default phone channel, name, service and consent`);
+  assert(/<input\b[^>]*name="phone"[^>]*type="tel"[^>]*autocomplete="tel"/.test(form), `${relative} offers telephone input and autofill`);
+  assert(/id="quick-contact-email" hidden[\s\S]*?<input\b[^>]*name="email"[^>]*type="email"[^>]*autocomplete="email"[^>]*disabled/.test(form), `${relative} offers a disabled email fallback with email autofill`);
+  assert(/<button\b[^>]*type="button"[^>]*aria-controls="quick-contact-phone quick-contact-email"/.test(form), `${relative} links the accessible switch to both channels`);
+  assert(html.includes('/site-hostinger-v16.js?v=20'), `${relative} loads the refreshed phone-first runtime`);
 }
 
 const handler = read("submit.php");

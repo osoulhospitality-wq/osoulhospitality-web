@@ -235,6 +235,19 @@ a { text-underline-offset: .22em; }
   border: 0;
   background: transparent;
 }
+.quick-enquiry .quick-enquiry-channel {
+  justify-self: start;
+  inline-size: auto;
+  min-block-size: 44px;
+  padding-inline: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  cursor: pointer;
+}
 .quick-enquiry .honeypot { display: none; }
 .quick-enquiry-service,
 .quick-enquiry-details { margin-block-start: 1rem; }

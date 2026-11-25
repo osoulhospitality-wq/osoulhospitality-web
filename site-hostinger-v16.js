@@ -301,16 +301,71 @@
     if (!form) return;
     var submit = form.querySelector('button[type="submit"]');
     var feedback = form.querySelector(".quick-enquiry-feedback");
+    var toggle = form.querySelector(".quick-enquiry-channel");
+    var phone = form.elements.namedItem("phone");
+    var email = form.elements.namedItem("email");
+    var phoneGroup = form.querySelector("#quick-contact-phone");
+    var emailGroup = form.querySelector("#quick-contact-email");
+    if (!submit || !feedback || !toggle || !phone || !email || !phoneGroup || !emailGroup) return;
     var english = document.documentElement.lang.startsWith("en");
     var label = submit.textContent;
     var started = Date.now();
     var pending = false;
+    var useEmail = false;
+    var phoneError = english
+      ? "Enter a valid mobile or WhatsApp number with 7 to 15 digits."
+      : "أدخل رقم جوال أو واتساب صحيحًا من ٧ إلى ١٥ رقمًا.";
+    var emailError = english ? "Enter a valid email address." : "أدخل بريدًا إلكترونيًا صحيحًا.";
+
+    function selectChannel(emailSelected) {
+      useEmail = emailSelected;
+      phoneGroup.hidden = useEmail;
+      phone.disabled = useEmail;
+      phone.required = !useEmail;
+      emailGroup.hidden = !useEmail;
+      email.disabled = !useEmail;
+      email.required = useEmail;
+      phone.setCustomValidity("");
+      toggle.textContent = useEmail
+        ? (english ? "Use a mobile number instead" : "استخدم رقم الجوال بدلًا من البريد")
+        : (english ? "Use email instead" : "استخدم البريد الإلكتروني بدلًا من الرقم");
+    }
+
+    function cleanPhone(value) {
+      return value.replace(/[٠-٩۰-۹]/g, function (digit) {
+        var code = digit.charCodeAt(0);
+        return String(code - (code < 0x06F0 ? 0x0660 : 0x06F0));
+      }).replace(/[\s()-]/g, "");
+    }
+
+    selectChannel(false);
+    toggle.hidden = false;
+    toggle.addEventListener("click", function () {
+      if (pending) return;
+      selectChannel(!useEmail);
+      feedback.textContent = "";
+      (useEmail ? email : phone).focus();
+    });
+    phone.addEventListener("input", function () { phone.setCustomValidity(""); });
 
     form.addEventListener("submit", async function (event) {
       event.preventDefault();
       if (pending) return;
+      var fields = new URLSearchParams(new FormData(form));
+      if (!useEmail) {
+        var number = cleanPhone(phone.value);
+        if (!/^\+?[0-9]{7,15}$/.test(number)) {
+          phone.setCustomValidity(phoneError);
+          phone.reportValidity();
+          return;
+        }
+        fields.set("phone", number);
+      } else {
+        fields.set("email", email.value.trim());
+      }
       pending = true;
       submit.disabled = true;
+      toggle.disabled = true;
       submit.textContent = english ? "Sending…" : "جارٍ الإرسال…";
       feedback.textContent = "";
       try {
@@ -319,7 +374,8 @@
         var wait = 3100 - (Date.now() - started);
         if (wait > 0) await new Promise(function (resolve) { window.setTimeout(resolve, wait); });
 
-        var fields = new URLSearchParams(new FormData(form));
+        var idempotency = form.elements.namedItem("idempotency_key");
+        if (idempotency) fields.set("idempotency_key", idempotency.value);
         fields.set("started_at", String(started));
         var response = await fetch(form.action, {
           method: "POST",
@@ -327,6 +383,7 @@
           body: fields
         });
         var result = await response.json();
+        if (typeof result.location !== "string") throw new Error("Missing enquiry redirect");
         var next = new URL(result.location, window.location.origin);
         if (response.ok && result.received === true && next.origin === window.location.origin &&
             next.pathname === (english ? "/en/thank-you/" : "/thank-you/") &&
@@ -335,12 +392,25 @@
           window.location.assign(next.href);
           return;
         }
+        if (next.origin !== window.location.origin) throw new Error("Unexpected enquiry redirect");
         var status = next.searchParams.get("status");
         if (status === "rate-limit") {
           feedback.textContent = english ? "Too many attempts. Try again in 15 minutes." : "المحاولات كثيرة. أعد المحاولة بعد ١٥ دقيقة.";
         } else if (status === "phone") {
-          feedback.textContent = english ? "Check the optional phone number, or leave it blank." : "راجع صيغة رقم الجوال أو اترك الحقل فارغًا.";
-          form.querySelector("details").open = true;
+          feedback.textContent = phoneError;
+          phone.focus();
+        } else if (status === "email") {
+          feedback.textContent = emailError;
+          email.focus();
+        } else if (status === "contact-required" || status === "email-required") {
+          feedback.textContent = english
+            ? "Enter a mobile number or switch to email."
+            : "أدخل رقم جوالك أو اختر التواصل بالبريد الإلكتروني.";
+          (useEmail ? email : phone).focus();
+        } else if (status === "incomplete") {
+          feedback.textContent = english
+            ? "Enter your name, choose a service and agree to the privacy notice."
+            : "أدخل اسمك، واختر الخدمة، ووافق على إشعار الخصوصية.";
         } else {
           throw new Error("Enquiry not confirmed");
         }
@@ -351,11 +421,12 @@
       }
       pending = false;
       submit.disabled = false;
+      toggle.disabled = false;
       submit.textContent = label;
     });
   }
 
-  ["/site-v13.css", "/site-v14.css?v=4"].forEach(function (href) {
+  ["/site-v13.css", "/site-v14.css?v=5"].forEach(function (href) {
     if (document.querySelector('link[href="' + href + '"]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
@@ -364,7 +435,7 @@
   });
   if (!document.querySelector('script[data-osoul-enhancer="14"]')) {
     var script = document.createElement("script");
-    script.src = "/site-hostinger-v13.js?v=21";
+    script.src = "/site-hostinger-v13.js?v=22";
     script.defer = true;
     script.dataset.osoulEnhancer = "14";
     document.head.appendChild(script);
