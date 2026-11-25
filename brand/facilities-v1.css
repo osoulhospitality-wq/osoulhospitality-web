@@ -1,0 +1,76 @@
+:root {
+  --osoul-pine: #10332b;
+  --osoul-ink: #172e28;
+  --osoul-gold: #e8c88d;
+  --osoul-paper: #f6f3eb;
+}
+
+.osoul-fm-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: center;
+  min-height: min(650px, 75svh);
+  overflow: hidden;
+  background: var(--osoul-pine);
+  color: #fff;
+}
+.osoul-fm-hero > img {
+  position: absolute;
+  z-index: -2;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 65%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.osoul-fm-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(to left, #10332b 34%, #10332bee 45%, #10332b00 76%);
+}
+[dir="ltr"] .osoul-fm-hero::after { transform: scaleX(-1); }
+.osoul-fm-hero .shell { width: min(100% - 48px, 1180px); }
+.osoul-fm-copy { max-width: 37rem; padding: 5rem 0; text-align: start; }
+.osoul-fm-eyebrow { color: var(--osoul-gold); font-weight: 700; letter-spacing: .01em; }
+.osoul-fm-copy h1 { max-width: 13ch; margin: .42em 0 .34em; font-size: clamp(2.65rem, 6.2vw, 5.2rem); line-height: 1.13; color: white; }
+.osoul-fm-copy p { max-width: 35rem; margin: 0 0 1.65rem; font-size: clamp(1rem, 1.7vw, 1.24rem); line-height: 1.8; color: #f6f3eb; }
+.osoul-fm-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem 1.25rem; }
+.osoul-fm-actions a { font-weight: 700; text-underline-offset: .3em; }
+.osoul-fm-actions .osoul-fm-cta { display: inline-block; padding: .75rem 1.25rem; border-radius: .5rem; background: var(--osoul-gold); color: var(--osoul-ink); }
+.osoul-fm-hero .osoul-fm-actions a:not(.osoul-fm-cta) { color: white; text-decoration: underline; }
+.osoul-fm-section { padding: clamp(2.8rem, 7vw, 5.5rem) 0; background: var(--osoul-paper); color: var(--osoul-ink); }
+.osoul-fm-section h2 { font-size: clamp(1.8rem, 3.6vw, 3.2rem); line-height: 1.2; margin: 0 0 .7em; }
+.osoul-fm-section .osoul-fm-actions { margin-top: 1.5rem; }
+.osoul-fm-section .osoul-fm-actions a:not(.osoul-fm-cta) { color: var(--osoul-pine); text-decoration: underline; }
+.osoul-fm-service-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, .58fr); gap: 2rem; align-items: center; margin-block-end: 2rem; }
+.osoul-fm-service-intro figure { margin: 0; }
+.osoul-fm-service-intro img { display: block; width: 100%; height: 240px; border-radius: .7rem; object-fit: cover; object-position: center 45%; }
+.osoul-fm-service-intro figcaption { margin-block-start: .4rem; color: #415950; font-size: .85rem; }
+.osoul-fm-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.osoul-fm-grid article { padding: 1.25rem; border-block-start: 2px solid #b99555; border-radius: .6rem; background: white; }
+.osoul-fm-grid h3 { margin: 0 0 .5rem; font-size: 1.16rem; }
+.osoul-fm-grid p { margin: 0; line-height: 1.8; }
+
+.enterprise-header { background: var(--osoul-pine); border-block-end: 1px solid #ffffff24; color: #fff; }
+.enterprise-header .enterprise-brand, .enterprise-header .enterprise-brand strong { color: #fff; }
+.enterprise-header .enterprise-brand small { color: var(--osoul-gold); }
+.enterprise-header .security-badge { background: #ffffff14; border-color: #ffffff37; color: #fff; }
+.enterprise-intro h1 { color: var(--osoul-pine); }
+#facility-operations { margin-top: 1.25rem; padding: .85rem 0; border-block: 1px solid #d9d4c6; }
+#facility-operations summary { cursor: pointer; color: var(--osoul-pine); font-weight: 750; }
+#facility-operations form { margin-block: .85rem; padding: .85rem; border: 1px solid #e2ddcf; border-radius: .6rem; background: #f8f6ef; }
+#facility-operations form button, #facility-work-orders button { margin-block-start: .55rem; padding: .45rem .8rem; border-radius: .4rem; background: var(--osoul-pine); color: #fff; }
+#facility-work-orders li { padding: .65rem 0; }
+#facility-work-orders li button { display: block; }
+
+@media (max-width: 720px) {
+  .osoul-fm-hero { min-height: 520px; align-items: end; }
+  .osoul-fm-hero > img { width: 100%; height: 100%; object-position: center 36%; }
+  .osoul-fm-hero::after, [dir="ltr"] .osoul-fm-hero::after { transform: none; background: linear-gradient(0deg, #10332b 10%, #10332bf7 38%, #10332b83 74%, #10332b50); }
+  .osoul-fm-copy { padding: 9rem 0 2.4rem; }
+  .osoul-fm-grid, .osoul-fm-service-intro { grid-template-columns: 1fr; }
+}
