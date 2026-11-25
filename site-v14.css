@@ -246,6 +246,16 @@ a { text-underline-offset: .22em; }
   padding-block: .5rem;
 }
 .quick-enquiry-details .form-grid { margin-block-start: .75rem; }
+.quick-enquiry .form-consent { align-items: center; min-block-size: 2.75rem; cursor: pointer; }
+.quick-enquiry .form-consent input[type="checkbox"] {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  min-block-size: 1.25rem;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--osoul-green-2);
+  cursor: pointer;
+}
 .quick-enquiry button[type="submit"] {
   justify-content: center;
   min-block-size: 2.75rem;
