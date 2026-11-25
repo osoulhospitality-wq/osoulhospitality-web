@@ -296,7 +296,66 @@
     refresh();
   }
 
-  ["/site-v13.css", "/site-v14.css?v=2"].forEach(function (href) {
+  function installQuickEnquiry() {
+    var form = document.querySelector("form[data-quick-enquiry]");
+    if (!form) return;
+    var submit = form.querySelector('button[type="submit"]');
+    var feedback = form.querySelector(".quick-enquiry-feedback");
+    var english = document.documentElement.lang.startsWith("en");
+    var label = submit.textContent;
+    var started = Date.now();
+    var pending = false;
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (pending) return;
+      pending = true;
+      submit.disabled = true;
+      submit.textContent = english ? "Sending…" : "جارٍ الإرسال…";
+      feedback.textContent = "";
+      try {
+        // Honour the existing server-side minimum form age, including autofill.
+        if (Date.now() - started > 23 * 60 * 60 * 1000) started = Date.now();
+        var wait = 3100 - (Date.now() - started);
+        if (wait > 0) await new Promise(function (resolve) { window.setTimeout(resolve, wait); });
+
+        var fields = new URLSearchParams(new FormData(form));
+        fields.set("started_at", String(started));
+        var response = await fetch(form.action, {
+          method: "POST",
+          headers: { "Accept": "application/json" },
+          body: fields
+        });
+        var result = await response.json();
+        var next = new URL(result.location, window.location.origin);
+        if (response.ok && result.received === true && next.origin === window.location.origin &&
+            next.pathname === (english ? "/en/thank-you/" : "/thank-you/") &&
+            next.searchParams.get("submitted") === "1" &&
+            /^[a-f0-9]{16}$/.test(next.searchParams.get("receipt") || "")) {
+          window.location.assign(next.href);
+          return;
+        }
+        var status = next.searchParams.get("status");
+        if (status === "rate-limit") {
+          feedback.textContent = english ? "Too many attempts. Try again in 15 minutes." : "المحاولات كثيرة. أعد المحاولة بعد ١٥ دقيقة.";
+        } else if (status === "phone") {
+          feedback.textContent = english ? "Check the optional phone number, or leave it blank." : "راجع صيغة رقم الجوال أو اترك الحقل فارغًا.";
+          form.querySelector("details").open = true;
+        } else {
+          throw new Error("Enquiry not confirmed");
+        }
+      } catch (_) {
+        feedback.textContent = english
+          ? "We couldn’t confirm receipt. Your details are still here. Please try again."
+          : "تعذّر تأكيد الاستلام. بياناتك ما زالت في النموذج. أعد المحاولة.";
+      }
+      pending = false;
+      submit.disabled = false;
+      submit.textContent = label;
+    });
+  }
+
+  ["/site-v13.css", "/site-v14.css?v=3"].forEach(function (href) {
     if (document.querySelector('link[href="' + href + '"]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
@@ -305,7 +364,7 @@
   });
   if (!document.querySelector('script[data-osoul-enhancer="14"]')) {
     var script = document.createElement("script");
-    script.src = "/site-hostinger-v13.js?v=19";
+    script.src = "/site-hostinger-v13.js?v=20";
     script.defer = true;
     script.dataset.osoulEnhancer = "14";
     document.head.appendChild(script);
@@ -313,6 +372,7 @@
   addPrivacySettingsButton();
   addPrivacyDisclosure();
   installProjectBriefFallback();
+  installQuickEnquiry();
   clearCompletedLeadToken();
   var consent = safeStorageGet();
   var privacySignal = navigator.globalPrivacyControl === true || navigator.doNotTrack === "1";
