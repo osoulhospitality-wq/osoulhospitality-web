@@ -1,0 +1,883 @@
+/* Public Osool facilities and asset management design system. */
+@font-face {
+  font-family: "Osool Arabic Body";
+  src: url("/brand/fonts/noto-sans-arabic-regular.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Osool Arabic Heading";
+  src: url("/brand/fonts/noto-kufi-arabic-bold.woff") format("woff");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+html[data-osoul-public-brand] {
+  --osoul-pine: #123b33;
+  --osoul-deep-pine: #092a24;
+  --osoul-moss: #276557;
+  --osoul-ink: #182d27;
+  --osoul-body: #3d514a;
+  --osoul-muted: #50635a;
+  --osoul-sand: #f5f1e7;
+  --osoul-paper: #fbf9f4;
+  --osoul-line: #e1d8c6;
+  --osoul-brass: #ebc985;
+  --osoul-brass-ink: #75531e;
+  --osoul-gold: var(--osoul-brass-ink);
+  --osoul-green: var(--osoul-pine);
+  --osoul-green-2: var(--osoul-moss);
+  --osoul-gutter: clamp(1.125rem, 4.5vw, 3.75rem);
+  --osoul-shell: 80rem;
+  --osoul-block: clamp(3.25rem, 7.8vw, 7rem);
+  --osoul-card: 12px;
+  --osoul-font-ar: "Osool Arabic Body", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  --osoul-font-ar-heading: "Osool Arabic Heading", "Noto Kufi Arabic", var(--osoul-font-ar);
+  --osoul-font-en: Inter, "Segoe UI", Helvetica, Arial, sans-serif;
+  color-scheme: light;
+  scroll-padding-block-start: 6rem;
+}
+
+html[data-osoul-public-brand] body {
+  background: var(--osoul-paper);
+  color: var(--osoul-body);
+  font: 400 1rem/1.74 var(--osoul-font-en);
+}
+
+html[data-osoul-public-brand][lang^="ar"] body {
+  font-family: var(--osoul-font-ar);
+  line-height: 1.92;
+}
+
+html[data-osoul-public-brand][lang^="ar"] :is(h1, h2, h3, h4, .brand-lockup strong) {
+  font-family: var(--osoul-font-ar-heading);
+}
+
+html[data-osoul-public-brand][lang^="ar"] :is(h1, h2, h3, h4, .eyebrow, .kicker) {
+  letter-spacing: normal;
+}
+
+html[data-osoul-public-brand] .shell {
+  width: min(calc(100% - 2 * var(--osoul-gutter)), var(--osoul-shell));
+  min-inline-size: 0;
+}
+
+html[data-osoul-public-brand] :focus-visible {
+  outline: 2px solid var(--osoul-deep-pine);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px var(--osoul-brass);
+}
+
+html[data-osoul-public-brand] .skip-link:focus-visible {
+  z-index: 10002;
+}
+
+html[data-osoul-public-brand] :is(a, button, summary, input, select, textarea) {
+  -webkit-tap-highlight-color: #ebc98555;
+}
+
+html[data-osoul-public-brand] :where(main > section, main > div) {
+  scroll-margin-block-start: 5.5rem;
+}
+
+html[data-osoul-public-brand] :is(.site-header, .english-header) {
+  color: var(--osoul-ink);
+  background: #fbf9f4;
+  border-block-end: 1px solid var(--osoul-line);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+html[data-osoul-public-brand] .site-header .header-inner {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(.75rem, 2vw, 2.2rem);
+  min-block-size: 5.3rem;
+}
+
+html[data-osoul-public-brand] .brand-lockup {
+  gap: .7rem;
+  text-decoration: none;
+}
+
+html[data-osoul-public-brand] .brand-lockup img {
+  inline-size: 3rem;
+  block-size: 3rem;
+  object-fit: contain;
+}
+
+html[data-osoul-public-brand] .site-header .brand-lockup strong {
+  color: var(--osoul-pine);
+  font-size: clamp(1rem, 1.6vw, 1.3rem);
+  font-weight: 800;
+}
+
+html[data-osoul-public-brand] .site-header .brand-lockup small {
+  margin-block-start: .32rem;
+  color: var(--osoul-brass-ink);
+  font-size: .69rem;
+}
+
+html[data-osoul-public-brand] .site-header .desktop-nav {
+  gap: clamp(.65rem, 1.45vw, 1.55rem);
+}
+
+html[data-osoul-public-brand] .site-header :is(.desktop-nav a, .language-link) {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  color: var(--osoul-body);
+  font-size: clamp(.8rem, 1.1vw, .94rem);
+  font-weight: 660;
+}
+
+html[data-osoul-public-brand] .site-header .desktop-nav a::after {
+  inset-inline: 0 auto;
+  inset-block-end: .36rem;
+  height: 1px;
+  background: var(--osoul-brass-ink);
+}
+
+html[data-osoul-public-brand] .site-header .desktop-nav :is(a:hover, a[aria-current="page"]) {
+  color: var(--osoul-pine);
+  font-weight: 800;
+}
+
+html[data-osoul-public-brand] .site-header .desktop-nav a[aria-current="page"]::after {
+  width: 100%;
+}
+
+html[data-osoul-public-brand] .site-header .header-actions {
+  gap: clamp(.4rem, 1vw, .88rem);
+  justify-self: end;
+}
+
+html[data-osoul-public-brand] :is(.button, .osoul-fm-cta) {
+  min-block-size: 2.8rem;
+  border-radius: 7px;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+html[data-osoul-public-brand] .site-header .button,
+html[data-osoul-public-brand] .quick-enquiry button[type="submit"] {
+  background: var(--osoul-pine);
+  color: white;
+}
+
+html[data-osoul-public-brand] .site-header .button:hover,
+html[data-osoul-public-brand] .quick-enquiry button[type="submit"]:hover {
+  background: var(--osoul-moss);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Large entry photograph, kept separate from the copy on small screens. */
+html[data-osoul-public-brand] .osoul-fm-hero {
+  display: grid;
+  min-block-size: clamp(34rem, 52vw, 43rem);
+  background: var(--osoul-deep-pine);
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero > .shell {
+  width: min(calc(100% - 2 * var(--osoul-gutter)), var(--osoul-shell));
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero > img {
+  inset-block: 1.65rem;
+  inset-inline: auto max(var(--osoul-gutter), calc((100% - var(--osoul-shell)) / 2));
+  width: min(46%, 38rem);
+  height: calc(100% - 3.3rem);
+  border: 1px solid #ebc98555;
+  border-start-start-radius: 5.5rem;
+  border-end-end-radius: 1.4rem;
+  object-position: 47% 48%;
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero::after {
+  transform: none;
+  background: radial-gradient(ellipse 100% 80% at top, #2765575c, transparent 65%);
+  z-index: -3;
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy {
+  max-inline-size: min(48%, 41rem);
+  padding-block: clamp(3.65rem, 8vw, 7rem);
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1 {
+  color: #fffdf6;
+  max-inline-size: 15ch;
+  margin: .5em 0 .45em;
+  font-size: clamp(2.55rem, 4.9vw, 5rem);
+  line-height: 1.12;
+  font-weight: 820;
+  text-wrap: balance;
+}
+
+html[data-osoul-public-brand][lang^="ar"] .osoul-fm-hero .osoul-fm-copy h1 {
+  max-inline-size: 100%;
+  font-size: clamp(2.55rem, 4.7vw, 4.65rem);
+  line-height: 1.3;
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy p {
+  color: #e7eee7;
+  max-inline-size: 48ch;
+  font-size: clamp(1rem, 1.45vw, 1.2rem);
+  line-height: 1.76;
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  color: var(--osoul-brass);
+  font-size: .88rem;
+  font-weight: 750;
+}
+
+html[data-osoul-public-brand] .osoul-fm-eyebrow::before {
+  display: inline-block;
+  content: "";
+  flex: 0 0 1.4rem;
+  block-size: 1px;
+  background: currentColor;
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-actions {
+  gap: .65rem clamp(.8rem, 2vw, 1.6rem);
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-cta {
+  display: inline-flex;
+  align-items: center;
+  color: var(--osoul-deep-pine);
+  background: var(--osoul-brass);
+  padding: .7rem 1.15rem;
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-cta:hover {
+  color: var(--osoul-deep-pine);
+  background: #f4dca7;
+}
+
+html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-actions a:not(.osoul-fm-cta) {
+  display: inline-flex;
+  min-block-size: 2.75rem;
+  align-items: center;
+  color: #fffdf6;
+  text-decoration-thickness: 1px;
+}
+
+/* Facilities content and catalog. */
+html[data-osoul-public-brand] :is(.section, .osoul-fm-section, .osoul-static-section, .contact-section) {
+  padding-block: var(--osoul-block);
+}
+
+html[data-osoul-public-brand] :is(.osoul-fm-section h2, .section-heading h2, .osoul-service-group h2, .osoul-fm-operations h2) {
+  margin-block: 0 .65rem;
+  font-size: clamp(1.9rem, 3.6vw, 3.4rem);
+  line-height: 1.26;
+}
+
+html[data-osoul-public-brand] .osoul-fm-section > .shell > p {
+  max-inline-size: 66ch;
+  margin-block: 0 clamp(1.4rem, 3vw, 2.6rem);
+}
+
+html[data-osoul-public-brand] :is(.osoul-fm-grid, .osoul-service-grid, .osoul-static-grid, .osoul-article-grid) {
+  gap: clamp(1rem, 2.35vw, 1.9rem);
+}
+
+html[data-osoul-public-brand] .osoul-fm-grid article {
+  border: 1px solid var(--osoul-line);
+  border-block-start: 2px solid #a58750;
+  border-radius: var(--osoul-card);
+  background: #fffdf9;
+  padding: clamp(1.15rem, 2.3vw, 1.8rem);
+}
+
+html[data-osoul-public-brand] .osoul-fm-grid h3 {
+  font-size: clamp(1.14rem, 1.8vw, 1.45rem);
+  line-height: 1.44;
+  color: var(--osoul-pine);
+}
+
+html[data-osoul-public-brand] .osoul-fm-grid p {
+  color: var(--osoul-body);
+}
+
+html[data-osoul-public-brand] :is(.osoul-fm-grid .osoul-fm-service-card, .osoul-service-grid .osoul-service-card) {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--osoul-line);
+  border-radius: var(--osoul-card);
+  background: #fffdf9;
+  box-shadow: 0 8px 24px #123b3308;
+}
+
+html[data-osoul-public-brand] :is(.osoul-fm-service-card, .osoul-service-grid .osoul-service-card) img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-block-end: 1px solid var(--osoul-line);
+  background: var(--osoul-sand);
+}
+
+html[data-osoul-public-brand] :is(.osoul-fm-service-body, .osoul-service-grid .osoul-service-card > div) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: clamp(1.1rem, 2.1vw, 1.65rem);
+}
+
+html[data-osoul-public-brand] .osoul-fm-service-body :is(a, .osoul-fm-actions) {
+  margin-block-start: auto;
+}
+
+html[data-osoul-public-brand] .osoul-fm-service-body a {
+  display: inline-flex;
+  align-items: center;
+  align-self: start;
+  min-block-size: 2.75rem;
+  padding-block-start: .5rem;
+  color: var(--osoul-moss);
+  text-decoration: underline;
+  text-underline-offset: .24em;
+  text-decoration-thickness: 1px;
+  font-weight: 750;
+}
+
+html[data-osoul-public-brand] .osoul-fm-service-body a:hover {
+  color: var(--osoul-deep-pine);
+}
+
+html[data-osoul-public-brand] .osoul-service-catalog {
+  padding-block: var(--osoul-block);
+  background: var(--osoul-paper);
+}
+
+html[data-osoul-public-brand] .osoul-service-jumps a {
+  display: inline-flex;
+  min-block-size: 2.75rem;
+  align-items: center;
+  background: #fffdf9;
+  border-color: var(--osoul-line);
+  color: var(--osoul-pine);
+  text-decoration: none;
+}
+
+html[data-osoul-public-brand] .osoul-service-jumps a:hover {
+  color: white;
+  background: var(--osoul-pine);
+  border-color: var(--osoul-pine);
+}
+
+html[data-osoul-public-brand] .osoul-service-group + .osoul-service-group {
+  border-color: var(--osoul-line);
+}
+
+html[data-osoul-public-brand] .osoul-service-group header {
+  margin-block-end: 1.8rem;
+}
+
+html[data-osoul-public-brand] :is(section.osoul-fm-operations, .section:has(#home-benefits-title)) {
+  background: var(--osoul-sand);
+}
+
+html[data-osoul-public-brand] :is(div.osoul-fm-operations, .osoul-fm-operations > .shell:has(.osoul-fm-operations-photo)) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+  gap: clamp(1.25rem, 4.7vw, 4.2rem);
+  align-items: center;
+}
+
+html[data-osoul-public-brand] .osoul-fm-operations-copy .osoul-fm-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+html[data-osoul-public-brand] .osoul-fm-operations-copy article {
+  padding: 1.2rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  border-block-end: 1px solid #cbbfa6;
+}
+
+html[data-osoul-public-brand] .osoul-fm-operations-copy article:last-child {
+  border-block-end: 0;
+}
+
+html[data-osoul-public-brand] :is(.osoul-fm-operations-photo, .osoul-fm-service-intro figure) {
+  min-inline-size: 0;
+  margin: 0;
+}
+
+html[data-osoul-public-brand] :is(.osoul-fm-operations-photo img, img.osoul-fm-operations-photo, .osoul-fm-service-intro img) {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 4;
+  object-fit: cover;
+  border-radius: var(--osoul-card);
+  border-start-start-radius: 3rem;
+  background: var(--osoul-sand);
+}
+
+html[data-osoul-public-brand] .osoul-fm-service-intro {
+  grid-template-columns: minmax(0, 1fr) minmax(0, .65fr);
+}
+
+/* Interior navigation, contact and footer. */
+html[data-osoul-public-brand] :is(.page-intro, .osoul-static-hero, .osoul-library-hero) {
+  position: relative;
+  isolation: isolate;
+  padding-block: clamp(3.1rem, 8vw, 7.4rem);
+  color: #fffdf6;
+  background-color: var(--osoul-deep-pine);
+  background-image: radial-gradient(80% 125% at 0% 100%, #27655783, transparent 72%);
+  border-block-end: 2px solid #ebc98565;
+}
+
+html[data-osoul-public-brand][dir="rtl"] :is(.page-intro, .osoul-static-hero, .osoul-library-hero) {
+  background-image: radial-gradient(80% 125% at 100% 100%, #27655783, transparent 72%);
+}
+
+html[data-osoul-public-brand] :is(.page-intro, .osoul-static-hero, .osoul-library-hero)::after {
+  pointer-events: none;
+}
+
+html[data-osoul-public-brand] :is(.page-intro, .osoul-static-hero, .osoul-library-hero) h1 {
+  max-inline-size: 24ch;
+  margin-block: .4em .38em;
+  color: #fffdf6;
+  font-size: clamp(2.15rem, 5vw, 4.5rem);
+  line-height: 1.2;
+  font-weight: 820;
+}
+
+html[data-osoul-public-brand][lang^="ar"] :is(.page-intro, .osoul-static-hero, .osoul-library-hero) h1 {
+  line-height: 1.38;
+}
+
+html[data-osoul-public-brand] :is(.page-intro, .osoul-static-hero, .osoul-library-hero) p {
+  max-inline-size: 65ch;
+  margin-block-end: 0;
+  color: #e5eee7;
+  font-size: clamp(1rem, 1.55vw, 1.2rem);
+}
+
+html[data-osoul-public-brand] :is(.page-intro, .osoul-static-hero, .osoul-library-hero) :is(.eyebrow, .shell > span:first-child) {
+  color: var(--osoul-brass);
+}
+
+html[data-osoul-public-brand] :is(.osoul-static-grid .osoul-static-card, .osoul-article-grid .osoul-article-card) {
+  border-color: var(--osoul-line);
+  border-radius: var(--osoul-card);
+  background: #fffdf9;
+  box-shadow: none;
+}
+
+html[data-osoul-public-brand] .output-gallery > .shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html[data-osoul-public-brand] .output-gallery :is(.output-sample, .output-pair, .sample-table-wrap) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+html[data-osoul-public-brand] .output-gallery .sample-table-wrap {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+html[data-osoul-public-brand] :is(.contact-page-layout, .contact-layout) {
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  gap: clamp(1.6rem, 6vw, 5.1rem);
+}
+
+html[data-osoul-public-brand] .contact-page-layout {
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
+}
+
+html[data-osoul-public-brand] main:has(.quick-enquiry) > :is(.page-intro, .osoul-static-hero) {
+  padding-block: clamp(2rem, 4.5vw, 4.5rem);
+}
+
+html[data-osoul-public-brand] :is(.contact-page, .osoul-static-section:has(.quick-enquiry)) {
+  padding-block-start: clamp(1.35rem, 3.8vw, 3.5rem);
+}
+
+html[data-osoul-public-brand] .contact-section {
+  background: var(--osoul-deep-pine);
+  color: #fffdf6;
+}
+
+html[data-osoul-public-brand] .contact-section .contact-copy > p {
+  color: #e5eee7;
+}
+
+html[data-osoul-public-brand] .contact-section :is(.contact-copy h2, .contact-promise span) {
+  color: #fffdf6;
+}
+
+html[data-osoul-public-brand] :is(.brief-card, .osoul-static-section .quick-enquiry) {
+  color: var(--osoul-ink);
+  border: 1px solid var(--osoul-line);
+  border-radius: var(--osoul-card);
+  background: #fffdf9;
+  box-shadow: 0 12px 36px #092a2417;
+}
+
+html[data-osoul-public-brand] .brief-card :is(.brief-head, .brief-foot) {
+  border-color: var(--osoul-line);
+}
+
+html[data-osoul-public-brand] :is(.brief-card .quick-enquiry, .osoul-static-section .quick-enquiry) {
+  max-inline-size: 50rem;
+  padding: clamp(1.1rem, 2.9vw, 2.25rem);
+}
+
+html[data-osoul-public-brand] .quick-enquiry .form-grid {
+  align-items: start;
+}
+
+html[data-osoul-public-brand] .quick-enquiry :is(input:not([type="checkbox"]), select, textarea) {
+  min-block-size: 2.95rem;
+  padding: .65rem .8rem;
+  border: 1px solid #9aa89e;
+  border-radius: 7px;
+  background-color: #fff;
+  color: var(--osoul-ink);
+  font: inherit;
+}
+
+html[data-osoul-public-brand] .quick-enquiry textarea {
+  min-block-size: 6rem;
+  resize: vertical;
+}
+
+html[data-osoul-public-brand] .quick-enquiry .quick-enquiry-channel {
+  min-block-size: 2.75rem;
+  color: var(--osoul-moss);
+  font-size: .9rem;
+  font-weight: 720;
+}
+
+html[data-osoul-public-brand] .quick-enquiry .quick-enquiry-channel[hidden] {
+  display: none;
+}
+
+html[data-osoul-public-brand] .quick-enquiry .quick-enquiry-feedback {
+  color: var(--osoul-ink);
+  font-weight: 680;
+}
+
+html[data-osoul-public-brand] .quick-enquiry .quick-enquiry-feedback:empty {
+  display: block;
+  margin: 0;
+}
+
+html[data-osoul-public-brand] .simple-cta {
+  background: var(--osoul-sand);
+  color: var(--osoul-ink);
+  border-block: 1px solid var(--osoul-line);
+}
+
+html[data-osoul-public-brand] .simple-cta h2 {
+  color: var(--osoul-pine);
+}
+
+html[data-osoul-public-brand] .simple-cta .button {
+  color: #fff;
+  background: var(--osoul-pine);
+}
+
+html[data-osoul-public-brand] .site-footer {
+  padding-block: clamp(2.8rem, 7vw, 5.25rem) 1.35rem;
+  color: #edf3ed;
+  background: var(--osoul-deep-pine);
+  border-block-start: 1px solid #ebc98566;
+}
+
+html[data-osoul-public-brand] .site-footer .footer-grid {
+  gap: clamp(1.75rem, 4.4vw, 4.4rem);
+}
+
+html[data-osoul-public-brand] .site-footer .brand-lockup-inverse img {
+  background: none;
+  filter: none;
+}
+
+html[data-osoul-public-brand] .site-footer .brand-lockup-inverse strong {
+  color: #fffdf6;
+  font-size: 1.22rem;
+}
+
+html[data-osoul-public-brand] .site-footer :is(.brand-lockup-inverse small, .footer-grid h2) {
+  color: var(--osoul-brass);
+  font-size: .85rem;
+}
+
+html[data-osoul-public-brand] .site-footer .footer-grid h2 {
+  margin-block-end: .7rem;
+}
+
+html[data-osoul-public-brand] .site-footer :is(.footer-brand > p, .footer-grid nav a, .footer-contact a, .footer-contact small, .footer-bottom) {
+  color: #e4eee6;
+  font-size: .91rem;
+  line-height: 1.7;
+}
+
+html[data-osoul-public-brand] .site-footer :is(.footer-grid a, .footer-bottom a):hover {
+  color: #fffdf6;
+  text-decoration: underline;
+}
+
+html[data-osoul-public-brand] .site-footer .footer-bottom {
+  border-color: #f8f4e033;
+}
+
+html[data-osoul-public-brand] .osoul-consent-panel {
+  gap: .85rem 1.3rem;
+  background: var(--osoul-deep-pine);
+  border-color: #ebc98570;
+}
+
+html[data-osoul-public-brand] .osoul-consent-actions button {
+  min-block-size: 2.75rem;
+}
+
+html[data-osoul-public-brand] .osoul-consent-actions .osoul-consent-accept {
+  background: var(--osoul-brass);
+  color: var(--osoul-deep-pine);
+}
+
+@media (max-width: 640px) {
+  html[data-osoul-public-brand] .osoul-consent-panel {
+    inset-inline: max(.625rem, env(safe-area-inset-left)) max(.625rem, env(safe-area-inset-right));
+    inset-block-end: max(.625rem, env(safe-area-inset-bottom));
+    grid-template-columns: minmax(0, 1fr);
+    gap: .48rem;
+    padding: .75rem;
+    max-block-size: calc(100svh - 1.25rem);
+    overflow-y: auto;
+    border-radius: 10px;
+  }
+
+  html[data-osoul-public-brand] .osoul-consent-copy strong {
+    font-size: .95rem;
+    line-height: 1.4;
+  }
+
+  html[data-osoul-public-brand] .osoul-consent-copy p {
+    margin-block: .18rem;
+    font-size: .84rem;
+    line-height: 1.48;
+  }
+
+  html[data-osoul-public-brand] .osoul-consent-copy a {
+    font-size: .82rem;
+  }
+
+  html[data-osoul-public-brand] .osoul-consent-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .42rem;
+  }
+
+  html[data-osoul-public-brand] .osoul-consent-actions button {
+    white-space: normal;
+    font-size: .84rem;
+    line-height: 1.3;
+    padding: .36rem .42rem;
+  }
+}
+
+@media (max-width: 1080px) {
+  html[data-osoul-public-brand] .site-header .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    min-block-size: 4.5rem;
+  }
+
+  html[data-osoul-public-brand] .site-header .desktop-nav {
+    display: none;
+  }
+
+  html[data-osoul-public-brand] .site-header .mobile-menu {
+    display: block;
+  }
+
+  html[data-osoul-public-brand] .site-header .mobile-menu summary {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-color: var(--osoul-line);
+    border-radius: 8px;
+    background: #fffdf9;
+  }
+
+  html[data-osoul-public-brand] .site-header .mobile-menu summary span {
+    background: var(--osoul-pine);
+  }
+
+  html[data-osoul-public-brand] .site-header .mobile-menu nav {
+    inset: 3.25rem 0 auto auto;
+    inset-inline: auto 0;
+    max-block-size: min(35rem, calc(100svh - 6rem));
+    width: min(20rem, 100vw - 2.5rem);
+    overflow-y: auto;
+    border-color: var(--osoul-line);
+    border-radius: var(--osoul-card);
+    background: var(--osoul-paper);
+  }
+
+  html[data-osoul-public-brand] .site-header .mobile-menu nav a {
+    min-block-size: 2.75rem;
+    color: var(--osoul-ink);
+    font-size: 1rem;
+  }
+
+  html[data-osoul-public-brand] .site-header .mobile-menu nav .mobile-cta {
+    background: var(--osoul-pine);
+    color: #fff;
+  }
+}
+
+@media (max-width: 850px) {
+  html[data-osoul-public-brand] .osoul-fm-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-block-size: 0;
+    gap: 0;
+    padding-block-end: var(--osoul-gutter);
+  }
+
+  html[data-osoul-public-brand] .osoul-fm-hero > .shell {
+    order: 0;
+  }
+
+  html[data-osoul-public-brand] .osoul-fm-hero > img {
+    position: static;
+    z-index: auto;
+    order: 1;
+    width: min(calc(100% - 2 * var(--osoul-gutter)), var(--osoul-shell));
+    height: clamp(15rem, 45vw, 22.5rem);
+    margin-inline: auto;
+    border-start-start-radius: 2.2rem;
+    border-end-end-radius: .85rem;
+    object-position: 49% 46%;
+  }
+
+  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy {
+    max-inline-size: 100%;
+    padding-block: clamp(2.5rem, 7vw, 4.4rem) clamp(1.25rem, 3.7vw, 2.5rem);
+  }
+
+  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1 {
+    max-inline-size: 19ch;
+  }
+
+  html[data-osoul-public-brand][lang^="ar"] .osoul-fm-hero .osoul-fm-copy h1 {
+    max-inline-size: 15ch;
+  }
+
+  html[data-osoul-public-brand] :is(.contact-page-layout, .contact-layout, .osoul-fm-service-intro, div.osoul-fm-operations, .osoul-fm-operations > .shell:has(.osoul-fm-operations-photo)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 580px) {
+  html[data-osoul-public-brand] .site-header .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .55rem;
+    min-block-size: 4rem;
+  }
+
+  html[data-osoul-public-brand] .site-header .header-actions {
+    display: none;
+  }
+
+  html[data-osoul-public-brand] .brand-lockup img {
+    inline-size: 2.55rem;
+    block-size: 2.55rem;
+  }
+
+  html[data-osoul-public-brand] .site-header .brand-lockup small {
+    display: block;
+    font-size: .62rem;
+  }
+
+  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-copy h1,
+  html[data-osoul-public-brand][lang^="ar"] .osoul-fm-hero .osoul-fm-copy h1 {
+    font-size: clamp(2.15rem, 8.7vw, 3.15rem);
+  }
+
+  html[data-osoul-public-brand] :is(.osoul-fm-grid, .osoul-service-grid, .osoul-static-grid, .osoul-article-grid, .quick-enquiry .form-grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html[data-osoul-public-brand] .osoul-service-jumps {
+    gap: .45rem;
+    margin-block-end: 2.3rem;
+  }
+
+  html[data-osoul-public-brand] .osoul-service-jumps a {
+    padding-inline: .74rem;
+    font-size: .88rem;
+  }
+
+  html[data-osoul-public-brand] .scenario-index {
+    position: static;
+  }
+
+  html[data-osoul-public-brand] .scenario-index .shell {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  html[data-osoul-public-brand] .scenario-index a {
+    min-inline-size: 0;
+    min-block-size: 2.75rem;
+  }
+
+  html[data-osoul-public-brand] .site-footer .footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[data-osoul-public-brand] .site-footer .footer-brand,
+  html[data-osoul-public-brand] .site-footer .footer-contact {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 370px) {
+  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-actions {
+    align-items: flex-start;
+  }
+
+  html[data-osoul-public-brand] .osoul-fm-hero .osoul-fm-cta {
+    min-inline-size: 12rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-osoul-public-brand] {
+    scroll-behavior: auto;
+  }
+
+  html[data-osoul-public-brand] :is(a, button, summary) {
+    transition: none;
+  }
+}

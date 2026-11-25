@@ -19,7 +19,7 @@ function head({ lang, title, description, pathname, alternate, type = "website",
   const locale = lang === "ar" ? "ar_SA" : "en_US";
   const otherLocale = lang === "ar" ? "en_US" : "ar_SA";
   return `<!DOCTYPE html>
-<html lang="${lang === "ar" ? "ar-SA" : "en-SA"}" dir="${lang === "ar" ? "rtl" : "ltr"}">
+<html data-osoul-public-brand lang="${lang === "ar" ? "ar-SA" : "en-SA"}" dir="${lang === "ar" ? "rtl" : "ltr"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -33,7 +33,7 @@ function head({ lang, title, description, pathname, alternate, type = "website",
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:url" content="${domain}${pathname}">
-  <meta property="og:image" content="${domain}/images/hero-riyadh-v8.webp">
+  <meta property="og:image" content="${domain}/brand/osool-share-${lang}.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="${domain}${pathname}">
   <link rel="alternate" hreflang="ar-SA" href="${domain}${lang === "ar" ? pathname : alternate}">
@@ -47,22 +47,22 @@ function head({ lang, title, description, pathname, alternate, type = "website",
   <link rel="stylesheet" href="/site-v15.css">
   <meta name="theme-color" content="#0b3b34">
   ${jsonLd.map((data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>`).join("\n  ")}
-</head>`;
+<link rel="stylesheet" href="/site-osoul-brand.css?v=1"></head>`;
 }
 
 function header(lang, current = "", languageHref = "") {
   const ar = lang === "ar";
   const prefix = ar ? "" : "/en";
   const items = ar
-    ? [["solutions", "الخدمات"], ["outputs", "نماذج المخرجات"], ["about", "عن أصول"], ["scenarios", "مكتبة القرار"], ["insights", "الرؤى"], ["contact", "تواصل"]]
-    : [["solutions", "Services"], ["outputs", "Outputs"], ["about", "About"], ["scenarios", "Decision library"], ["insights", "Insights"], ["contact", "Contact"]];
+    ? [["solutions", "الخدمات"], ["outputs", "تقارير التشغيل"], ["about", "عن أصول"], ["scenarios", "أمثلة تشغيلية"], ["insights", "الرؤى"], ["contact", "تواصل"]]
+    : [["solutions", "Services"], ["outputs", "Operations reports"], ["about", "About"], ["scenarios", "Operations examples"], ["insights", "Insights"], ["contact", "Contact"]];
   const switchHref = languageHref || (ar ? "/en/" : "/");
   return `<a class="skip-link" href="#content">${ar ? "انتقل إلى المحتوى" : "Skip to content"}</a>
 <header class="site-header osoul-v13-header"><div class="shell header-inner">
-  <a href="${prefix || "/"}" class="brand-lockup" aria-label="${ar ? "أصول الضيافة — الرئيسية" : "Osool Hospitality — home"}"><img src="/brand/osool-mark-v8.svg" alt="" width="56" height="56"><span><strong>${ar ? "أصول الضيافة" : "Osool Hospitality"}</strong><small>${ar ? "استراتيجية • تنفيذ • نمو" : "Strategy • Execution • Growth"}</small></span></a>
+  <a href="${prefix || "/"}" class="brand-lockup" aria-label="${ar ? "أصول الضيافة — الرئيسية" : "Osool Hospitality — home"}"><img src="/brand/osool-mark-v8.svg" alt="" width="56" height="56"><span><strong>${ar ? "أصول الضيافة" : "Osool Hospitality"}</strong><small>${ar ? "إدارة المرافق والأصول" : "Facilities &amp; asset management"}</small></span></a>
   <nav class="desktop-nav" aria-label="${ar ? "التنقل الرئيسي" : "Main navigation"}">${items.map(([slug, label]) => `<a href="${prefix}/${slug}/"${current === slug ? ' aria-current="page"' : ""}>${label}</a>`).join("")}</nav>
-  <div class="header-actions"><a class="language-link" href="${switchHref}" lang="${ar ? "en" : "ar"}" dir="${ar ? "ltr" : "rtl"}">${ar ? "EN" : "العربية"}</a><a class="button button-small" href="${prefix}/contact/">${ar ? "ابدأ مشروعك" : "Start a project"}</a></div>
-  <details class="mobile-menu"><summary aria-label="${ar ? "فتح قائمة التنقل" : "Open navigation"}"><span></span><span></span><span></span></summary><nav aria-label="${ar ? "تنقل الهاتف" : "Mobile navigation"}">${items.map(([slug, label]) => `<a href="${prefix}/${slug}/">${label}</a>`).join("")}<a class="language-link" href="${switchHref}">${ar ? "English" : "العربية"}</a><a class="mobile-cta" href="${prefix}/contact/">${ar ? "ابدأ مشروعك" : "Start a project"}</a></nav></details>
+  <div class="header-actions"><a class="language-link" href="${switchHref}" lang="${ar ? "en" : "ar"}" dir="${ar ? "ltr" : "rtl"}">${ar ? "EN" : "العربية"}</a><a class="button button-small" href="${prefix}/contact/">${ar ? "اطلب عرض خدمة" : "Request a service quote"}</a></div>
+  <details class="mobile-menu"><summary aria-label="${ar ? "فتح قائمة التنقل" : "Open navigation"}"><span></span><span></span><span></span></summary><nav aria-label="${ar ? "تنقل الهاتف" : "Mobile navigation"}">${items.map(([slug, label]) => `<a href="${prefix}/${slug}/">${label}</a>`).join("")}<a class="language-link" href="${switchHref}">${ar ? "English" : "العربية"}</a><a class="mobile-cta" href="${prefix}/contact/">${ar ? "اطلب عرض خدمة" : "Request a service quote"}</a></nav></details>
 </div></header>`;
 }
 
@@ -70,8 +70,8 @@ function footer(lang) {
   const ar = lang === "ar";
   const p = ar ? "" : "/en";
   return `<footer class="site-footer"><div class="shell footer-grid">
-  <div class="footer-brand"><a href="${p || "/"}" class="brand-lockup brand-lockup-inverse"><img src="/brand/osool-mark-v8.svg" alt="" width="56" height="56"><span><strong>${ar ? "أصول الضيافة" : "Osool Hospitality"}</strong><small>${ar ? "استراتيجية • تنفيذ • نمو" : "Strategy • Execution • Growth"}</small></span></a><p>${ar ? "بيت خبرة سعودي متخصص في الاستشارات السياحية، يجمع الاستراتيجية والتنفيذ وذكاء الأداء ضمن مسؤولية واضحة." : "A Saudi hospitality advisory house connecting strategy, execution and performance intelligence under clear accountability."}</p></div>
-  <div><h2>${ar ? "استكشف" : "Explore"}</h2><nav aria-label="${ar ? "روابط الاستكشاف في التذييل" : "Footer explore links"}"><a href="${p}/solutions/">${ar ? "الخدمات" : "Services"}</a><a href="${p}/outputs/">${ar ? "المخرجات" : "Outputs"}</a><a href="${p}/insights/">${ar ? "الرؤى" : "Insights"}</a><a href="${p}/contact/">${ar ? "تواصل" : "Contact"}</a></nav></div>
+  <div class="footer-brand"><a href="${p || "/"}" class="brand-lockup brand-lockup-inverse"><img src="/brand/osool-mark-inverse.svg" alt="" width="56" height="56"><span><strong>${ar ? "أصول الضيافة" : "Osool Hospitality"}</strong><small>${ar ? "إدارة المرافق والأصول" : "Facilities &amp; asset management"}</small></span></a><p>${ar ? "ندير مرافق وأصول الفنادق والشقق المخدومة، ونتابع الصيانة والخدمات اليومية والموردين وجودة التنفيذ." : "We manage facilities and assets for hotels and serviced apartments, from maintenance and daily services to suppliers and service quality."}</p></div>
+  <div><h2>${ar ? "استكشف" : "Explore"}</h2><nav aria-label="${ar ? "روابط الاستكشاف في التذييل" : "Footer explore links"}"><a href="${p}/solutions/">${ar ? "الخدمات" : "Services"}</a><a href="${p}/outputs/">${ar ? "المخرجات" : "Operations reports"}</a><a href="${p}/insights/">${ar ? "الرؤى" : "Insights"}</a><a href="${p}/contact/">${ar ? "تواصل" : "Contact"}</a></nav></div>
   <div><h2>${ar ? "الحوكمة" : "Governance"}</h2><nav aria-label="${ar ? "روابط الحوكمة في التذييل" : "Footer governance links"}"><a href="${p}/privacy/">${ar ? "الخصوصية" : "Privacy"}</a><a href="${p}/terms/">${ar ? "الشروط" : "Terms"}</a><a href="${p}/accessibility/">${ar ? "إتاحة الاستخدام" : "Accessibility"}</a></nav></div>
   <div class="footer-contact"><h2>${ar ? "الرياض، المملكة العربية السعودية" : "Riyadh, Saudi Arabia"}</h2><a href="mailto:info@osoulhospitality.com">info@osoulhospitality.com</a><a href="https://wa.me/966544384132" target="_blank" rel="noreferrer">+966 54 438 4132</a><small>${ar ? "زمن الاستجابة المستهدف: خلال يومي عمل." : "Target response time: within two business days."}</small></div>
 </div><div class="shell footer-bottom"><span>© 2026 ${ar ? "أصول الضيافة. جميع الحقوق محفوظة." : "Osool Hospitality. All rights reserved."}</span><span>${ar ? "آخر تحديث: 8 أغسطس 2026." : "Last updated: 8 August 2026."}</span></div></footer>`;
@@ -198,7 +198,7 @@ const corePages = {
     cards: [["Diagnosis before recommendation", "We establish the decision and evidence before prescribing a solution."], ["Clear boundaries", "Facts, assumptions, licensed opinions and partner responsibilities remain distinct."], ["Execution accountability", "Recommendations become owners, dates, measures and closure evidence."], ["Saudi context", "Local regulation, demand, talent and supplier reality shape the answer."], ["Independent owner view", "We challenge narratives without replacing the operator's role."], ["Responsible technology", "Tools accelerate analysis while people retain judgment and accountability."]]
   },
   scenarios: {
-    title: "Decision Library | Osool Hospitality", description: "Common hospitality owner and investor scenarios, the decision required and the first evidence to request.", eyebrow: "Decision library", h1: "Start from the decision you need to make.", intro: "Each scenario below identifies a practical entry point. Scope is confirmed only after a non-confidential brief and evidence review.",
+    title: "Decision Library | Osool Hospitality", description: "Common hospitality owner and investor scenarios, the decision required and the first evidence to request.", eyebrow: "Operations examples", h1: "Start from the decision you need to make.", intro: "Each scenario below identifies a practical entry point. Scope is confirmed only after a non-confidential brief and evidence review.",
     cards: [["A new project before lease or acquisition", "Test demand, total cost, licensability and downside before commitment."], ["A project approaching handover", "Connect defects, licences, systems, people and opening gates."], ["An operating asset missing budget", "Separate rate, volume, mix, cost and one-off effects."], ["High occupancy but weak cash", "Measure net channel economics, cost to serve and working capital."], ["An owner dissatisfied with operator reporting", "Reconcile definitions, rights, decisions and evidence."], ["An international operator entering Saudi Arabia", "Localise regulation, supply, talent, demand and decision rights."]]
   }
 };
