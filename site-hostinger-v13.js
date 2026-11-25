@@ -121,7 +121,7 @@
   }
 
   function addStylesheet() {
-    ["/site-v13.css", "/site-v14.css?v=2"].forEach(function (href) {
+    ["/site-v13.css", "/site-v14.css?v=3"].forEach(function (href) {
       if (document.querySelector('link[href="' + href + '"]')) return;
       var link = document.createElement("link");
       link.rel = "stylesheet";

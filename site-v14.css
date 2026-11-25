@@ -226,6 +226,40 @@ a { text-underline-offset: .22em; }
 }
 
 /* Facilities brand surfaces and text contrast */
+.quick-enquiry {
+  min-inline-size: 0;
+  box-shadow: none;
+}
+.brief-card .quick-enquiry {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.quick-enquiry .honeypot { display: none; }
+.quick-enquiry-service,
+.quick-enquiry-details { margin-block-start: 1rem; }
+.quick-enquiry-details summary {
+  color: var(--osoul-green-2);
+  cursor: pointer;
+  font-weight: 700;
+  min-block-size: 2.75rem;
+  padding-block: .5rem;
+}
+.quick-enquiry-details .form-grid { margin-block-start: .75rem; }
+.quick-enquiry button[type="submit"] {
+  justify-content: center;
+  min-block-size: 2.75rem;
+}
+.quick-enquiry button[type="submit"]:disabled { cursor: wait; }
+.quick-enquiry-feedback {
+  margin-block: .7rem 0;
+  color: var(--osoul-ink);
+}
+.quick-enquiry-feedback:empty { display: none; }
+@media (max-width: 600px) {
+  .quick-enquiry button[type="submit"] { inline-size: 100%; }
+}
+
 :root {
   --osoul-brand-gold-light: #e8c88d;
   --osoul-brand-gold-dark: #765218;

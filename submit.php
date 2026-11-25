@@ -17,6 +17,14 @@ const RATE_LIMIT_WINDOW_SECONDS = 900;
 const RATE_LIMIT_MAX_REQUESTS = 5;
 
 function redirect_to(string $path): never {
+    if (post_value('brief_mode', 10) === 'quick' && ($_SERVER['HTTP_ACCEPT'] ?? '') === 'application/json') {
+        header('Content-Type: application/json; charset=utf-8');
+        $success = str_contains($path, 'submitted=1&receipt=');
+        $status = http_response_code();
+        http_response_code($success ? 200 : ($status >= 400 ? $status : 422));
+        echo json_encode(['received' => $success, 'location' => $path], JSON_UNESCAPED_SLASHES);
+        exit;
+    }
     header('Location: ' . $path, true, 303);
     exit;
 }
@@ -263,7 +271,10 @@ $email = post_value('email', 180);
 $phone = post_value('phone', 60);
 $submittedIdempotencyKey = strtolower(post_value('idempotency_key', 36));
 
-$required = [$formName, $assetType, $city, $stage, $opening, $units, $primaryGap, $urgency, $documents, $support, $name, $organization];
+$quick = post_value('brief_mode', 10) === 'quick';
+$required = $quick
+    ? [$formName, $support, $name]
+    : [$formName, $assetType, $city, $stage, $opening, $units, $primaryGap, $urgency, $documents, $support, $name, $organization];
 if (in_array('', $required, true) || $formName !== 'hospitality_readiness_brief' || $consent !== 'yes') {
     redirect_to($contactPath . '?status=incomplete#project-brief');
 }
@@ -278,6 +289,15 @@ if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
 
 if ($phone !== '' && !preg_match('/^[0-9+\s()\-]{7,30}$/u', $phone)) {
     redirect_to($contactPath . '?status=phone#project-brief');
+}
+
+if ($quick) {
+    // The existing intake record requires strings for these optional details.
+    $notProvided = $isEnglish ? 'Not provided' : 'لم يذكر';
+    [$assetType, $city, $stage, $opening, $units, $primaryGap, $urgency, $documents, $organization] = array_map(
+        static fn (string $value): string => $value !== '' ? $value : $notProvided,
+        [$assetType, $city, $stage, $opening, $units, $primaryGap, $urgency, $documents, $organization]
+    );
 }
 
 $submissionId = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $submittedIdempotencyKey) === 1

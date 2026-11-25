@@ -84,10 +84,15 @@ for (const slug of arabicCore) {
   assert(html.includes(`hreflang="en-SA" href="https://osoulhospitality.com/en/${slug}/"`), `${relative} links to its English alternate`);
 }
 
-const form = read("en/contact/index.html");
-const formNames = ["form_name", "language", "asset_type", "city", "stage", "opening_target", "units", "primary_gap", "urgency", "documents", "requested_support", "name", "organization", "email", "phone", "consent", "website"];
-for (const field of formNames) assert(form.includes(`name="${field}"`), `English form includes ${field}`);
-assert(form.includes('name="language" value="en"'), "English form identifies its return language");
+const formNames = ["form_name", "language", "brief_mode", "requested_support", "name", "email", "consent", "website"];
+for (const relative of ["index.html", "contact/index.html", "en/contact/index.html"]) {
+  const html = read(relative);
+  const form = html.match(/<form\b[^>]*data-quick-enquiry[\s\S]*?<\/form>/)?.[0] || "";
+  for (const field of formNames) assert(form.includes(`name="${field}"`), `${relative} quick form includes ${field}`);
+  assert(form.includes(`name="language" value="${relative.startsWith("en/") ? "en" : "ar"}"`), `${relative} identifies its return language`);
+  const required = [...form.matchAll(/<(?:input|select)\b[^>]*name="([^"]+)"[^>]*\brequired\b/g)].map((field) => field[1]).sort();
+  assert(required.join(",") === "consent,email,name,requested_support", `${relative} requires only the three enquiry fields and consent`);
+}
 
 const handler = read("submit.php");
 assert(handler.includes("$contactPath = $isEnglish ? '/en/contact/' : '/contact/';"), "Form handler supports English validation redirects");
