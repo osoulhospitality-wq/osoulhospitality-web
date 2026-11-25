@@ -6,12 +6,15 @@ const configReady = requiredKeys.every((key) => typeof config[key] === "string" 
 
 const views = {
   signIn: document.querySelector("#sign-in-view"),
+  recoveryRequest: document.querySelector("#recovery-request-view"),
+  passwordUpdate: document.querySelector("#password-update-view"),
   verify: document.querySelector("#mfa-verify-view"),
   enroll: document.querySelector("#mfa-enroll-view"),
   dashboard: document.querySelector("#dashboard-view")
 };
 const statusNode = document.querySelector("#app-status");
 let activeFactorId = null;
+let passwordUpdateUserId = null;
 let supabase = null;
 
 function setStatus(message = "", type = "") {
@@ -40,8 +43,25 @@ async function signOut() {
   setStatus("جارٍ إنهاء الجلسة…");
   await supabase.auth.signOut();
   activeFactorId = null;
+  passwordUpdateUserId = null;
   showView("signIn");
   setStatus("تم إنهاء الجلسة بأمان.", "success");
+}
+
+async function initializeSession(callback) {
+  const callbackType = callback.get("type");
+  const callbackToken = callback.get("access_token");
+  const { data } = await supabase.auth.getSession();
+  if ((callbackType === "invite" || callbackType === "recovery")
+    && callbackToken && data?.session?.access_token === callbackToken) {
+    passwordUpdateUserId = data.session.user.id;
+  }
+  await routeSession();
+  if (callback.has("error") || (callbackToken
+    && (callbackType === "invite" || callbackType === "recovery")
+    && !passwordUpdateUserId)) {
+    setStatus("رابط الدخول غير صالح أو انتهت صلاحيته. اطلب رابط استعادة جديدًا.", "error");
+  }
 }
 
 async function beginEnrollment() {
@@ -155,6 +175,7 @@ async function routeSession() {
   }
   const session = sessionData.session;
   if (!session) {
+    passwordUpdateUserId = null;
     showView("signIn");
     setStatus("الوصول بدعوة فقط؛ سجّل الدخول بحسابك المؤسسي.");
     return;
@@ -163,6 +184,13 @@ async function routeSession() {
   const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (aalError) {
     setStatus(friendlyError(aalError), "error");
+    return;
+  }
+  if (passwordUpdateUserId === session.user.id
+    && (aal.currentLevel === "aal2" || aal.nextLevel !== "aal2")) {
+    showView("passwordUpdate");
+    setStatus("تم التحقق من الرابط. عيّن كلمة المرور للمتابعة.");
+    document.querySelector("#new-password").focus();
     return;
   }
   if (aal.currentLevel === "aal2") {
@@ -194,9 +222,71 @@ if (!configReady) {
   showView("signIn");
   setStatus("إعداد الاتصال الآمن غير مكتمل. تواصل مع مسؤول النظام.", "error");
 } else {
+  const callback = new URLSearchParams(window.location.hash.slice(1));
   supabase = createClient(config.supabaseUrl, config.supabasePublishableKey, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
     global: { headers: { "X-Client-Info": "osoul-command-center-v15" } }
+  });
+
+  const recoveryButton = document.querySelector("#show-password-recovery");
+  recoveryButton.disabled = false;
+  recoveryButton.addEventListener("click", () => {
+    const email = document.querySelector("#recovery-email");
+    email.value = document.querySelector("#email").value;
+    showView("recoveryRequest");
+    setStatus();
+    email.focus();
+  });
+  document.querySelector("#back-to-sign-in").addEventListener("click", () => {
+    showView("signIn");
+    setStatus();
+    document.querySelector("#email").focus();
+  });
+  views.recoveryRequest.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const email = new FormData(form).get("email").trim();
+    setBusy(form, true);
+    try {
+      const redirectTo = new URL(window.location.pathname, window.location.origin).href;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) throw error;
+      setStatus("إذا كان البريد مرتبطًا بحساب، فسيصلك رابط الاستعادة.", "success");
+    } catch (error) {
+      setStatus(friendlyError(error), "error");
+    } finally {
+      setBusy(form, false);
+    }
+  });
+  views.passwordUpdate.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const values = new FormData(form);
+    const password = values.get("password");
+    if (password !== values.get("confirmPassword")) {
+      setStatus("كلمتا المرور غير متطابقتين.", "error");
+      return;
+    }
+    setBusy(form, true);
+    try {
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!passwordUpdateUserId || data.session?.user.id !== passwordUpdateUserId) {
+        passwordUpdateUserId = null;
+        await routeSession();
+        setStatus("انتهت جلسة تعيين كلمة المرور. اطلب رابط استعادة جديدًا.", "error");
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      passwordUpdateUserId = null;
+      form.reset();
+      await routeSession();
+    } catch (error) {
+      setStatus(friendlyError(error), "error");
+    } finally {
+      setBusy(form, false);
+    }
   });
 
   document.querySelector("#sign-in-view").addEventListener("submit", async (event) => {
@@ -258,5 +348,5 @@ if (!configReady) {
     }
   });
 
-  routeSession();
+  initializeSession(callback);
 }
