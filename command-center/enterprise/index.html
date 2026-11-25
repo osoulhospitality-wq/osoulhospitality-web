@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/command-center/enterprise/app.css">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=16" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#enterprise-app">انتقل إلى بوابة الدخول</a>
@@ -46,6 +46,27 @@
         <label for="password">كلمة المرور</label>
         <input id="password" name="password" type="password" autocomplete="current-password" minlength="10" required>
         <button class="primary-action" type="submit">متابعة آمنة</button>
+        <button id="show-password-recovery" class="text-action" type="button" disabled>نسيت كلمة المرور؟</button>
+      </form>
+
+      <form id="recovery-request-view" class="app-view" hidden>
+        <h2>استعادة كلمة المرور</h2>
+        <p class="muted">أدخل بريدك المؤسسي لاستلام رابط تعيين كلمة مرور جديدة.</p>
+        <label for="recovery-email">البريد الإلكتروني</label>
+        <input id="recovery-email" name="email" type="email" autocomplete="email" required>
+        <button class="primary-action" type="submit">إرسال رابط الاستعادة</button>
+        <button id="back-to-sign-in" class="text-action" type="button">العودة إلى تسجيل الدخول</button>
+      </form>
+
+      <form id="password-update-view" class="app-view" hidden>
+        <h2>تعيين كلمة المرور</h2>
+        <p class="muted">اختر كلمة مرور من 10 أحرف على الأقل، ثم أكمل التحقق الثنائي.</p>
+        <label for="new-password">كلمة المرور الجديدة</label>
+        <input id="new-password" name="password" type="password" autocomplete="new-password" minlength="10" required>
+        <label for="confirm-password">تأكيد كلمة المرور</label>
+        <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="10" required>
+        <button class="primary-action" type="submit">حفظ كلمة المرور</button>
+        <button class="text-action js-sign-out" type="button">إلغاء وتسجيل الخروج</button>
       </form>
 
       <form id="mfa-verify-view" class="app-view" hidden>
