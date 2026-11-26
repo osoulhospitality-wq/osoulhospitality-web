@@ -937,7 +937,7 @@
         [
           {
             "node": "Dragon Intake Assistant",
-            "type": "main",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]

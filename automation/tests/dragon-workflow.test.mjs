@@ -60,6 +60,11 @@ for (const [source, outputs] of Object.entries(workflow.connections)) {
   }
 }
 
+// n8n resolves the model against the agent's language-model input port.
+assert.deepEqual(workflow.connections["OpenAI Chat Model"].ai_languageModel, [[{
+  node: "Dragon Intake Assistant", type: "ai_languageModel", index: 0,
+}]]);
+
 // Event and authorization matrix.
 assert.equal(classify(payload()).decision, "proceed");
 assert.equal(classify(payload({ labels: [] })).decision, "ignored");
