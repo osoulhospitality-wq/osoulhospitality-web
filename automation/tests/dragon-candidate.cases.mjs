@@ -28,15 +28,17 @@ function scenario(id, input, expected, observe) {
 }
 const sentence = 'تم استلام طلب التحقق.';
 const englishRequest = 'Reply with one short sentence confirming receipt.';
-const handoverRequest = 'Draft an Arabic shift handover in three short bullets from the given facts.';
+const historic = JSON.parse(fs.readFileSync(new URL('./fixtures/draqon-historical-qa.json', import.meta.url)));
+const handoverRequest = historic.qa79;
 const bullets = '- تبريد الردهة ضعيف، والزيارة معلقة.\n- اكتمل تنظيف المدخل وفحصه.\n- تنتظر القطعة موافقة مدير المرافق.';
 const draft = (output, request) => run('Normalize Delivery', { output }, request).delivery;
-scenario('WF-01 short Arabic acknowledgement', [sentence, englishRequest], sentence, () => draft(sentence, englishRequest));
+scenario('WF-01 short Arabic acknowledgement', [sentence, englishRequest], 'تم استلام الطلب.', () => draft(sentence, englishRequest));
 scenario('WF-02 rejects multi-section acknowledgement', 'two sections', 'DRAQON_EXPECTED_ONE_SHORT_SENTENCE',
   () => draft('تم استلام الطلب.\nالتوصية: مراجعة.', englishRequest));
 scenario('WF-03 rejects two sentences on one line', 'two statements', 'DRAQON_EXPECTED_ONE_SHORT_SENTENCE',
   () => draft('Received. We will contact the owner.', englishRequest));
-scenario('WF-04 three handover bullets', 'HVAC, cleaning, approval', bullets, () => draft(bullets, handoverRequest));
+const grounded = '- تبريد الردهة ضعيف وزيارة الفني معلقة. تابع تحديد موعد الزيارة.\n- اكتمل تنظيف المدخل وفحصه.\n- قطعة الغيار بانتظار موافقة مدير المرافق. تابع قرار الموافقة.';
+scenario('WF-04 three handover bullets', 'HVAC, cleaning, approval', grounded, () => draft(bullets, handoverRequest));
 scenario('WF-05 rejects missing bullet', 'two bullet lines', 'DRAQON_EXPECTED_THREE_SHORT_BULLETS',
   () => draft('- الأولى\n- الثانية', handoverRequest));
 scenario('WF-06 rejects extra heading', 'heading followed by 3 bullets', 'DRAQON_EXPECTED_THREE_SHORT_BULLETS',
@@ -68,3 +70,20 @@ for (const state of ['completed','failed']) {
 after(() => {
   if (process.env.DRAQON_WORKFLOW_TEST_REPORT) fs.writeFileSync(process.env.DRAQON_WORKFLOW_TEST_REPORT, JSON.stringify(record,null,2)+'\n');
 });
+
+// Historical QA materials are synthetic. Recompute outcomes from independent explicit fixtures.
+scenario('WF-18 archived single-sentence reply rejected', 'QA 73', 'DRAQON_EXPECTED_ONE_SHORT_SENTENCE',
+  () => draft(historic.archive73, historic.qa73));
+scenario('WF-19 archived multi-section handover rejected', 'QA 79', 'DRAQON_EXPECTED_THREE_SHORT_BULLETS',
+  () => draft(historic.archive79, historic.qa79));
+scenario('WF-20 supplied source wins over unsupported inventory or invented work', 'QA 79', grounded,
+  () => draft('- التبريد ممتاز.\n- تم تبديل المحرك.\n- القطعة متوفرة في المستودع.', historic.qa79));
+scenario('WF-21 unfamiliar translation is held', 'unsupported English observation', 'DRAQON_HANDOVER_SOURCE_REVIEW_REQUIRED',
+  () => draft(bullets, historic.qa79.replace('entrance cleaning was finished and inspected','a pump was submerged')));
+scenario('WF-22 conflicting appended fact is held', 'conflicting tail', 'DRAQON_HANDOVER_SOURCE_REVIEW_REQUIRED',
+  () => draft(bullets, historic.qa79 + ' The part was later approved.'));
+scenario('WF-23 one line Arabic acknowledgement', 'طلب عربي', 'تم استلام الطلب.',
+  () => draft('نُفّذ العمل كاملًا.', 'أكد استلام الطلب في سطر واحد.'));
+scenario('WF-24 original direct-language facts are usable', 'other Arabic assets',
+ '- ضغط المضخة منخفض.\n- مستوى الخزان طبيعي.\n- باب المخزن مغلق.', () => draft(bullets,
+ 'تسليم الوردية في ثلاث نقاط وفق الوقائع التالية فقط: (١) ضغط المضخة منخفض؛ (٢) مستوى الخزان طبيعي؛ (٣) باب المخزن مغلق.'));
