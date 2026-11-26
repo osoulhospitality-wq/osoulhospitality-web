@@ -1,5 +1,6 @@
 import { uiText } from "./locale.js";
 import { createClient } from "@supabase/supabase-js";
+import { setupFieldHandoff } from "./field-handoff.js";
 import { setupFacilityOperations } from "./facility-operations.js";
 
 const config = window.OSOUL_ENTERPRISE_CONFIG || {};
@@ -230,6 +231,7 @@ if (!configReady) {
     global: { headers: { "X-Client-Info": "osoul-command-center-v15" } }
   });
   setupFacilityOperations(supabase);
+  setupFieldHandoff(supabase);
 
   const recoveryButton = document.querySelector("#show-password-recovery");
   recoveryButton.disabled = false;

@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/command-center/enterprise/app.css">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=18" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=20" defer></script>
 <link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">Skip to sign-in</a>
@@ -140,6 +140,15 @@
             </form>
             <h3>Work orders and visits</h3>
             <ul id="facility-work-orders"></ul>
+          </details>
+          <details id="draqon-field-handoff">
+            <summary>Draqon draft to field order</summary><p>Enter the draft reference manually and check the scope. A second person approves and names a coordinator. Authorized team members record work and visits under their own identities. Pausing the pilot stops new orders and allows existing work to continue. Purchasing requires separate financial approval.</p><p id="draqon-field-status" role="status"></p>
+            <form id="draqon-field-form">
+              <label>Public GitHub issue number <input type="number" name="issue" min="1" max="2147483647" required></label>
+              <label>Asset (first 100 by code in this pilot) <select name="asset" required></select></label>
+              <label>Reviewed routine work summary <input name="summary" required minlength="3" maxlength="300"></label>
+              <button type="submit">Submit for approval</button>
+            </form><h3>Latest 100 proposals and field outcomes</h3><ul id="draqon-field-queue"></ul>
           </details>
           <p class="privacy-note">Access follows permissions and actions are audited. Share screenshots and files only through approved channels.</p>
         </div>

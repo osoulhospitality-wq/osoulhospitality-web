@@ -1,0 +1,74 @@
+name: DRAQON enterprise verification
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 4 * * 1'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      failed: ${{ steps.verify.outputs.failed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - id: verify
+        name: Run all synthetic suites and retain both outcomes
+        shell: bash
+        run: |
+          mkdir -p evidence
+          install_code=0; node_code=0; memory_code=0
+          npm ci >evidence/install.log 2>&1 || install_code=$?
+          node --test --test-reporter=tap automation/tests/*.test.mjs >evidence/node.tap 2>&1 || node_code=$?
+          DRAQON_MEMORY_TEST_REPORT=evidence/memory.json python3 automation/enterprise/memory/verify_memory.py >evidence/memory.log 2>&1 || memory_code=$?
+          printf '{"install":%s,"node":%s,"memory":%s}\n' "$install_code" "$node_code" "$memory_code" >evidence/status.json
+          if (( install_code || node_code || memory_code )); then
+            echo 'failed=true' >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo 'failed=false' >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: draqon-synthetic-results
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 14
+  propose:
+    # Write permissions are held only by trusted default-branch runs.
+    if: ${{ failure() && needs.verify.outputs.failed == 'true' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref_name == github.event.repository.default_branch && github.ref_type == 'branch' }}
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: draqon-regression-proposals
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: draqon-synthetic-results
+          path: evidence
+      - name: Open a documentation-only draft proposal
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          report="$RUNNER_TEMP/draqon-review.md"
+          signature=$(node automation/enterprise/improvement.mjs evidence "$report")
+          test -n "$signature"
+          bash automation/enterprise/propose-improvement.sh "$signature" "$report" "$DEFAULT_BRANCH"

@@ -9,12 +9,14 @@
     "test:release": "node scripts/check-release-readiness.mjs",
     "test:dragon": "node --test automation/tests/dragon-workflow.test.mjs",
     "test:links": "python3 scripts/check-internal-links.py",
-    "test:mail": "python3 -m unittest scripts/test_send_hostinger_notification.py"
+    "test:mail": "python3 -m unittest scripts/test_send_hostinger_notification.py",
+    "test:enterprise": "node --test automation/tests/*.test.mjs && python3 automation/enterprise/memory/verify_memory.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.6.0",
     "esbuild": "0.28.1"
   }
 }

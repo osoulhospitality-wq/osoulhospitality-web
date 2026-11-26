@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/command-center/enterprise/app.css">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=18" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=20" defer></script>
 <link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">انتقل إلى بوابة الدخول</a>
@@ -140,6 +140,15 @@
             </form>
             <h3>أوامر العمل والزيارات</h3>
             <ul id="facility-work-orders"></ul>
+          </details>
+          <details id="draqon-field-handoff">
+            <summary>تحويل مسودة دراقون إلى أمر عمل</summary><p>أدخل مرجع المسودة يدويًا وراجع نطاقها. يعتمدها شخص آخر ويختار منسّقًا؛ ويمكن لأعضاء الفريق المخولين تسجيل العمل والزيارات بأسمائهم. إيقاف التجربة يوقف إصدار أوامر جديدة وتستمر متابعة الأوامر القائمة. يتطلب الشراء اعتمادًا ماليًا منفصلًا.</p><p id="draqon-field-status" role="status"></p>
+            <form id="draqon-field-form">
+              <label>رقم طلب GitHub العام <input type="number" name="issue" min="1" max="2147483647" required></label>
+              <label>الأصل (أول ١٠٠ بحسب الرمز في التجربة) <select name="asset" required></select></label>
+              <label>ملخص العمل الروتيني بعد مراجعة المسودة <input name="summary" required minlength="3" maxlength="300"></label>
+              <button type="submit">إرسال للاعتماد</button>
+            </form><h3>أحدث ١٠٠ مقترح وأثرها الميداني</h3><ul id="draqon-field-queue"></ul>
           </details>
           <p class="privacy-note">البيانات المعروضة خاضعة للصلاحيات وسجل التدقيق. لا تشارك لقطات الشاشة أو الملفات خارج القنوات المعتمدة.</p>
         </div>

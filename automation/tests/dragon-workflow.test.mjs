@@ -8,14 +8,17 @@ const nodes = new Map(workflow.nodes.map((node) => [node.name, node]));
 function runCode(nodeName, json, executionId = "test-execution") {
   const code = nodes.get(nodeName)?.parameters?.jsCode;
   assert.ok(code, `Missing code node: ${nodeName}`);
-  return new Function("$json", "$execution", code)(json, { id: executionId })[0].json;
+  return new Function("$json", "$execution", "$vars", code)(json, { id: executionId }, {
+    DRAQON_GITHUB_OWNER: "staging-owner", DRAQON_GITHUB_REPOSITORY: "staging-repository",
+    DRAQON_ALLOWED_SENDER: "staging-owner"
+  })[0].json;
 }
 
 function payload({
   action = "opened",
   labels = ["dragon-task"],
   addedLabel = null,
-  sender = "osoulhospitality-wq",
+  sender = "staging-owner",
   state = "open",
   updatedAt = "2026-07-27T12:00:00Z",
 } = {}) {
@@ -25,9 +28,9 @@ function payload({
       sender: { login: sender },
       label: addedLabel ? { name: addedLabel } : undefined,
       repository: {
-        full_name: "osoulhospitality-wq/osoulhospitality-web",
-        owner: { login: "osoulhospitality-wq" },
-        name: "osoulhospitality-web",
+        full_name: "staging-owner/staging-repository",
+        owner: { login: "staging-owner" },
+        name: "staging-repository",
       },
       issue: {
         number: 25,
@@ -82,6 +85,12 @@ assert.equal(
   "proceed",
 );
 assert.equal(classify(payload({ action: "edited" })).decision, "ignored");
+
+const foreignRepo = payload();
+foreignRepo.body.repository.full_name = "synthetic/unrelated";
+assert.equal(classify(foreignRepo).decision, "unauthorized");
+assert.throws(() => new Function("$json","$execution","$vars",nodes.get("Authorize & Classify").parameters.jsCode)(
+  payload(), {id:"fixture"}, {}), /MISSING_ENVIRONMENT_SCOPE/);
 
 // Initial opened+labeled deliveries must converge on one atomic key.
 const opened = classify(payload({ action: "opened", updatedAt: "2026-07-27T12:00:00Z" }), "a");
@@ -146,19 +155,19 @@ for (const obsolete of [
 }
 assert.deepEqual(connectionTargets("Lock Acquired?"), ["Add dragon-processing"]);
 
-// Every post-lock external step that can fail must terminate the database lock.
+// Ambiguous comment writes stay available for operator reconciliation.
 assert.deepEqual(connectionTargets("Add dragon-processing", 1), ["Finalize Lock: failed"]);
-assert.deepEqual(connectionTargets("Post Acceptance", 1), ["Finalize Lock: failed"]);
+assert.deepEqual(connectionTargets("Post Acceptance", 1), ["Reconciliation required"]);
 assert.deepEqual(connectionTargets("Normalize Delivery", 1), ["Post Failure"]);
-assert.deepEqual(connectionTargets("Post Delivery", 1), ["Finalize Lock: failed"]);
+assert.deepEqual(connectionTargets("Post Delivery", 1), ["Reconciliation required"]);
 assert.deepEqual(connectionTargets("Post Failure", 1), ["Finalize Lock: failed"]);
 
 // The lock becomes terminal before best-effort label reconciliation, preventing
 // permanent processing rows when a later GitHub label mutation fails.
 assert.deepEqual(connectionTargets("Post Delivery"), ["Finalize Lock: completed"]);
 assert.deepEqual(connectionTargets("Post Failure"), ["Finalize Lock: failed"]);
-assert.deepEqual(connectionTargets("Finalize Lock: completed"), ["Clear Status (completed) 1"]);
-assert.deepEqual(connectionTargets("Finalize Lock: failed"), ["Clear Status (failed) 1"]);
+assert.deepEqual(connectionTargets("Finalize Lock: completed"), ["Verify terminal row: completed"]);
+assert.deepEqual(connectionTargets("Finalize Lock: failed"), ["Verify terminal row: failed"]);
 assert.deepEqual(connectionTargets("Clear Status (completed) 1"), ["Add dragon-completed"]);
 assert.deepEqual(connectionTargets("Clear Status (completed) 1", 1), ["Add dragon-completed"]);
 assert.deepEqual(connectionTargets("Clear Status (failed) 1"), ["Add dragon-failed"]);
@@ -168,9 +177,7 @@ for (const externalNode of [
   "Log Decision",
   "Acquire Lock",
   "Add dragon-processing",
-  "Post Acceptance",
-  "Post Delivery",
-  "Post Failure",
+  "Read Lock Owner",
   "Finalize Lock: completed",
   "Finalize Lock: failed",
 ]) {
@@ -179,3 +186,9 @@ for (const externalNode of [
 }
 
 console.log("PASS: Dragon workflow structural, policy, idempotency, retry, and safety tests");
+
+for (const name of ["Post Acceptance", "Post Delivery", "Post Failure"]) {
+  assert.notEqual(nodes.get(name).retryOnFail, true, "Non-idempotent comment writes require reconciliation: " + name);
+}
+
+await import("./dragon-candidate.cases.mjs");
