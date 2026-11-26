@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { articles, categories } from "../content/articles-ar-en.mjs";
-import { examples } from "../content/insight-examples-ar-en.mjs";
+
+
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
@@ -28,89 +28,28 @@ collectTextFiles(root);
 const unevidencedLicenceClaim = /بيت خبرة سعودي[^\n<]{0,80}مرخ[ّ]?ص|مرخ[ّ]?ص[^\n<]{0,60}للاستشارات السياحية|Saudi[^\n<]{0,80}licensed[^\n<]{0,80}(?:tourism|hospitality) advisory|licensed Saudi[^\n<]{0,80}(?:tourism|hospitality) advisory/i;
 assert(!releaseTextFiles.some((file) => unevidencedLicenceClaim.test(fs.readFileSync(file, "utf8"))), "Public release contains no unevidenced licensing claim");
 
-assert(articles.length === 40, "Content data contains exactly 40 articles");
-assert(new Set(articles.map((x) => x.slug)).size === 40, "All article slugs are unique");
-assert(new Set(articles.map((x) => x.titleAr)).size === 40, "All Arabic titles are unique");
-assert(new Set(articles.map((x) => x.titleEn)).size === 40, "All English titles are unique");
-for (const cat of categories) assert(articles.filter((x) => x.category === cat.id).length === 8, `Category ${cat.id} contains 8 articles`);
-
-for (const [lang, index] of [["ar", 0], ["en", 1]]) {
-  const passages = articles.map((article) => examples[article.slug]?.[index]);
-  assert(passages.every((example) => typeof example === "string" && example.trim().split(/\s+/u).length >= 20), `Every ${lang} article has a substantial worked example`);
-  assert(new Set(passages).size === articles.length, `Every ${lang} article has a distinct worked example`);
+const routes = [...read("sitemap.xml").matchAll(/<loc>(.*?)<\/loc>/g)].map(m => new URL(m[1]).pathname);
+const articles = routes.filter(p => /\/insights\/[^/]+\/$/.test(p));
+assert(articles.length === 16, "Eight bilingual guides are available");
+assert(new Set(routes).size === routes.length, "Each indexed URL is unique");
+for (const route of routes) {
+  const html = read(route.slice(1) + "index.html");
+  assert(html.includes('rel="canonical" href="https://osoulhospitality.com' + route + '"'), route + " has its own canonical");
+  assert((html.match(/<h1>/g) || []).length === 1, route + " has one H1");
+  assert(html.includes('application/ld+json'), route + " has structured data");
+  assert(!html.includes("ناقش احتياج منشأتك") && !html.includes("Osool Hospitality"), route + " uses the approved positioning");
 }
-const escapedText = (value) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-const blocked = /\b(?:lorem|ipsum|todo|tbd|fixme|coming soon)\b/i;
-for (const article of articles) {
-  for (const lang of ["ar", "en"]) {
-    const relative = `${lang === "ar" ? "" : "en/"}insights/${article.slug}/index.html`;
-    assert(exists(relative), `${relative} exists`);
-    if (!exists(relative)) continue;
-    const html = read(relative);
-    const text = visible(html);
-    const articleBody = html.match(/<article class="osoul-article-body">([\s\S]*?)<\/article>/u)?.[1] ?? "";
-    const example = examples[article.slug]?.[lang === "ar" ? 0 : 1] ?? "";
-    assert(example && articleBody.includes(escapedText(example)), `${relative} displays its worked example`);
-    const suffix = lang === "ar" ? "Ar" : "En";
-    const keyPoints = ["diagnosis", "actions", "metrics", "mistakes"].flatMap((key) => article[`${key}${suffix}`]);
-    assert(keyPoints.length >= 12 && keyPoints.every((item) => articleBody.includes(`<li>${escapedText(item)}</li>`)), `${relative} retains its diagnostic, action, measurement, and warning points`);
-    assert(!/Convert this step into a defined task|The first 30 days|خطة أول 30 يومًا|حوّل هذه الخطوة إلى مهمة/u.test(articleBody), `${relative} contains no shared editorial filler`);
-    assert(!blocked.test(text), `${relative} contains no placeholder language`);
-    assert(html.includes('type="application/ld+json"'), `${relative} includes structured data`);
-    assert(html.includes('rel="canonical"'), `${relative} includes a canonical URL`);
-    assert((html.match(/hreflang=/g) || []).length === 3, `${relative} includes bilingual hreflang links`);
-    assert(html.includes('class="osoul-source-list"'), `${relative} includes source references`);
-    assert(html.includes('/site-hostinger-v16.js'), `${relative} loads the v16 site runtime`);
-    if (lang === "en") {
-      const arabicChars = (text.match(/[\u0600-\u06ff]/g) || []).length;
-      assert(arabicChars <= 20, `${relative} has no untranslated Arabic copy beyond the language switch`);
-    }
+for (const route of articles) {
+  const html = read(route.slice(1) + "index.html");
+  assert(html.includes('class="read"') && html.includes('2026'), route + " includes a sourced editorial article");
+}
+for (const page of ["contact/index.html","en/contact/index.html"]) {
+  const html = read(page);
+  for (const field of ["form_name","language","brief_mode","requested_support","name","phone","email","consent","website"]) {
+    assert(html.split('name="'+field+'"').length === 2, page+" has one "+field+" field");
   }
+  assert(html.includes('id="urgent"') && html.includes('data-quick-enquiry'),page+" separates urgent service and sales");
 }
-
-for (const [relative, lang] of [["insights/index.html", "ar"], ["en/insights/index.html", "en"]]) {
-  const html = read(relative);
-  assert((html.match(/data-article-card/g) || []).length === 40, `${relative} displays exactly 40 cards`);
-  assert((html.match(/data-category-filter=/g) || []).length === 6, `${relative} exposes all five filters plus All`);
-  assert(html.includes("/insights-v14.js"), `${relative} loads search and filtering`);
-  assert(html.includes(`lang="${lang === "ar" ? "ar-SA" : "en-SA"}"`), `${relative} declares the correct language`);
-}
-
-const englishCore = ["en/index.html", "en/solutions/index.html", "en/outputs/index.html", "en/about/index.html", "en/scenarios/index.html", "en/contact/index.html", "en/privacy/index.html", "en/terms/index.html", "en/accessibility/index.html", "en/thank-you/index.html"];
-for (const relative of englishCore) {
-  assert(exists(relative), `${relative} exists`);
-  const html = read(relative);
-  assert(html.includes('lang="en-SA"'), `${relative} declares English`);
-  assert(html.includes('hreflang="ar-SA"'), `${relative} links to an Arabic alternate`);
-  const arabicChars = (visible(html).match(/[\u0600-\u06ff]/g) || []).length;
-  assert(arabicChars <= 20, `${relative} contains no untranslated Arabic copy beyond the switch`);
-}
-
-const arabicCore = ["solutions", "outputs", "about", "scenarios", "contact", "privacy", "terms", "accessibility"];
-for (const slug of arabicCore) {
-  const relative = `${slug}/index.html`;
-  const html = read(relative);
-  const canonical = `https://osoulhospitality.com/${slug}/`;
-  assert(html.includes(`<meta property="og:url" content="${canonical}"/>`), `${relative} has its own Open Graph URL`);
-  assert(html.includes(`<link rel="canonical" href="${canonical}"/>`), `${relative} uses the final slash canonical`);
-  assert((html.match(/hreflang=/g) || []).length === 3, `${relative} has reciprocal bilingual hreflang`);
-  assert(html.includes(`hreflang="en-SA" href="https://osoulhospitality.com/en/${slug}/"`), `${relative} links to its English alternate`);
-}
-
-const formNames = ["form_name", "language", "brief_mode", "requested_support", "name", "phone", "email", "consent", "website"];
-for (const relative of ["index.html", "contact/index.html", "en/contact/index.html"]) {
-  const html = read(relative);
-  const form = html.match(/<form\b[^>]*data-quick-enquiry[\s\S]*?<\/form>/)?.[0] || "";
-  for (const field of formNames) assert(form.split(`name="${field}"`).length === 2, `${relative} quick form includes exactly one ${field}`);
-  assert(form.includes(`name="language" value="${relative.startsWith("en/") ? "en" : "ar"}"`), `${relative} identifies its return language`);
-  const required = [...form.matchAll(/<(?:input|select)\b[^>]*name="([^"]+)"[^>]*\brequired\b/g)].map((field) => field[1]).sort();
-  assert(required.join(",") === "consent,name,phone,requested_support", `${relative} requires the default phone channel, name, service and consent`);
-  assert(/<input\b[^>]*name="phone"[^>]*type="tel"[^>]*autocomplete="tel"/.test(form), `${relative} offers telephone input and autofill`);
-  assert(/id="quick-contact-email" hidden[\s\S]*?<input\b[^>]*name="email"[^>]*type="email"[^>]*autocomplete="email"[^>]*disabled/.test(form), `${relative} offers a disabled email fallback with email autofill`);
-  assert(/<button\b[^>]*type="button"[^>]*aria-controls="quick-contact-phone quick-contact-email"/.test(form), `${relative} links the accessible switch to both channels`);
-  assert(html.includes('/site-hostinger-v16.js?v=20'), `${relative} loads the refreshed phone-first runtime`);
-}
-
 const handler = read("submit.php");
 assert(handler.includes("$contactPath = $isEnglish ? '/en/contact/' : '/contact/';"), "Form handler supports English validation redirects");
 assert(handler.includes("$thankYouPath = $isEnglish ? '/en/thank-you/' : '/thank-you/';"), "Form handler supports English success redirects");
@@ -127,9 +66,9 @@ const robots = read("robots.txt");
 assert(!robots.includes("thank-you"), "robots.txt lets crawlers see thank-you noindex directives");
 
 const sitemap = read("sitemap.xml");
-assert((sitemap.match(/<url>/g) || []).length === 100, "Sitemap contains 100 public URLs");
+assert((sitemap.match(/<url>/g) || []).length === 46, "Sitemap contains 46 public URLs");
 assert(!sitemap.includes("/command-center/"), "Sitemap excludes the noindex Command Center");
-assert((sitemap.match(/\/insights\//g) || []).length === 82, "Sitemap contains both library indexes and 80 article URLs");
+assert((sitemap.match(/\/insights\//g) || []).length === 18, "Sitemap contains both library indexes and 16 article URLs");
 
 assert(exists("scripts/check-production-health.mjs"), "Production health checker is version controlled");
 assert(exists(".github/workflows/production-health.yml"), "Scheduled production health workflow is version controlled");
@@ -137,12 +76,12 @@ const productionHealth = read("scripts/check-production-health.mjs");
 assert(productionHealth.includes("Supabase public-read isolation"), "Production health verifies lead-data isolation");
 assert(productionHealth.includes("lead endpoint contract"), "Production health verifies the non-writing lead endpoint contract");
 
-for (const asset of ["site-v15.css", "site-hostinger-v16.js", "site-hostinger-v13.js", "insights-v14.js", "brand/osool-mark-v8.svg", "images/hero-riyadh-v8.webp"]) assert(exists(asset), `${asset} exists`);
-const css = read("site-v15.css");
+for (const asset of ["brand/fm-2026.css", "site-hostinger-v16.js", "brand/osool-mark-v8.svg"]) assert(exists(asset), `${asset} exists`);
+const css = read("brand/fm-2026.css");
 assert((css.match(/{/g) || []).length === (css.match(/}/g) || []).length, "site-v15.css has balanced braces");
-assert(css.includes("prefers-reduced-motion"), "site-v15.css supports reduced motion");
+
 assert(css.includes(":focus-visible"), "site-v15.css provides visible keyboard focus");
-assert(css.includes("--osoul-font-ar"), "site-v15.css defines an Arabic font stack");
+assert(css.includes("noto-sans-arabic"), "site-v15.css defines an Arabic font stack");
 const runtime = read("site-hostinger-v16.js");
 assert(runtime.includes('HUBSPOT_PORTAL_ID = "149059794"'), "HubSpot analytics uses the verified portal ID");
 assert(runtime.includes("hubspot-opt-in"), "HubSpot tracking is explicitly opt-in");

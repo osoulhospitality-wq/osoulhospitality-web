@@ -275,7 +275,7 @@ $quick = post_value('brief_mode', 10) === 'quick';
 $required = $quick
     ? [$formName, $support, $name]
     : [$formName, $assetType, $city, $stage, $opening, $units, $primaryGap, $urgency, $documents, $support, $name, $organization];
-if (in_array('', $required, true) || $formName !== 'hospitality_readiness_brief' || $consent !== 'yes') {
+if (in_array('', $required, true) || !in_array($formName, ['facilities_service_proposal', 'hospitality_readiness_brief'], true) || $consent !== 'yes') {
     redirect_to($contactPath . '?status=incomplete#project-brief');
 }
 
@@ -409,7 +409,7 @@ if ($email !== '') {
         'email' => $email,
         'phone' => $phone,
         'message' => $hubspotMessage,
-    ], 'https://' . $currentHost . $contactPath, 'Osool Hospitality Website Contact');
+    ], 'https://' . $currentHost . $contactPath, 'Osoul Hospitality Website Contact');
 }
 
 if ($email !== '' && !$hubspotSubmitted) {
@@ -429,7 +429,7 @@ $headers = [
     'X-Mailer: Osool-Hospitality-Website',
 ];
 if ($serverSender !== '') {
-    $headers[] = 'From: Osool Website <' . $serverSender . '>';
+    $headers[] = 'From: Osoul Website <' . $serverSender . '>';
 }
 if ($email !== '') {
     $headers[] = 'Reply-To: ' . $email;

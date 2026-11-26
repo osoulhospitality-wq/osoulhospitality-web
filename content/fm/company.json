@@ -1,0 +1,98 @@
+{
+  "legal": [
+    "[الاسم النظامي]",
+    "[Registered legal name]"
+  ],
+  "cr": [
+    "[رقم السجل التجاري]",
+    "[Commercial registration number]"
+  ],
+  "vat": [
+    "[الرقم الضريبي أو بيان عدم الانطباق]",
+    "[VAT number or applicability statement]"
+  ],
+  "address": [
+    "[العنوان الوطني]",
+    "[National address]"
+  ],
+  "direct": [
+    "[هاتف التواصل المباشر]",
+    "[Direct telephone]"
+  ],
+  "urgent": [
+    "[رقم مناوب الأعطال]",
+    "[Duty telephone]"
+  ],
+  "hours": [
+    "[أيام وساعات العمل بتوقيت الرياض]",
+    "[Business days and hours, Riyadh time]"
+  ],
+  "coverage": [
+    "[نطاق وساعات تغطية المناوبة]",
+    "[Duty coverage area and hours]"
+  ],
+  "privacy": [
+    "بريد طلبات الخصوصية: info@osoulhospitality.com، مع كتابة «طلب خصوصية».",
+    "Email info@osoulhospitality.com with “Privacy request” in the subject line."
+  ],
+  "retention": [
+    "وفق إشعار الموقع المنشور بتاريخ ٢٢ أكتوبر ٢٠٢٦، تراجع الطلبات غير المتعاقدة وتحذف أو تخفى هويتها خلال ٢٤ شهرًا من آخر تواصل ما لم يوجد مسوغ للاحتفاظ. تخضع سجلات العملاء لجدول العقد والالتزامات المنطبقة.",
+    "The site notice dated 22 October 2026 provides for review and deletion or de-identification of uncontracted enquiries within 24 months of last contact unless continued retention is justified. Contract records follow the agreed retention schedule and applicable obligations."
+  ],
+  "basis": [
+    "الموافقة على التحليلات اختيارية ويمكن سحبها من إعدادات الخصوصية. يستخدم فريق العقود معلومات الاستفسار للرد على طلبك ومتابعة التواصل السابق للتعاقد. [الأساس النظامي المعتمد لكل غرض]",
+    "Analytics are optional and consent can be withdrawn in privacy settings. The contracts team uses enquiry details to respond and handle pre-contract discussions. [Approved lawful basis per purpose]"
+  ],
+  "recipients": [
+    "Hostinger للاستضافة والبريد، وSupabase لحفظ الطلبات في سيول، وHubSpot لإدارة العملاء في المنطقة الأوروبية، وGoogle Analytics 4 للتحليلات الاختيارية. مصدر مواقع المعالجة: إشعار الموقع المؤرخ ٢٢ أكتوبر ٢٠٢٦. [ضمانات النقل المعتمدة]",
+    "Hostinger provides hosting and mail, Supabase stores enquiries in Seoul, HubSpot manages enquiries in its EU region and Google Analytics 4 provides optional analytics. Processing locations follow the site notice dated 22 October 2026. [Approved transfer safeguards]"
+  ],
+  "team_profiles": [
+    [
+      "[الاسم] · [المسمى] · [خبرة موثقة] · [الشهادة وجهة إصدارها ورابط التحقق] · [LinkedIn]",
+      "[Name] · [Title] · [Verified experience] · [Credential, issuer and verification URL] · [LinkedIn]"
+    ],
+    [
+      "[الاسم] · [المسمى] · [خبرة موثقة] · [الشهادة وجهة إصدارها ورابط التحقق] · [LinkedIn]",
+      "[Name] · [Title] · [Verified experience] · [Credential, issuer and verification URL] · [LinkedIn]"
+    ],
+    [
+      "[الاسم] · [المسمى] · [خبرة موثقة] · [الشهادة وجهة إصدارها ورابط التحقق] · [LinkedIn]",
+      "[Name] · [Title] · [Verified experience] · [Credential, issuer and verification URL] · [LinkedIn]"
+    ]
+  ],
+  "authors": {
+    "summer-cooling": [
+      "[اسم الكاتب المهني]",
+      "[Author’s professional name]"
+    ],
+    "supplier-accountability": [
+      "[اسم الكاتب المهني]",
+      "[Author’s professional name]"
+    ],
+    "renewal-evidence": [
+      "[اسم الكاتب المهني]",
+      "[Author’s professional name]"
+    ],
+    "asset-handover": [
+      "[اسم الكاتب المهني]",
+      "[Author’s professional name]"
+    ],
+    "water-leaks": [
+      "[اسم الكاتب المهني]",
+      "[Author’s professional name]"
+    ],
+    "lift-outages": [
+      "[اسم الكاتب المهني]",
+      "[Author’s professional name]"
+    ],
+    "housekeeping-acceptance": [
+      "[اسم الكاتب المهني]",
+      "[Author’s professional name]"
+    ],
+    "preventive-maintenance-budget": [
+      "[اسم الكاتب المهني]",
+      "[Author’s professional name]"
+    ]
+  }
+}

@@ -1,0 +1,230 @@
+[
+ [
+  [
+   "صيانة أنظمة التكييف",
+   "متابعة صيانة وحدات التكييف والتهوية، ومعالجة الأعطال التي تؤثر على راحة الضيوف وتشغيل المرفق."
+  ],
+  [
+   "الكهرباء والطاقة الاحتياطية",
+   "متابعة اللوحات والتوزيع الكهربائي وفحوص المولدات والطاقة الاحتياطية وفق جدول المرفق."
+  ],
+  [
+   "المضخات والسباكة وشبكات المياه",
+   "نتابع أعطال التغذية والصرف والتسربات وأداء المضخات، وننسق فحص السبب واختبار عودة الخدمة مع المختص."
+  ],
+  [
+   "صيانة المصاعد والسلالم المتحركة",
+   "تنسيق الزيارات الدورية والأعطال مع مقدمي الخدمة المختصين ومتابعة إغلاق الملاحظات."
+  ],
+  [
+   "أنظمة الحريق والسلامة",
+   "متابعة فحوص أنظمة الإنذار والإطفاء، وتوثيق نتائج الزيارات ومتابعة معالجة الملاحظات مع الجهات المختصة."
+  ],
+  [
+   "الشبكات والاتصالات",
+   "تنسيق صيانة الشبكات والاتصالات في المرفق، ومتابعة البلاغات التي تؤثر على الضيوف أو فريق التشغيل."
+  ],
+  [
+   "فني صيانة مقيم",
+   "تنظيم تغطية فنية في الموقع وفق احتياج المرفق، لمتابعة الفحوص اليومية والبلاغات والأعمال المجدولة."
+  ],
+  [
+   "الصيانة الميدانية عند الطلب",
+   "استقبال البلاغ وتحديد أولويته وتنسيق الزيارة الفنية، ثم توثيق ما نُفذ قبل اعتماد الإغلاق."
+  ],
+  [
+   "النظافة والتدبير الفندقي",
+   "تنظيم أعمال تنظيف الوحدات والمناطق المشتركة، ومراجعة الجودة وفق قوائم فحص تناسب طبيعة المرفق."
+  ],
+  [
+   "فريق نظافة مقيم",
+   "تنظيم التغطية اليومية والورديات في الموقع، ومتابعة الحضور وجودة العمل حسب نطاق الخدمة."
+  ],
+  [
+   "تنظيف الواجهات",
+   "جدولة أعمال تنظيف الزجاج والواجهات، وتنسيق وسائل الوصول الآمن ومراجعة جودة التنفيذ."
+  ],
+  [
+   "تنظيف وتعقيم الخزانات",
+   "جدولة التنظيف والتعقيم مع مقدم الخدمة المختص وتوثيق التنفيذ والملاحظات ومواعيد الزيارة التالية."
+  ],
+  [
+   "مكافحة الآفات",
+   "تنسيق الزيارات الوقائية ومعالجة البلاغات، وتوثيق المواقع المعالجة ومتابعة الحالات المتكررة."
+  ],
+  [
+   "جمع النفايات وإدارتها",
+   "تنظيم نقاط التجميع وجداول الرفع، ومتابعة التزام مقدم الخدمة والتعامل مع تأخر الرفع أو امتلاء الحاويات."
+  ],
+  [
+   "الحراسة وتنظيم الدخول",
+   "تنسيق التغطية الأمنية وإجراءات الدخول ومتابعة الحوادث والملاحظات مع مقدم الخدمة المختص."
+  ],
+  [
+   "إدارة المرافق المتكاملة",
+   "توحيد متابعة الخدمات والموردين والبلاغات في خطة تشغيل واحدة، مع مسؤول واضح لكل إجراء."
+  ],
+  [
+   "إدارة العقود والجودة",
+   "مراجعة نطاقات العقود ومواعيد الزيارات ومستويات الخدمة، وتوثيق الملاحظات والإجراءات التصحيحية."
+  ],
+  [
+   "المستلزمات والمواد التشغيلية",
+   "متابعة احتياج فرق التشغيل للمواد وقطع الغيار، وتنسيق التوريد ومراجعة الاستهلاك."
+  ],
+  [
+   "جرد الأصول وترميزها",
+   "إعداد سجل يربط كل أصل برمزه وموقعه وبياناته الأساسية، لتسهيل تتبع تاريخه وصيانته."
+  ],
+  [
+   "تقييم حالة الأصول ودورة حياتها",
+   "توثيق حالة الأصول وترتيب أولويات الإصلاح أو الاستبدال بحسب أثر التعطل وحالة الأصل."
+  ],
+  [
+   "تخطيط الصيانة الوقائية",
+   "إعداد جداول الصيانة حسب نوع الأصل وتكرار الخدمة، ومتابعة الزيارات المنفذة والمتأخرة."
+  ],
+  [
+   "إدارة البلاغات والصيانة التصحيحية",
+   "متابعة البلاغ من تحديد الأولوية وإسناده إلى تسجيل نتيجة الزيارة والتحقق من التنفيذ واعتماد الإغلاق."
+  ],
+  [
+   "الاستلام الفني ونقل مسؤولية التشغيل",
+   "نطابق حالة الوحدات والمرافق المشتركة مع سجل التسليم، ونحدد الأعمال الموروثة والمسؤول عن إغلاقها."
+  ],
+  [
+   "متابعة ملف الدفاع المدني",
+   "ترتيب مستندات أنظمة السلامة ومتابعة النواقص بالتنسيق مع الجهات المختصة ومقدمي الخدمة المرخصين."
+  ],
+  [
+   "متابعة ترخيص منشأة الضيافة",
+   "جمع مستندات المنشأة الفندقية، ومتابعة استكمال المتطلبات وإجراءات الترخيص مع ممثل المرفق."
+  ],
+  [
+   "متابعة الترخيص البلدي",
+   "تنظيم ملف الترخيص البلدي ومتابعة الملاحظات والمواعيد مع ممثل المنشأة والأطراف المختصة."
+  ],
+  [
+   "مراجعة كفاءة الإنفاق التشغيلي",
+   "مراجعة تكاليف العقود والزيارات والمستلزمات، وتحديد البنود التي تستدعي ضبط الإنفاق أو تعديل النطاق."
+  ],
+  [
+   "تقارير الأداء ومستويات الخدمة",
+   "عرض حالة البلاغات والزيارات وجودة التنفيذ والالتزام بمستويات الخدمة، مع تحديد القرارات المطلوبة من الإدارة."
+  ]
+ ],
+ [
+  [
+   "Air-conditioning maintenance",
+   "Manage servicing and faults in air conditioning and ventilation systems to maintain guest comfort and keep facilities running."
+  ],
+  [
+   "Electrical and backup power",
+   "Oversee switchboards, electrical distribution and scheduled checks for generators and backup power."
+  ],
+  [
+   "Pumps, plumbing and water networks",
+   "Coordinate investigation of leaks, water supply, drainage and pump faults, followed by a specialist return-to-service test."
+  ],
+  [
+   "Lift and escalator maintenance",
+   "Coordinate routine servicing and breakdown response with qualified providers, and track outstanding findings."
+  ],
+  [
+   "Fire and life safety systems",
+   "Track inspections of detection and suppression systems, document findings and follow up with qualified providers."
+  ],
+  [
+   "Networks and communications",
+   "Coordinate on-site network and communications maintenance and track outages affecting guests or staff."
+  ],
+  [
+   "Resident maintenance technician",
+   "Arrange on-site technician coverage for daily checks, service requests and scheduled work."
+  ],
+  [
+   "On-demand field maintenance",
+   "Triage service calls, arrange a technician visit and document the work before sign-off."
+  ],
+  [
+   "Cleaning and housekeeping",
+   "Plan cleaning for guest units and shared areas, and check quality against site-specific standards."
+  ],
+  [
+   "Resident cleaning team",
+   "Arrange daily on-site staffing and shifts, and monitor attendance and service quality."
+  ],
+  [
+   "Façade cleaning",
+   "Schedule façade and glazing cleaning, coordinate safe access and inspect the finished work."
+  ],
+  [
+   "Tank cleaning and disinfection",
+   "Schedule specialist tank cleaning and disinfection, and keep records of work, findings and the next visit."
+  ],
+  [
+   "Pest control",
+   "Arrange preventive visits and callouts, record treated areas and follow up on recurring issues."
+  ],
+  [
+   "Waste collection and management",
+   "Organize collection points and pickup schedules, and follow up on delays and overflowing containers."
+  ],
+  [
+   "Security guarding and access control",
+   "Coordinate security coverage and access procedures, and track incidents and findings with the contracted provider."
+  ],
+  [
+   "Integrated facilities management",
+   "Bring services, vendors and work orders into one operating plan with clear accountability for each action."
+  ],
+  [
+   "Contract and quality management",
+   "Review contract scope, visit schedules and service levels, and document findings and corrective actions."
+  ],
+  [
+   "Operating supplies and materials",
+   "Track demand for consumables and spare parts, coordinate supply and review usage."
+  ],
+  [
+   "Asset inventory and tagging",
+   "Build a register tying each asset to its identifier, location and key details so its history and servicing can be tracked."
+  ],
+  [
+   "Asset condition and lifecycle",
+   "Record asset condition and prioritize repair or replacement based on condition and the impact of failure."
+  ],
+  [
+   "Preventive maintenance planning",
+   "Set maintenance schedules by asset type and service interval, and track completed and overdue visits."
+  ],
+  [
+   "Service requests and corrective maintenance",
+   "Track each work order from triage and assignment through the visit report, verification and closure."
+  ],
+  [
+   "Technical handover and transfer of operations",
+   "Reconcile units and shared areas with the handover register and assign inherited defects to the party responsible for closure."
+  ],
+  [
+   "Civil Defense documentation",
+   "Organize safety-system records and coordinate outstanding documentation with competent authorities and licensed providers."
+  ],
+  [
+   "Hospitality property licensing support",
+   "Organize property documents and help the facility representative track licensing requirements and submissions."
+  ],
+  [
+   "Municipal licensing support",
+   "Organize the municipal licence file and follow up on findings and deadlines with the client and relevant parties."
+  ],
+  [
+   "Operating spend review",
+   "Review contract, callout and supply costs to identify where spending or service scope warrants adjustment."
+  ],
+  [
+   "Performance reporting and SLAs",
+   "Report work order status, visits, service quality and SLA performance, and flag where management decisions are needed."
+  ]
+ ]
+]

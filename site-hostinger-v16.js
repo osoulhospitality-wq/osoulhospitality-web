@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   var CONSENT_KEY = "osoul_analytics_consent_v1";
-  var LOADER_VERSION = "16";
+
   var HUBSPOT_PORTAL_ID = "149059794";
   var HUBSPOT_SCRIPT = "https://js-eu1.hs-scripts.com/" + HUBSPOT_PORTAL_ID + ".js";
   var GA4_MEASUREMENT_ID = "G-HY8WJ4SDCM";
@@ -151,7 +151,7 @@
     });
     document.body.appendChild(panel);
     var firstButton = panel.querySelector("button");
-    if (firstButton) firstButton.focus({ preventScroll: true });
+  
   }
 
   function addPrivacySettingsButton() {
@@ -177,123 +177,9 @@
     section.className = "osoul-analytics-disclosure";
     section.innerHTML = english
       ? '<h2>Optional analytics and CRM</h2><p>After opt-in, we use HubSpot (EU data region) to measure page visits and enquiry journeys and, where non-HubSpot form capture is enabled, to associate a submitted business enquiry with its visitor journey. This can include IP address, device and browser information, viewed pages, referral source, cookie identifiers and the details you choose to submit. The purpose is service improvement, lead management and response measurement. You may reject analytics or reopen Privacy settings at any time; rejection does not affect essential site functions. Historical records and deletion requests are handled under the retention and rights sections of this notice.</p>'
-      : '<h2>التحليلات الاختيارية وإدارة العملاء</h2><p>بعد الموافقة فقط، نستخدم HubSpot (منطقة بيانات أوروبية) لقياس زيارات الصفحات ومسار طلب المشروع، وعند تفعيل التقاط النماذج الخارجية يمكن ربط الطلب التجاري المرسل برحلة الزائر. قد تشمل البيانات عنوان IP ومعلومات الجهاز والمتصفح والصفحات ومصدر الإحالة ومعرّفات الارتباط والبيانات التي تختار إرسالها. الغرض هو تحسين الخدمة وإدارة العملاء المحتملين وقياس الاستجابة. يمكنك رفض التحليلات أو إعادة فتح إعدادات الخصوصية في أي وقت، ولا يؤثر الرفض في وظائف الموقع الضرورية. تخضع السجلات السابقة وطلبات المحو لأحكام الاحتفاظ والحقوق في هذا الإشعار.</p>';
+      : '<h2>التحليلات الاختيارية وإدارة العملاء</h2><p>بعد الموافقة فقط، نستخدم HubSpot (منطقة بيانات أوروبية) لقياس زيارات الصفحات ومسار طلب الخدمة، وعند تفعيل التقاط النماذج الخارجية يمكن ربط الطلب التجاري المرسل برحلة الزائر. قد تشمل البيانات عنوان IP ومعلومات الجهاز والمتصفح والصفحات ومصدر الإحالة ومعرّفات الارتباط والبيانات التي تختار إرسالها. الغرض هو تحسين الخدمة وإدارة العملاء المحتملين وقياس الاستجابة. يمكنك رفض التحليلات أو إعادة فتح إعدادات الخصوصية في أي وقت، ولا يؤثر الرفض في وظائف الموقع الضرورية. تخضع السجلات السابقة وطلبات المحو لأحكام الاحتفاظ والحقوق في هذا الإشعار.</p>';
     var host = document.querySelector(".osoul-prose") || document.querySelector("main") || document.body;
     host.appendChild(section);
-  }
-
-  function installProjectBriefFallback() {
-    var form = document.querySelector('form[action="/submit.php"]');
-    if (!form || form.dataset.osoulStepFallback === "true") return;
-    var fieldsets = Array.prototype.slice.call(form.querySelectorAll("fieldset"));
-    var actions = form.querySelector(".brief-actions");
-    var card = form.closest(".brief-card");
-    if (fieldsets.length < 3 || !actions || !card) return;
-
-    form.dataset.osoulStepFallback = "true";
-    var step = 1;
-    var english = document.documentElement.lang.toLowerCase().indexOf("en") === 0;
-
-    function value(name) {
-      var field = form.elements.namedItem(name);
-      return field && typeof field.value === "string" ? field.value.trim() : "";
-    }
-
-    function valid(targetStep) {
-      if (targetStep === 1) return !!(value("asset_type") && value("city"));
-      if (targetStep === 2) return !!(value("stage") && value("opening_target") && value("units"));
-      var consent = form.elements.namedItem("consent");
-      return !!(
-        value("primary_gap") &&
-        value("urgency") &&
-        value("documents") &&
-        value("requested_support") &&
-        value("name") &&
-        value("organization") &&
-        value("email") &&
-        consent &&
-        consent.checked
-      );
-    }
-
-    function renderActions() {
-      actions.innerHTML = "";
-      if (step > 1) {
-        var back = document.createElement("button");
-        back.className = "brief-back";
-        back.type = "button";
-        back.dataset.osoulStepAction = "back";
-        back.textContent = english ? "Previous" : "السابق";
-        actions.appendChild(back);
-      }
-      var primary = document.createElement("button");
-      primary.className = step < 3 ? "brief-next" : "brief-submit";
-      primary.type = step < 3 ? "button" : "submit";
-      primary.dataset.osoulStepAction = step < 3 ? "next" : "submit";
-      primary.disabled = !valid(step);
-      primary.textContent = step < 3 ? (english ? "Next" : "التالي") : (english ? "Send brief" : "إرسال الموجز");
-      actions.appendChild(primary);
-    }
-
-    function refresh() {
-      fieldsets.forEach(function (fieldset, index) {
-        fieldset.hidden = index !== step - 1;
-      });
-      var counter = card.querySelector(".brief-head b");
-      if (counter) counter.textContent = "0" + step + " / 03";
-      var progress = card.querySelector(".brief-progress");
-      if (progress) progress.setAttribute("aria-label", (english ? "Step " : "الخطوة ") + step + (english ? " of 3" : " من 3"));
-      card.querySelectorAll(".brief-progress i").forEach(function (item, index) {
-        item.classList.toggle("active", index < step);
-      });
-      renderActions();
-    }
-
-    form.addEventListener("input", function (event) {
-      event.stopPropagation();
-      refresh();
-    }, true);
-    form.addEventListener("change", function (event) {
-      event.stopPropagation();
-      refresh();
-    }, true);
-    form.addEventListener("click", function (event) {
-      var control = event.target.closest("[data-osoul-step-action]");
-      if (!control) return;
-      var action = control.dataset.osoulStepAction;
-      if (action === "next") {
-        event.preventDefault();
-        event.stopPropagation();
-        if (valid(step)) {
-          step = Math.min(3, step + 1);
-          refresh();
-        }
-      } else if (action === "back") {
-        event.preventDefault();
-        event.stopPropagation();
-        step = Math.max(1, step - 1);
-        refresh();
-      }
-    }, true);
-    form.addEventListener("submit", function (event) {
-      var complete = valid(1) && valid(2) && valid(3);
-      if (!complete || !form.checkValidity()) {
-        event.preventDefault();
-        step = !valid(1) ? 1 : (!valid(2) ? 2 : 3);
-        refresh();
-        form.reportValidity();
-      }
-      event.stopPropagation();
-    }, true);
-
-    var emailField = form.elements.namedItem("email");
-    if (emailField) {
-      emailField.required = true;
-      emailField.setAttribute("aria-required", "true");
-    }
-    var hint = form.querySelector(".form-hint");
-    if (hint) hint.textContent = english ? "A professional email is required; phone is optional." : "البريد المهني مطلوب، ورقم التواصل اختياري.";
-    refresh();
   }
 
   function installQuickEnquiry() {
@@ -426,23 +312,9 @@
     });
   }
 
-  ["/site-v13.css", "/site-v14.css?v=5"].forEach(function (href) {
-    if (document.querySelector('link[href="' + href + '"]')) return;
-    var link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  });
-  if (!document.querySelector('script[data-osoul-enhancer="14"]')) {
-    var script = document.createElement("script");
-    script.src = "/site-hostinger-v13.js?v=23";
-    script.defer = true;
-    script.dataset.osoulEnhancer = "14";
-    document.head.appendChild(script);
-  }
   addPrivacySettingsButton();
   addPrivacyDisclosure();
-  installProjectBriefFallback();
+
   installQuickEnquiry();
   clearCompletedLeadToken();
   var consent = safeStorageGet();

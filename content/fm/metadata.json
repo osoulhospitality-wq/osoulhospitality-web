@@ -1,0 +1,102 @@
+{
+  "": [
+    "إدارة مرافق الفنادق والشقق والمنتجعات في السعودية. تابع الصيانة والموردين عبر نظام أصول، وراجع ما يحتاج اعتمادك وما استُلم في الموقع.",
+    "Facilities management for hotels, apartments and resorts in Saudi Arabia. Track maintenance, contractors, decisions and accepted work in the Osoul platform."
+  ],
+  "solutions": [
+    "اختر خدمات الصيانة الفنية أو خدمات الموقع أو إدارة الأصول والعقود. تحدد أصول نطاق العمل والزيارات والمواد وطريقة الاستلام لكل منشأة.",
+    "Explore technical maintenance, site services and asset management. Define labour, coverage, materials and acceptance in one proposal for your property."
+  ],
+  "solutions/technical": [
+    "إدارة التكييف والمصاعد والمضخات والكهرباء وأنظمة السلامة، من تشخيص العطل إلى اختبار عودة الخدمة في المنشأة.",
+    "Coordinate HVAC, lift, pump, electrical and life safety maintenance, from fault diagnosis to a documented return-to-service test."
+  ],
+  "solutions/site-services": [
+    "نظافة فندقية وخدمات موقع للفنادق والشقق والمناطق المشتركة، بمعايير فحص تحدد متى تُسلّم الوحدة أو المساحة للمشغّل.",
+    "Housekeeping and site services for hotels, apartments and shared spaces, with inspection and handover criteria your operator can use."
+  ],
+  "solutions/assets-contracts": [
+    "اربط كل أصل بعقده وضمانه وتكلفة صيانته. راجع أعطال المعدات وأداء الموردين وقرارات الإصلاح والإحلال مع أصول.",
+    "Connect assets to warranties, contracts and maintenance costs. Review equipment condition, supplier performance and repair or replacement decisions."
+  ],
+  "how-we-work": [
+    "كيف تنقل أصول مسؤولية التشغيل، وتسجل الأعمال الموروثة، وتتفق مع المالك على الاستجابة والاستلام وتقارير الأداء.",
+    "See how Osoul takes over a property, records inherited issues and agrees response, escalation, acceptance and owner reporting."
+  ],
+  "outputs": [
+    "اطّلع على طريقة متابعة قرارات المالك وتاريخ المعدات وتقارير الاستلام المصورة، أو ادخل إلى حساب منشأتك في نظام أصول.",
+    "Explore owner decisions, equipment histories and photographic handbacks, or sign in to your property’s Osoul account."
+  ],
+  "about": [
+    "تعرّف إلى أدوار فريق أصول الهندسي والتشغيلي ومسؤول العقد الذي يتابع الموردين وجودة الأعمال في منشأتك.",
+    "Meet the engineering, site and contract roles responsible for supplier coordination and the quality of work at your property."
+  ],
+  "sectors": [
+    "إدارة مرافق تناسب حركة الضيوف في الفنادق والشقق الفندقية، وخصوصية السكان في الشقق والمجمعات، وتوزع الخدمات في المنتجعات.",
+    "Facilities plans tailored to hotel arrivals, apartment access, residents’ privacy and the dispersed amenities of a resort."
+  ],
+  "scenarios": [
+    "دليل المالك للتحقق من دراسات الحالة، ومصادر القياس قبل التدخل وبعده، وأدلة قبول العمل قبل التعاقد.",
+    "Assess case evidence, comparable measurement periods and acceptance records before commissioning facilities management."
+  ],
+  "contact": [
+    "اطلب عرض خدمة لمنشأتك بالجوال أو البريد. للعملاء المتعاقدين مسار مستقل للإبلاغ عن عطل عاجل والتواصل مع مناوب الموقع.",
+    "Request a facilities proposal by mobile or email. Contracted clients can find the separate duty contact route for urgent faults."
+  ],
+  "terms": [
+    "راجع نطاق عقد إدارة المرافق، وآلية الاعتماد والتغيير والتصحيح، وشروط الاستلام والإنهاء وتسليم سجلات المنشأة.",
+    "Review service scope, change and cost approvals, correction, acceptance, termination and handover of property records."
+  ],
+  "privacy": [
+    "تعرف إلى استخدام معلومات طلب الخدمة، ومزودي المعالجة، ومدة الاحتفاظ، وطرق ممارسة حقوقك وإدارة التحليلات الاختيارية.",
+    "How service enquiry details are used, processed and retained, and how to exercise privacy rights and manage optional analytics."
+  ],
+  "accessibility": [
+    "إرشادات التنقل والوصول إلى نموذج طلب الخدمة والإبلاغ عن مشكلة في استخدام موقع أصول.",
+    "Find navigation and enquiry options and report an accessibility barrier on the Osoul website."
+  ],
+  "insights": [
+    "أدلة عملية لمالك المنشأة توضح كيف يراجع أعطال التبريد والتسرب والمصاعد والنظافة والعقود والميزانية وسجلات الأصول.",
+    "Practical guidance on cooling faults, leaks, lifts, housekeeping, contractors, asset records, renewals and preventive budgets."
+  ],
+  "404.html": [
+    "تعذّر العثور على الرابط المطلوب. تصفح خدمات أصول أو عد إلى الرئيسية أو صفحة التواصل.",
+    "This page could not be found. Browse Osoul services, visit the home page or find the contact team."
+  ],
+  "thank-you": [
+    "متابعة طلب عرض خدمة أصول والوصول إلى وسائل التواصل الخاصة بالمنشأة.",
+    "Follow up on an Osoul service proposal enquiry and find the property contact routes."
+  ],
+  "insights/summer-cooling": [
+    "قبل شراء قطعة تكييف أخرى، طابق وقت الشكوى وظروف الغرفة مع سجل المعدة واختبار قبول يعيدها إلى الخدمة.",
+    "Before approving another cooling part, reconcile guest observations, equipment history and an acceptance test under representative conditions."
+  ],
+  "insights/supplier-accountability": [
+    "تتبّع بلاغًا يعبر حدود عقدين، وحدد من يقبل العمل ومن يعتمد التكلفة، وكيف تطابق فواتير الموردين مع النتيجة.",
+    "Trace a fault across two supplier contracts. Establish who owns acceptance and spending, then reconcile invoices to the delivered outcome."
+  ],
+  "insights/renewal-evidence": [
+    "راجع الفرق بين وثيقة سارية وموقع تغيّر استخدامه، وابنِ ملف تجديد يستند إلى مصادر السياحة وبلدي وسلامة.",
+    "Compare licence records with actual site use and organise renewal evidence using tourism, municipal and Civil Defense sources."
+  ],
+  "insights/asset-handover": [
+    "اختبر سجل الأصول عند استلام مبنى مأهول، من تعريف المعدة وربط ضمانها إلى رفع بلاغ يستطيع المناوب متابعته.",
+    "Test whether an incoming operator can locate equipment, trace its warranty and raise a usable work order from the asset register."
+  ],
+  "insights/water-leaks": [
+    "ميّز أثر الرطوبة عن مصدر التسرب، واربط التشخيص والإصلاح وإعادة التشطيب بقرار موثق واحد.",
+    "Distinguish a visible stain from its source and connect diagnosis, repair and reinstatement through one documented incident."
+  ],
+  "insights/lift-outages": [
+    "خطط لوصول الضيوف والسكان عند توقف المصعد، وراجع تقرير المختص ومستلزمات إعادة الخدمة قبل اعتماد التكلفة.",
+    "Plan for guest and resident access during a lift outage and evaluate specialist release evidence before authorising expenditure."
+  ],
+  "insights/housekeeping-acceptance": [
+    "رتّب تفتيش الغرفة بحسب استخدام النزيل، وحدد متى تنتقل من التدبير إلى الاستقبال وكيف تراجع إعادة التنظيف.",
+    "Inspect a room in the order guests use it. Separate cleaning, inspection and release, and trace the cause of rework."
+  ],
+  "insights/preventive-maintenance-budget": [
+    "اكتشف لماذا تتأجل مهام الوقاية، وقارن تكلفة الوصول والعمالة والمواد قبل زيادة عدد زيارات الصيانة.",
+    "Identify why planned tasks slip and compare access, labour and materials before buying more contractor visits."
+  ]
+}
