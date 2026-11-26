@@ -13,12 +13,12 @@
     "test:enterprise": "node --test --test-concurrency=2 automation/tests/*.test.mjs && python3 automation/enterprise/memory/verify_memory.py"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.112.2",
+    "@supabase/supabase-js": "2.112.4",
     "jsqr": "1.4.0",
     "qrcode-generator": "2.0.4"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.6.0",
-    "esbuild": "0.28.1"
+    "esbuild": "0.28.2"
   }
 }
