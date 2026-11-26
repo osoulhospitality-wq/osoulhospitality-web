@@ -7,6 +7,12 @@ project_dir="$(mktemp -d)"
 report_dir="${DRAQON_UAT_REPORT_DIR:-$repo/evidence/local-auth}"
 mkdir -p "$report_dir" "$project_dir/supabase"
 report_dir="$(cd "$report_dir" && pwd)"
+# A failed repeat must never inherit receipts from a previous successful run.
+# Preserve existing reports and put this run in its own directory when needed.
+if compgen -G "$report_dir/*.json" >/dev/null; then
+  report_dir="$(mktemp -d "$report_dir/run-XXXXXX")"
+  echo "Fresh evidence directory: $report_dir"
+fi
 cp "$repo/automation/e2e/config.toml" "$project_dir/supabase/config.toml"
 cp -R "$repo/supabase/migrations" "$project_dir/supabase/migrations"
 cd "$project_dir"
@@ -32,3 +38,4 @@ supabase status -o env >"$project_dir/local.env" 2>"$project_dir/status.log"
 cd "$repo"
 DRAQON_DISPOSABLE_LOCAL=draqon-ci-auth bash automation/e2e/council-monitor-scheduler.sh "$report_dir"
 node automation/e2e/real-auth.mjs "$project_dir/local.env" "$report_dir"
+node automation/e2e/field-receipts.mjs "$report_dir" "$(git rev-parse HEAD)"
