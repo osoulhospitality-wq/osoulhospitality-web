@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en-SA" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#062f2b">
+  <title>Osool Operations Centre | Public Pilot</title>
+  <link rel="icon" href="/brand/osool-mark-v8.svg">
+  <link rel="stylesheet" href="/command-center/app/app.css?v=14">
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to workspace</a>
+  <header class="topbar">
+    <a class="brand" href="/en/command-center/" aria-label="Osool Hospitality — Operations Centre">
+      <img src="/brand/osool-mark-v8.svg" alt="" width="44" height="44">
+      <span><b>Osool Hospitality</b><small>EXECUTIVE COMMAND CENTER</small></span>
+    </a>
+    <div class="top-actions">
+      <a class="ghost" href="/command-center/app/" lang="ar" hreflang="ar">العربية</a>
+      <span class="system-state" id="systemState"><i></i><span>Connecting…</span></span>
+      <span class="last-sync" id="lastSync">Last sync: —</span>
+      <button class="icon-button" type="button" data-action="refreshDragon" aria-label="Refresh Dragon requests" title="Refresh data">↻</button>
+      <button class="ghost desktop-action" type="button" data-action="export">Back up</button>
+      <label class="ghost file-button desktop-action">Restore<input id="restoreFile" type="file" accept="application/json"></label>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="Workspace sections">
+      <div class="nav-group"><small>Operations</small>
+        <button class="nav-item active" data-view="requests"><span>01</span><b>Request centre</b><em id="requestNavCount">—</em></button>
+        <button class="nav-item" data-view="dashboard"><span>02</span><b>Executive dashboard</b></button>
+      </div>
+      <div class="nav-group"><small>Procurement and assets</small>
+        <button class="nav-item" data-view="suppliers"><span>03</span><b>Suppliers</b></button>
+        <button class="nav-item" data-view="products"><span>04</span><b>Products and pricing</b></button>
+        <button class="nav-item" data-view="quotes"><span>05</span><b>Quote comparison</b></button>
+        <button class="nav-item" data-view="contracts"><span>06</span><b>Contracts and risks</b></button>
+      </div>
+      <div class="nav-group"><small>Governance</small>
+        <button class="nav-item" data-view="decisions"><span>07</span><b>Decision log</b></button>
+        <button class="nav-item" data-view="documents"><span>08</span><b>Documents</b></button>
+        <button class="nav-item" data-view="audit"><span>09</span><b>Audit log</b></button>
+        <button class="nav-item" data-view="settings"><span>10</span><b>Data and settings</b></button>
+      </div>
+      <div class="sidebar-note"><b>Public Pilot v13</b><p>This pilot displays a public Dragon request log. Use the secure enterprise portal for customer details, contracts and confidential records.</p></div>
+    </nav>
+
+    <main id="workspace" class="workspace">
+      <section class="view active" id="view-requests">
+        <div class="page-head request-head">
+          <div><small>DRAGON OPERATIONS</small><h1>Request centre</h1><p>Track public pilot requests, their status and Dragon’s replies.</p></div>
+          <div class="page-actions"><button class="secondary" type="button" data-action="exportRequests">Export report</button><button class="primary" type="button" data-open="requestDialog">Create pilot request</button></div>
+        </div>
+
+        <div class="security-banner" role="note"><b>Public workspace — use non-sensitive information only</b><span>Requests created here are published on GitHub. Use only anonymised sample data. The enterprise portal provides authentication, MFA, row-level access controls and private storage.</span></div>
+
+        <div class="connection-banner" id="connectionBanner" aria-live="polite">
+          <div><span class="pulse"></span><b>Live Dragon feed</b><small>Refreshes automatically every five minutes</small></div>
+          <a href="https://github.com/osoulhospitality-wq/osoulhospitality-web/issues?q=is%3Aissue%20label%3Adragon-task" target="_blank" rel="noopener">Open source log ↗</a>
+        </div>
+
+        <div class="request-kpis" id="requestKpis" aria-label="Dragon request metrics"></div>
+
+        <div class="grid request-overview">
+          <article class="panel status-panel">
+            <div class="panel-head"><div><small>DELIVERY HEALTH</small><h2>Delivery performance</h2></div><span class="metric-note" id="requestScopeLabel">Operational requests</span></div>
+            <div id="deliveryHealth"></div>
+          </article>
+          <article class="panel attention-panel">
+            <div class="panel-head"><div><small>ACTION QUEUE</small><h2>Needs attention</h2></div></div>
+            <div id="attentionList" class="list"></div>
+          </article>
+        </div>
+
+        <article class="panel requests-panel">
+          <div class="panel-head request-table-head">
+            <div><small>REQUEST LEDGER</small><h2>Request register</h2></div>
+            <div class="record-count" id="recordCount">—</div>
+          </div>
+          <div class="toolbar request-toolbar">
+            <label class="search-box"><span>⌕</span><input class="search" data-search="requests" placeholder="Search by request number, title or content" aria-label="Search requests"></label>
+            <select data-filter="requestStatus" aria-label="Filter by status"><option value="">All statuses</option><option value="new">New</option><option value="processing">In progress</option><option value="completed">Completed</option><option value="failed">Failed</option><option value="conflict">Conflicting status</option><option value="archived">Archived</option></select>
+            <select data-filter="requestCategory" aria-label="Filter by category"><option value="">All categories</option><option value="safety">Safety</option><option value="compliance">Compliance</option><option value="client">Client services</option><option value="partnership">Partnerships</option><option value="strategy">Strategy</option><option value="general">General</option></select>
+            <select data-filter="requestScope" aria-label="Record scope"><option value="operational">Operational requests only</option><option value="all">Include QA tests</option></select>
+          </div>
+          <div id="requestTable" class="table-wrap requests-table" aria-live="polite"></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-dashboard">
+        <div class="page-head"><div><small>EXECUTIVE CONTROL</small><h1>Executive dashboard</h1><p>Review suppliers, prices, contracts and decisions together.</p></div><button class="primary" type="button" data-action="seed">Load sample data</button></div>
+        <div class="kpis" id="kpis"></div>
+        <div class="grid two">
+          <article class="panel"><div class="panel-head"><div><small>CONTRACT WATCH</small><h2>Upcoming contract renewals</h2></div></div><div id="expiryList" class="list"></div></article>
+          <article class="panel"><div class="panel-head"><div><small>RISK RADAR</small><h2>Open risks</h2></div></div><div id="riskList" class="list"></div></article>
+        </div>
+        <article class="panel"><div class="panel-head"><div><small>PRICE INTELLIGENCE</small><h2>Potential savings</h2></div></div><div id="savingList" class="table-wrap"></div></article>
+      </section>
+
+      <section class="view" id="view-suppliers">
+        <div class="page-head"><div><small>SUPPLIER MASTER</small><h1>Suppliers</h1><p>Review supplier status, documents, coverage and performance.</p></div><button class="primary" type="button" data-open="supplierDialog">Add supplier</button></div>
+        <div class="toolbar"><input class="search" data-search="suppliers" placeholder="Search by name, registration number or city"><select data-filter="supplierStatus"><option value="">All statuses</option><option value="approved">Approved</option><option value="under_review">Under review</option><option value="suspended">Suspended</option></select></div>
+        <div id="supplierTable" class="table-wrap"></div>
+      </section>
+
+      <section class="view" id="view-products">
+        <div class="page-head"><div><small>PRODUCT & PRICE MASTER</small><h1>Products and pricing</h1><p>Compare different pack sizes using a standard unit price.</p></div><button class="primary" type="button" data-open="productDialog">Add product and price</button></div>
+        <div class="toolbar"><input class="search" data-search="products" placeholder="Search by product, SKU or supplier"></div>
+        <div id="productTable" class="table-wrap"></div>
+      </section>
+
+      <section class="view" id="view-quotes">
+        <div class="page-head"><div><small>QUOTE COMPARATOR</small><h1>Compare supplier quotes</h1><p>Compare quotes using the cost per standard unit.</p></div><button class="primary" type="button" data-open="quoteDialog">Add quote line</button></div>
+        <div class="notice">Total cost includes discounts, delivery and tax. Check scope and quality before accepting the lowest-priced offer.</div>
+        <div id="quoteTable" class="table-wrap"></div>
+      </section>
+
+      <section class="view" id="view-contracts">
+        <div class="page-head"><div><small>CONTRACT CONTROL</small><h1>Contracts and risks</h1><p>Track renewals, notice periods, service levels, exclusions and corrective actions.</p></div><button class="primary" type="button" data-open="contractDialog">Add contract</button></div>
+        <div id="contractTable" class="table-wrap"></div>
+      </section>
+
+      <section class="view" id="view-decisions">
+        <div class="page-head"><div><small>DECISION LEDGER</small><h1>Decision log</h1><p>Record the decision, its owner, supporting evidence and rationale.</p></div><button class="primary" type="button" data-open="decisionDialog">Record decision</button></div>
+        <div id="decisionTable" class="table-wrap"></div>
+      </section>
+
+      <section class="view" id="view-documents">
+        <div class="page-head"><div><small>DOCUMENT INTAKE</small><h1>Document register</h1><p>Register contracts, quotes and invoices, and verify file integrity before central processing.</p></div></div>
+        <div class="notice">This browser computes the file’s SHA-256 fingerprint and stores its metadata only. File contents remain on your device.</div>
+        <article class="panel">
+          <div class="form-grid">
+            <label>Document type<select id="documentType"><option>Contract</option><option>Quotation</option><option>Invoice</option><option>Commercial registration</option><option>Tax certificate</option><option>Other</option></select></label>
+            <label>Related reference<input id="documentReference" placeholder="Supplier name or contract number"></label>
+            <label class="wide">Choose file<input id="documentFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv,.doc,.docx"></label>
+          </div>
+          <button class="primary" type="button" data-action="registerDocument">Register document and calculate fingerprint</button>
+        </article>
+        <div id="documentTable" class="table-wrap"></div>
+      </section>
+
+      <section class="view" id="view-audit">
+        <div class="page-head"><div><small>AUDIT TRAIL</small><h1>Audit log</h1><p>Track records created, deleted, restored or exported on this device.</p></div><button class="secondary" type="button" data-action="exportAudit">Export log</button></div>
+        <div id="auditTable" class="table-wrap"></div>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="page-head"><div><small>DATA CONTROL</small><h1>Data and settings</h1><p>Back up, restore and clear local pilot data.</p></div></div>
+        <div class="grid three">
+          <article class="panel action-card"><h2>Full backup</h2><p>A JSON file containing local supplier and contract records.</p><button class="primary" type="button" data-action="export">Download backup</button></article>
+          <article class="panel action-card"><h2>Sample data</h2><p>Clearly labelled examples for testing procurement workflows.</p><button class="secondary" type="button" data-action="seed">Reload sample data</button></article>
+          <article class="panel action-card danger"><h2>Clear this device</h2><p>Removes local procurement records from this browser only.</p><button class="danger-button" type="button" data-action="reset">Clear local data</button></article>
+        </div>
+        <article class="panel"><div class="panel-head"><div><small>INTEGRATION MAP</small><h2>Enterprise integration status</h2></div><span class="badge review">Public Pilot v13</span></div><ul class="plain-list"><li><b>Dragon:</b> Connected to a public GitHub log for anonymised testing only.</li><li><b>Suppliers and contracts</b> Records are stored on one device. This pilot is designed for single-user testing.</li><li><b>Documents</b> The browser computes a local fingerprint without storing file contents.</li><li><b>Metrics</b> Success reflects the latest visible status. Time to closure measures the GitHub issue lifecycle and does not measure service-level compliance.</li><li><b>Production requirements</b> Supabase authentication, MFA, row-level access controls, private storage and a tamper-resistant audit log.</li></ul></article>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="requestDialog" class="request-dialog"><form method="dialog" data-form="request">
+    <header><div><small>PUBLIC PILOT REQUEST</small><h2>Create public pilot request</h2></div><button value="cancel" aria-label="Close">×</button></header>
+    <div class="dialog-intro warning"><b>Privacy notice</b> Your request will be published in a public GitHub repository. Remove customer names, personal details, contracts and confidential pricing before you continue.</div>
+    <div class="form-grid">
+      <label>Category<select name="category" required><option value="strategy">Strategy and delivery</option><option value="client">Client services and proposals</option><option value="compliance">Compliance and licensing</option><option value="safety">Safety and urgent operations</option><option value="partnership">Partnerships and business development</option><option value="general">General request</option></select></label>
+      <label>Priority<select name="priority" required><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></label>
+      <label class="wide">Request title<input name="title" required maxlength="140" placeholder="Example: Define the scope of a readiness audit for a 120-room hotel"></label>
+      <label>Target date<input name="dueDate" type="date"></label>
+      <label>Required deliverable<input name="deliverable" required placeholder="Plan, letter, analysis or technical proposal"></label>
+      <label class="wide">Context and details<textarea name="details" required maxlength="5000" placeholder="Describe the current situation, constraints and intended outcome."></textarea></label>
+      <label class="wide consent-check"><input name="publicDataConsent" type="checkbox" value="yes" required><span>I confirm that this test request is anonymised and contains no personal data or confidential contractual or commercial information.</span></label>
+    </div>
+    <footer><button value="cancel" class="ghost dialog-ghost">Cancel</button><button value="default" class="primary">Review on GitHub ↗</button></footer>
+  </form></dialog>
+
+  <dialog id="requestDetailDialog" class="detail-dialog">
+    <div class="detail-shell">
+      <header class="detail-header"><div id="detailHeading"></div><button type="button" data-action="closeRequestDetail" aria-label="Close">×</button></header>
+      <div class="detail-body">
+        <div class="detail-meta" id="detailMeta"></div>
+        <section class="detail-section"><small>Request text</small><div id="detailRequest" class="content-block"></div></section>
+        <section class="detail-section"><div class="thread-head"><small>Activity and replies</small><span id="threadCount"></span></div><div id="detailThread" class="thread"></div></section>
+      </div>
+      <footer class="detail-footer"><a id="detailGithubLink" class="secondary button-link" target="_blank" rel="noopener">Open request on GitHub ↗</a><button id="copyLatestResponse" class="secondary" type="button" data-action="copyLatestResponse">Copy latest response</button><button class="primary" type="button" data-action="closeRequestDetail">Done</button></footer>
+    </div>
+  </dialog>
+
+  <dialog id="supplierDialog"><form method="dialog" data-form="supplier"><header><h2>Add supplier</h2><button value="cancel" aria-label="Close">×</button></header><div class="form-grid"><label>Registered business name<input name="name" required></label><label>Commercial registration number<input name="cr"></label><label>City<input name="city" value="Riyadh"></label><label>Status<select name="status"><option value="under_review">Under review</option><option value="approved">Approved</option><option value="suspended">Suspended</option></select></label><label>Service coverage<input name="coverage" placeholder="Riyadh, Jeddah"></label><label>Payment terms<input name="payment" placeholder="30 days"></label></div><footer><button value="cancel" class="ghost dialog-ghost">Cancel</button><button value="default" class="primary">Save</button></footer></form></dialog>
+  <dialog id="productDialog"><form method="dialog" data-form="product"><header><h2>Add product and price</h2><button value="cancel" aria-label="Close">×</button></header><div class="form-grid"><label>SKU<input name="sku" required></label><label>Product name<input name="name" required></label><label>Supplier<select name="supplierId" data-options="suppliers" required></select></label><label>Category<input name="category" value="Cleaning supplies"></label><label>Pack price (SAR)<input name="packPrice" type="number" min="0" step=".01" required></label><label>Standard units per pack<input name="standardQty" type="number" min=".001" step=".001" required></label><label>Unit of measure<select name="unit"><option>Litre</option><option>Kilogram</option><option>Item</option></select></label><label>Minimum order<input name="moq" type="number" min="1" value="1"></label></div><footer><button value="cancel" class="ghost dialog-ghost">Cancel</button><button value="default" class="primary">Save</button></footer></form></dialog>
+  <dialog id="quoteDialog"><form method="dialog" data-form="quote"><header><h2>Add quote line</h2><button value="cancel" aria-label="Close">×</button></header><div class="form-grid"><label>Product<select name="productId" data-options="products" required></select></label><label>Supplier<select name="supplierId" data-options="suppliers" required></select></label><label>Quantity<input name="quantity" type="number" min="1" value="1" required></label><label>Pack price<input name="packPrice" type="number" min="0" step=".01" required></label><label>Discount<input name="discount" type="number" min="0" step=".01" value="0"></label><label>Delivery<input name="delivery" type="number" min="0" step=".01" value="0"></label><label>Tax (%)<input name="taxRate" type="number" min="0" step=".01" value="15"></label><label>Quote valid until<input name="validUntil" type="date"></label></div><footer><button value="cancel" class="ghost dialog-ghost">Cancel</button><button value="default" class="primary">Save and compare</button></footer></form></dialog>
+  <dialog id="contractDialog"><form method="dialog" data-form="contract"><header><h2>Add contract and risk</h2><button value="cancel" aria-label="Close">×</button></header><div class="form-grid"><label>Contract name<input name="name" required></label><label>Supplier<select name="supplierId" data-options="suppliers" required></select></label><label>Building<input name="building" required></label><label>Annual value<input name="value" type="number" min="0" required></label><label>End date<input name="endDate" type="date" required></label><label>Notice period (days)<input name="noticeDays" type="number" min="0" value="90"></label><label>Risk likelihood (1–5)<input name="probability" type="number" min="1" max="5" value="3"></label><label>Risk impact (1–5)<input name="impact" type="number" min="1" max="5" value="3"></label><label class="wide">Risk description<input name="risk" placeholder="Example: Excluded parts or unclear service levels"></label></div><footer><button value="cancel" class="ghost dialog-ghost">Cancel</button><button value="default" class="primary">Save</button></footer></form></dialog>
+  <dialog id="decisionDialog"><form method="dialog" data-form="decision"><header><h2>Record decision</h2><button value="cancel" aria-label="Close">×</button></header><div class="form-grid"><label>Subject<input name="subject" required></label><label>Decision<select name="decision"><option>Approve</option><option>Negotiate</option><option>Decline</option><option>Request clarification</option></select></label><label>Approver<input name="approver" required></label><label>Evidence reference<input name="evidence" placeholder="Quote 2026-001"></label><label class="wide">Rationale<textarea name="rationale" required></textarea></label></div><footer><button value="cancel" class="ghost dialog-ghost">Cancel</button><button value="default" class="primary">Record</button></footer></form></dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/command-center/app/app.js?v=14"></script>
+</body>
+</html>

@@ -1,9 +1,10 @@
-const stages = { open: "مفتوح", in_progress: "قيد التنفيذ", completed: "مكتمل" };
+import { uiText } from "./locale.js";
+const stages = { open: uiText("مفتوح", "Open"), in_progress: uiText("قيد التنفيذ", "In progress"), completed: uiText("مكتمل", "Completed") };
 
 function optionList(select, rows, label) {
   const previous = select.value;
   const options = rows.map((row) => new Option(label(row), row.id));
-  select.replaceChildren(new Option("اختر", ""), ...options);
+  select.replaceChildren(new Option(uiText("اختر", "Select"), ""), ...options);
   if (rows.some((row) => row.id === previous)) select.value = previous;
 }
 
@@ -53,7 +54,7 @@ export function setupFacilityOperations(client) {
         if (order.status !== "completed") {
           const advance = document.createElement("button");
           advance.type = "button";
-          advance.textContent = order.status === "open" ? "بدء التنفيذ" : "اعتماد الإغلاق";
+          advance.textContent = order.status === "open" ? uiText("بدء التنفيذ", "Start work") : uiText("اعتماد الإغلاق", "Approve closure");
           advance.addEventListener("click", async () => {
             advance.disabled = true;
             const { data, error } = await client.from("facility_work_orders")
@@ -61,7 +62,7 @@ export function setupFacilityOperations(client) {
               .eq("organization_id", organizationId).eq("id", order.id).eq("status", order.status)
               .select("id").maybeSingle();
             if (organizationId === organization.value) {
-              status.textContent = error || !data ? "تعذر تحديث الأمر. تحقّق من الصلاحية وحالة الأمر والزيارة." : "تم تحديث أمر العمل.";
+              status.textContent = error || !data ? uiText("تعذر تحديث الأمر. تحقّق من الصلاحية وحالة الأمر والزيارة.", "The work order could not be updated. Check your permissions, its status and the visit record.") : uiText("تم تحديث أمر العمل.", "Work order updated.");
               await refresh();
             }
             advance.disabled = false;
@@ -71,7 +72,7 @@ export function setupFacilityOperations(client) {
         return item;
       }));
     } catch {
-      if (request === generation) status.textContent = "تعذر تحميل بيانات إدارة المرافق.";
+      if (request === generation) status.textContent = uiText("تعذر تحميل بيانات إدارة المرافق.", "Facilities data could not be loaded.");
     }
   }
 
@@ -89,11 +90,11 @@ export function setupFacilityOperations(client) {
         if (error) throw error;
         if (organizationId === organization.value) {
           form.reset();
-          status.textContent = "تم الحفظ.";
+          status.textContent = uiText("تم الحفظ.", "Saved.");
           await refresh();
         }
       } catch {
-        if (organizationId === organization.value) status.textContent = "تعذر الحفظ. تحقّق من الصلاحية والبيانات المدخلة.";
+        if (organizationId === organization.value) status.textContent = uiText("تعذر الحفظ. تحقّق من الصلاحية والبيانات المدخلة.", "Could not save. Check your permissions and the information you entered.");
       } finally {
         button.disabled = false;
       }
@@ -104,7 +105,7 @@ export function setupFacilityOperations(client) {
     list.replaceChildren();
     for (const { form } of forms) {
       form.reset();
-      for (const select of form.querySelectorAll("select")) select.replaceChildren(new Option("اختر", ""));
+      for (const select of form.querySelectorAll("select")) select.replaceChildren(new Option(uiText("اختر", "Select"), ""));
     }
     status.textContent = "";
   });

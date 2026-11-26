@@ -1,0 +1,2 @@
+# Preserve the original HTTP 404 status for missing English pages.
+ErrorDocument 404 /en/404.html

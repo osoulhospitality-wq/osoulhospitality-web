@@ -35,7 +35,7 @@ export const articles = [
     mistakesAr: ["بدء التأثيث قبل تثبيت الفئة", "رفع ملفات بأسماء أو تواريخ متعارضة", "اعتبار موافقة واحدة بديلًا عن بقية الجهات"]
   }, {
     titleEn: "A Hospitality Facility Licensing Roadmap: From Concept to Operations",
-    excerptEn: "A practical route that connects entity, activity, site, classification and evidence instead of treating the licence as a last-minute application.",
+    excerptEn: "Map the activity, entity, property, classification and supporting documents before submitting a licence application.",
     diagnosisEn: ["Confirm facility type and activity before design", "Reconcile entity, property and contract data", "Map parallel approvals and dependencies", "Assign an owner and closure evidence to every requirement"],
     actionsEn: ["Maintain one requirement register with dates, owners and status", "Test the target classification against design and equipment", "Separate operator evidence from licensed-specialist deliverables", "Run an evidence review before every submission", "Allow time for remediation and resubmission"],
     metricsEn: ["Requirements closed with accepted evidence", "Unresolved critical dependencies", "Elapsed time from first submission to issue"],
@@ -51,7 +51,7 @@ export const articles = [
     mistakesAr: ["اعتبار الرخصة شهادة جودة", "خلط قائمة الأثاث بقائمة التشغيل", "تجاهل تدريب الفريق"]
   }, {
     titleEn: "Licence, Classification and Operations: Three Files, Not One",
-    excerptEn: "Separating regulatory permission, product standard and operating capability prevents a licensed facility from opening unready.",
+    excerptEn: "Review the licence, classification requirements and operating capability separately before setting an opening date.",
     diagnosisEn: ["Define the decision and boundary of each workstream", "Connect classification requirements to actual specifications", "Test operating readiness separately from construction completion", "Unify evidence and observation logs"],
     actionsEn: ["Create three separate decision gates", "Define evidence for each gate", "Review conflicts between drawings and operations", "Test service before accepting guests", "Do not announce opening before critical closure"],
     metricsEn: ["Licence readiness", "Classification conformity", "Operating-test pass rate"],
@@ -67,7 +67,7 @@ export const articles = [
     mistakesAr: ["الاعتماد على ذاكرة موظف واحد", "رفع مستند قديم بعد تغيير المشغّل", "تأجيل الصيانة الظاهرة"]
   }, {
     titleEn: "Renewing a Serviced-Apartment Licence Without a Last-Minute Rush",
-    excerptEn: "An annual compliance calendar turns renewal from an emergency campaign into a documented routine.",
+    excerptEn: "An annual calendar gives the operations team time to renew contracts, replace expired evidence and prepare the licence file.",
     diagnosisEn: ["Expiry dates of every linked document", "Changes in ownership, management or capacity", "Open findings from previous visits", "Integrity and retrievability of approved copies"],
     actionsEn: ["Start the review well before the due date", "Refresh the document register monthly", "Close findings with photos and minutes", "Run an unannounced internal audit", "Put renewal ownership on management dashboards"],
     metricsEn: ["Valid-document ratio", "Overdue findings", "Resubmission requests"],
@@ -83,7 +83,7 @@ export const articles = [
     mistakesAr: ["قائمة بلا روابط أدلة", "وصف مبهم للمسؤول", "حذف أثر القرارات السابقة"]
   }, {
     titleEn: "How to Build an Audit-Ready Compliance Register",
-    excerptEn: "A sound register does more than list requirements: it proves source, ownership, frequency, evidence and decision history.",
+    excerptEn: "Keep the source, owner, review date and evidence for each requirement in a single register.",
     diagnosisEn: ["Source and version of every obligation", "Named executive owner", "Next verification date", "Evidence link and reviewer"],
     actionsEn: ["Give every obligation a unique ID", "Record the source without misleading truncation", "Support every status with dated evidence", "Add independent review for critical controls", "Preserve change history instead of overwriting it"],
     metricsEn: ["Evidence coverage", "Average age of open findings", "Reviews completed on time"],
@@ -99,7 +99,7 @@ export const articles = [
     mistakesAr: ["إغلاق الملاحظة بصورة واحدة", "معالجة الموظف بدل العملية", "غياب تحقق ما بعد الإغلاق"]
   }, {
     titleEn: "Recurring Violations: Preventing Them With Evidence Controls",
-    excerptEn: "Verbal instructions do not survive shift changes; prevention requires a clear control, recurring evidence and escalation.",
+    excerptEn: "Give each shift a clear procedure for preventing recurring violations and recording how issues were resolved.",
     diagnosisEn: ["Highest-likelihood and highest-impact breach", "Root cause rather than symptom", "Early detection point", "Evidence that proves the control keeps working"],
     actionsEn: ["Rank risks by impact and likelihood", "Convert each risk into a periodic check", "Use samples rather than ceremonial signatures", "Escalate overdue actions automatically", "Test whether the cause returns after closure"],
     metricsEn: ["Repeat-finding rate", "Closure time", "Corrective-action effectiveness"],
@@ -115,7 +115,7 @@ export const articles = [
     mistakesAr: ["احتساب إجمالي مضلل", "توظيف بلا مدرب أو مناوبة", "تغيير المسميات دون تغيير العمل"]
   }, {
     titleEn: "Saudisation as Operating Readiness, Not an Isolated Ratio",
-    excerptEn: "An effective plan connects targeted roles to rosters, training, career paths and service continuity.",
+    excerptEn: "Connect the staffing plan to rosters, training and career paths so each shift can maintain service coverage.",
     diagnosisEn: ["Current roles, ratios and decisions", "Gap by department and shift", "Training and coaching capacity", "Retention risks"],
     actionsEn: ["Record the governing source and review date", "Build a demand-based workforce plan", "Link recruitment to practical learning", "Name deputies for critical roles", "Measure retention, not hiring alone"],
     metricsEn: ["Compliance by category", "Time to competence", "Ninety-day retention"],
@@ -131,7 +131,7 @@ export const articles = [
     mistakesAr: ["نسخ الجوازات بلا سياسة احتفاظ", "حسابات مشتركة", "نقل بيانات دون تقييم مناسب"]
   }, {
     titleEn: "Data Protection in Hospitality: What Do We Collect and Why?",
-    excerptEn: "Booking, identity, payment and preference data moves across systems and parties; governance starts with flow, purpose and authority.",
+    excerptEn: "Map where booking, identity, payment and preference data goes, and record why each team needs access.",
     diagnosisEn: ["Data classes and collection points", "Purpose, basis and retention", "Recipients inside and outside the Kingdom", "Permissions and access logs"],
     actionsEn: ["Map the end-to-end data flow", "Minimise fields to what is necessary", "Document notices and consent where required", "Review processor and transfer terms", "Test incident and rights-request response"],
     metricsEn: ["Systems covered by the record", "Excess access removed", "Request-response time"],
@@ -147,7 +147,7 @@ export const articles = [
     mistakesAr: ["إدخال يدوي متكرر", "وصف نطاق لا يطابق العقد", "حذف الفاتورة بدل إصدار إشعار"]
   }, {
     titleEn: "E-invoicing for Hospitality Businesses and Advisory Firms",
-    excerptEn: "Readiness is not just producing a file; it connects customer, tax, sequence, note and archive data.",
+    excerptEn: "Trace each invoice and adjustment from the booking through tax records to the final archive.",
     diagnosisEn: ["Invoice and note types", "Required fields and tax number", "Alignment of contract, delivery and invoice", "Retention, access and retrieval"],
     actionsEn: ["Establish a master data source", "Test exception scenarios", "Separate creation and approval rights", "Reconcile revenue, invoices and collections", "Preserve the amendment trail"],
     metricsEn: ["First-time-correct invoices", "Reconciliation differences", "Note-processing time"],
@@ -163,7 +163,7 @@ export const articles = [
     mistakesAr: ["خفض العمالة دون تحليل الطلب", "مقارنة إجمالي الإيراد فقط", "احتساب الخصم دون عمولة القناة"]
   }, {
     titleEn: "Diagnosing Profit Leakage in Serviced Apartments",
-    excerptEn: "Leakage is usually a portfolio of small variances across channels, cleaning, utilities, contracts and pricing—not one dramatic line item.",
+    excerptEn: "Small losses across bookings, cleaning, utilities, contracts and pricing can erode margin across an entire property.",
     diagnosisEn: ["Net revenue after channel cost", "Cost per occupied unit", "Cleaning and maintenance frequency", "Out-of-scope contract consumption"],
     actionsEn: ["Build a twelve-month baseline", "Analyse by unit, channel and segment", "Separate rate, volume and mix effects", "Deliver quick wins with quality controls", "Lock in weekly variance reviews"],
     metricsEn: ["Contribution margin per unit", "Cost per stay", "Net-revenue ratio"],
@@ -179,7 +179,7 @@ export const articles = [
     mistakesAr: ["قبول تفسير إنشائي", "الخلط بين الربح والنقد", "إخفاء الانحراف بتعديل الميزانية"]
   }, {
     titleEn: "How Should an Owner Read a Hotel P&L?",
-    excerptEn: "Useful reading starts with operating drivers and returns to line items, separating rate, volume, mix and timing.",
+    excerptEn: "Start with room rates, nights sold and booking mix, then trace how they affect the profit and loss statement.",
     diagnosisEn: ["Budget and prior-year comparison", "Departmental drivers", "Non-recurring items", "Allocations and management fees"],
     actionsEn: ["Start with a revenue bridge", "Separate variable and fixed costs", "Require quantified variance explanations", "Connect profit to cash", "Record owner decisions and follow-up"],
     metricsEn: ["GOP and margin", "Cash flow", "Forecast accuracy"],
@@ -195,7 +195,7 @@ export const articles = [
     mistakesAr: ["ضم تكاليف ثابتة بلا تفسير", "تجاهل طول الإقامة", "خفض الجودة لتحقيق هدف شهري"]
   }, {
     titleEn: "Cost per Occupied Room: A Small Metric With Big Decisions",
-    excerptEn: "With a stable definition, the metric exposes occupancy effects on supplies, cleaning and energy while preventing misleading averages.",
+    excerptEn: "A consistent cost per occupied room night shows how occupancy affects supplies, cleaning and energy.",
     diagnosisEn: ["Numerator and denominator definitions", "Traceable costs", "Unit type and length-of-stay variation", "Season and roster effects"],
     actionsEn: ["Lock the metric dictionary", "Separate arrival cost from stayover cost", "Compare like-for-like units", "Investigate the driver, not only the number", "Link savings to guest feedback"],
     metricsEn: ["Cost per occupied room", "Cost per arrival", "Rework and complaints"],
@@ -211,7 +211,7 @@ export const articles = [
     mistakesAr: ["مقارنة الإجمالي", "ترك الاستثناءات في نص صغير", "التجديد التلقائي دون مراجعة"]
   }, {
     titleEn: "Supplier Contracts: Separate Price From Scope Before Comparing",
-    excerptEn: "The lowest bid may be the most expensive when quantities, exclusions, service levels and material responsibility differ.",
+    excerptEn: "Compare visit frequency, exclusions, service levels and parts coverage to understand the full cost of each bid.",
     diagnosisEn: ["Units of measure and quantities", "Exclusions and consumables", "Service level and response time", "Change and remedy mechanism"],
     actionsEn: ["Standardise the bill of quantities", "Build a technical matrix before price scoring", "Price scenarios, not only the base bid", "Check capacity and references", "Audit invoices against scope"],
     metricsEn: ["Total cost of ownership", "Service-level compliance", "Change-order value"],
@@ -227,7 +227,7 @@ export const articles = [
     mistakesAr: ["مطاردة 100% إشغال", "خصم شامل بلا سياج", "إهمال الحجوزات المزاحة"]
   }, {
     titleEn: "Why High Occupancy Does Not Guarantee High Profit",
-    excerptEn: "A property may fill at a weak rate, high channel cost and poor stay mix; revenue quality matters as much as volume.",
+    excerptEn: "Check how rate, channel costs and stay length affect the contribution from rooms sold.",
     diagnosisEn: ["Net rate after commission", "Channel and segment mix", "Cost to serve demand", "Displacement on high-demand dates"],
     actionsEn: ["Measure net revenue", "Compare margin by channel", "Set rate floors", "Manage restrictions by demand", "Review every campaign after stay"],
     metricsEn: ["Net RevPAR", "Channel margin", "Acquisition cost"],
@@ -243,7 +243,7 @@ export const articles = [
     mistakesAr: ["اختيار منافس بالاسم فقط", "مزج شهور مختلفة", "تقديم تقدير كحقيقة"]
   }, {
     titleEn: "Honest Hospitality Benchmarking: Choosing the Right Peer Set",
-    excerptEn: "A comparison becomes evidence only after controlling for market, class, size, location, period and accounting definitions.",
+    excerptEn: "Choose peers with comparable markets, service levels and reporting definitions before relying on a benchmark.",
     diagnosisEn: ["Purpose of the comparison", "Product and market similarity", "Definition integrity", "Sample size and period"],
     actionsEn: ["Write the decision question first", "Use more than one peer set", "Show ranges, not averages alone", "Separate fact from assumption", "Record limitations"],
     metricsEn: ["Peer-data coverage", "Definition variance", "Decision sensitivity"],
@@ -259,7 +259,7 @@ export const articles = [
     mistakesAr: ["قائمة مبادرات طويلة", "تغيير الهيكل قبل التشخيص", "إعلان نجاح قبل ثبات المؤشر"]
   }, {
     titleEn: "A 90-Day Turnaround Plan for an Underperforming Hospitality Asset",
-    excerptEn: "A disciplined turnaround first stops leakage, then stabilises service and finally builds structural improvement on an evidenced baseline.",
+    excerptEn: "Protect cash, stabilise service and measure the changes that make a turnaround sustainable.",
     diagnosisEn: ["Cash and immediate risks", "Recurring service failures", "Top three profit leaks", "Team and leadership capacity"],
     actionsEn: ["Days 1–15: establish truth and controls", "Days 16–30: close risks and quick wins", "Days 31–60: redesign processes", "Days 61–90: lock ownership and cadence", "Use weekly decision gates"],
     metricsEn: ["Cash preserved", "Failures closed", "Guest-satisfaction trend"],
@@ -275,7 +275,7 @@ export const articles = [
     mistakesAr: ["خفض الصيانة الوقائية", "إلغاء تدريب أساسي", "نقل التكلفة إلى شكوى أو تعويض"]
   }, {
     titleEn: "When Is Cost Cutting the Wrong Decision?",
-    excerptEn: "A cost that protects revenue, safety or asset reliability is not waste; the decision requires total impact, not an isolated number.",
+    excerptEn: "Measure a proposed saving against its impact on revenue, safety and equipment reliability.",
     diagnosisEn: ["Connection to revenue and quality", "Deferral impact across the lifecycle", "Regulatory and safety risk", "Productivity options before removal"],
     actionsEn: ["Classify cost as protection, growth or waste", "Model the full-impact scenario", "Start with demand and specification", "Use a bounded pilot", "Monitor protective indicators"],
     metricsEn: ["Net saving", "Cost of failure", "Guest-rating movement"],
@@ -291,7 +291,7 @@ export const articles = [
     mistakesAr: ["قراءة مؤشر منفرد", "تغيير المقام", "مقارنة منشآت غير متجانسة"]
   }, {
     titleEn: "ADR, RevPAR and Occupancy: What Does Each Metric Reveal?",
-    excerptEn: "Three connected measures answer different questions; reading them together prevents premature conclusions.",
+    excerptEn: "Read occupancy, ADR and RevPAR together to see how rooms sold and room rates contributed to revenue.",
     diagnosisEn: ["Definition of available and sold rooms", "Period and comparison market", "Included and excluded revenue", "Rate-volume mix"],
     actionsEn: ["Lock the metric dictionary", "Analyse rate and occupancy together", "Use Net RevPAR for channel decisions", "Connect results to demand", "Document variance explanations"],
     metricsEn: ["ADR", "Occupancy", "RevPAR and Net RevPAR"],
@@ -307,7 +307,7 @@ export const articles = [
     mistakesAr: ["نسخ سعر المنافس", "خصم الإقامة الطويلة بلا تكلفة", "تجاهل يوم الأسبوع"]
   }, {
     titleEn: "Building a Pricing Strategy for Riyadh Serviced Apartments",
-    excerptEn: "Effective pricing combines demand pattern, length of stay, unit type, channel and event into reviewable rules.",
+    excerptEn: "Set and review rates by demand, length of stay, unit type, booking channel and local events.",
     diagnosisEn: ["Demand curve by day", "Short- and long-stay segments", "True competitors by unit", "Event and account effects"],
     actionsEn: ["Build a demand calendar", "Define reference rates and fences", "Set length-of-stay rules", "Review pickup weekly", "Test net price by channel"],
     metricsEn: ["Pickup", "Net ADR", "Length of stay and cancellation"],
@@ -323,7 +323,7 @@ export const articles = [
     mistakesAr: ["إغلاق القناة فجأة", "كسر تكافؤ السعر دون خطة", "طلب بيانات لا تستخدم"]
   }, {
     titleEn: "Reducing OTA Dependency Without Losing Demand",
-    excerptEn: "The goal is not to eliminate a channel, but to own guest relationships and improve direct booking while protecting new-demand reach.",
+    excerptEn: "Build direct bookings and guest relationships while monitoring the demand brought in by online travel agencies.",
     diagnosisEn: ["Channel share and net contribution", "Potential to convert repeat demand", "Website and booking experience", "Guest-data policy"],
     actionsEn: ["Separate new and returning demand", "Create direct-booking value", "Remove mobile and payment friction", "Activate post-stay communication", "Reallocate inventory gradually"],
     metricsEn: ["Direct share", "Acquisition cost", "Repeat-booking rate"],
@@ -339,10 +339,10 @@ export const articles = [
     mistakesAr: ["خصم بلا التزام حجم", "قياس عدد المكالمات", "الاحتفاظ بحسابات غير منتجة"]
   }, {
     titleEn: "Corporate Accounts: From Company List to Demand Engine",
-    excerptEn: "Corporate sales requires opportunity segmentation, a clear proposition, follow-up cadence and room-production measures—not visit counts.",
+    excerptEn: "Group corporate prospects by demand, agree on a follow-up schedule and track the room nights each account produces.",
     diagnosisEn: ["Sectors and demand generators", "Opportunity size and timing", "Competition and contracting terms", "Property capacity to serve"],
     actionsEn: ["Build a qualified account list", "Define a proposition for each segment", "Use a simple CRM", "Connect rate to volume and behaviour", "Review production and wash monthly"],
-    metricsEn: ["Room nights produced", "Opportunity conversion", "Account productivity"],
+    metricsEn: ["Room nights booked", "Opportunity conversion", "Account productivity"],
     mistakesEn: ["Discounting without volume commitment", "Measuring call volume", "Keeping non-producing accounts"]
   }),
 
@@ -355,7 +355,7 @@ export const articles = [
     mistakesAr: ["مقارنة السعر الإجمالي", "خصومات متراكبة", "إهمال تكلفة الإلغاء"]
   }, {
     titleEn: "Rate Parity and Channel Economics",
-    excerptEn: "Displayed rate is not realised rate; commission, discount, marketing, payment and cancellation belong in the decision.",
+    excerptEn: "Compare offers on matching terms, then account for commissions, discounts, payment charges and cancellations.",
     diagnosisEn: ["Displayed and net rate", "Commission and hidden costs", "Cancellation and payment terms", "Displacement of other channels"],
     actionsEn: ["Build a net-rate waterfall", "Monitor parity automatically or by sample", "Design non-price direct value", "Control promotions through access rights", "Review profit by stay date"],
     metricsEn: ["Net ADR", "Parity gap", "Channel contribution"],
@@ -371,10 +371,10 @@ export const articles = [
     mistakesAr: ["نسخ ميزانية الشهر", "رقم واحد بلا سيناريو", "تغيير الافتراض دون سجل"]
   }, {
     titleEn: "A 13-Week Demand Forecast Linking Sales, Pricing and Operations",
-    excerptEn: "A rolling short horizon reveals change early and converts forecast into room, labour, purchasing and cash decisions.",
-    diagnosisEn: ["On-books demand and pickup", "Events and demand generators", "Cancellation and wash", "Operating capacity"],
+    excerptEn: "Update the next 13 weeks of demand weekly to plan room availability, staffing, purchases and cash.",
+    diagnosisEn: ["On-books demand and pickup", "Events and demand generators", "Cancellations and expected booking reductions", "Operating capacity"],
     actionsEn: ["Refresh the forecast weekly", "Separate segments and channels", "Record assumptions", "Attach an action to every variance", "Compare forecast with actual"],
-    metricsEn: ["Forecast accuracy", "Pickup versus required", "Capacity gap"],
+    metricsEn: ["Forecast accuracy", "New bookings versus the forecast requirement", "Capacity gap"],
     mistakesEn: ["Copying the monthly budget", "One number with no scenario", "Changing assumptions without a record"]
   }),
 
@@ -387,7 +387,7 @@ export const articles = [
     mistakesAr: ["الرد التسويقي فقط", "مطاردة المتوسط", "عدم فصل الشكوى عن السبب"]
   }, {
     titleEn: "Guest Reviews as Commercial Data, Not Isolated Comments",
-    excerptEn: "Coding review themes and connecting them to channel, unit and date exposes quality effects on rate, conversion and repeat demand.",
+    excerptEn: "Group reviews by issue, then use the booking channel, unit and date to trace recurring problems and their commercial effects.",
     diagnosisEn: ["Theme, frequency and severity", "Unit, shift and channel", "Response and closure time", "Link to commercial performance"],
     actionsEn: ["Create a coding dictionary", "Review a weekly sample", "Assign each cause to a process owner", "Close the loop with the guest", "Compare rating with rate and conversion"],
     metricsEn: ["Theme recurrence", "Resolution time", "Rating and conversion"],
@@ -403,7 +403,7 @@ export const articles = [
     mistakesAr: ["زر حجز مخفي", "مفاجآت رسوم متأخرة", "إرسال رسائل بلا موافقة أو قيمة"]
   }, {
     titleEn: "The Direct-Booking Journey: From Search to Post-Stay",
-    excerptEn: "Every friction point between intent and confirmation raises acquisition cost; measure the journey step by step without excessive data collection.",
+    excerptEn: "Follow the journey from search to payment to identify where guests leave and which changes improve completion.",
     diagnosisEn: ["Visit source and intent", "Page speed and offer clarity", "Unit availability and payment", "Confirmation and follow-up"],
     actionsEn: ["Map the full funnel", "Test mobile first", "Simplify fields and policies", "Show price and value clearly", "Use relevant post-stay communication"],
     metricsEn: ["Booking conversion", "Abandonment", "Direct-booking cost"],
@@ -419,7 +419,7 @@ export const articles = [
     mistakesAr: ["الاعتماد على وسيط واحد", "تجاهل فترة التجهيز", "احتساب الإيجار دون الزيادات"]
   }, {
     titleEn: "Feasibility Before Signing a Hospitality Lease",
-    excerptEn: "A long lease turns an optimistic assumption into an obligation; test demand, cost, licensing and downside before signature.",
+    excerptEn: "Test demand, opening costs, licensing and a weaker trading scenario before signing a long lease.",
     diagnosisEn: ["Verifiable demand", "Total development cost", "Licensability and permitted use", "Lease and exit terms"],
     actionsEn: ["Test the market in the field", "Build three scenarios", "Run technical and regulatory diligence", "Tie payments to conditions precedent", "Use an explicit stop/go point"],
     metricsEn: ["Break-even point", "DSCR or safety margin", "Occupancy and rate sensitivity"],
@@ -435,7 +435,7 @@ export const articles = [
     mistakesAr: ["نسخ مشروع مجاور", "تكثير الأنواع", "تجاهل المخازن والخدمة"]
   }, {
     titleEn: "Operating Concept and Unit Mix Before Design Freeze",
-    excerptEn: "Unit types are not only an architectural choice; they are a bet on segments, length of stay, cleaning, maintenance and revenue.",
+    excerptEn: "Compare unit layouts against the guests you expect to serve, how long they stay and the cost of servicing each unit.",
     diagnosisEn: ["Demand segments and use cases", "Required duration and capacity", "Cost to serve each type", "Future conversion flexibility"],
     actionsEn: ["Write the product hypothesis", "Test the mix financially", "Review sellable-area efficiency", "Model operations for every type", "Design deliberate flexibility"],
     metricsEn: ["Revenue per square metre", "Unit-type margin", "Space efficiency"],
@@ -451,7 +451,7 @@ export const articles = [
     mistakesAr: ["تصميم BOH كبواقي مساحة", "باب أو مصعد غير ملائم", "غياب منطقة استلام"]
   }, {
     titleEn: "Back of House in Serviced Apartments: The Space Guests Never See",
-    excerptEn: "Compressing back-of-house may gain sellable area but create crossed flows, exposed inventory and expensive manual work.",
+    excerptEn: "Plan service routes and stock space alongside rentable areas to reduce delays and interruptions during busy periods.",
     diagnosisEn: ["Housekeeping and waste flow", "Stores and receiving", "Staff and guest routes", "Maintenance access"],
     actionsEn: ["Map a real operating day", "Test peaks and trolley movement", "Separate clean and dirty points", "Review maintainability", "Document deviations before approval"],
     metricsEn: ["Unit turnaround time", "Travel distance", "Flow-conflict incidents"],
@@ -467,7 +467,7 @@ export const articles = [
     mistakesAr: ["تلوين المهام بالأخضر دون دليل", "خلط الوصول بالجاهزية", "ترك قرار بلا مالك"]
   }, {
     titleEn: "The Pre-opening Critical Path",
-    excerptEn: "A long checklist is not enough; dependency logic must show what blocks testing, recruitment or sales, and when.",
+    excerptEn: "Sequence the work that controls the opening date, including testing, recruitment, training and sales.",
     diagnosisEn: ["Dependencies between project and operations", "Critical-path decisions", "Arrival and commissioning dates", "Shared accountability"],
     actionsEn: ["Build an evidence-based WBS", "Name each activity's predecessor and successor", "Use gates rather than broad completion percentages", "Attach a recovery plan to every risk", "Run decision meetings, not status narration"],
     metricsEn: ["Critical-path variance", "Gate readiness", "Overdue decisions"],
@@ -483,7 +483,7 @@ export const articles = [
     mistakesAr: ["احتساب المتوسط", "تخفيض المعيار في آخر أسبوع", "قبول وعد بلا دليل"]
   }, {
     titleEn: "Opening Readiness Gates: Go or Conditional Go?",
-    excerptEn: "An opening decision requires explicit stop criteria, disclosed residual risk and containment—not an average completion score hiding a critical gap.",
+    excerptEn: "Agree on the conditions for opening and record any unresolved risks and the measures to contain them.",
     diagnosisEn: ["Safety and compliance", "Systems and data", "Team and training", "Guest journey and response"],
     actionsEn: ["Define Go and No-Go criteria in advance", "Require evidence for every criterion", "Test failure scenarios", "Record accepted residual risk", "Time-box conditional opening with an owner"],
     metricsEn: ["Critical criteria closed", "Test pass rate", "Post-opening risk"],
@@ -499,7 +499,7 @@ export const articles = [
     mistakesAr: ["طلب كميات غير متصالحة", "بديل بلا مراجعة تشغيلية", "تسليم للموقع دون مساحة تخزين"]
   }, {
     titleEn: "FF&E and OS&E Procurement: From List to Readiness",
-    excerptEn: "Successful procurement connects specification, sample, quantity, supplier, shipping, receipt, warranty and operation in one register.",
+    excerptEn: "Track specifications, samples, quantities, deliveries and warranties in a register the team can use at opening.",
     diagnosisEn: ["Approved specifications and quantities", "Lead times and dependencies", "Samples and alternatives", "Receipt, warranty and spares"],
     actionsEn: ["Use one item code", "Reconcile the BOQ with drawings and units", "Approve a sample before production", "Plan inspection and storage", "Test before closing the purchase order"],
     metricsEn: ["On-time delivery", "Rejection and rework", "Readiness by area"],
@@ -515,7 +515,7 @@ export const articles = [
     mistakesAr: ["إغلاق جماعي", "صورة بلا اختبار", "قبول عيب يصعب إصلاحه بعد الإشغال"]
   }, {
     titleEn: "Handover and Snagging: When Does a Defect Become an Operating Risk?",
-    excerptEn: "Not every defect is equal; sound classification connects impact to safety, operations, guest experience and post-opening repairability.",
+    excerptEn: "Classify defects by their effect on safety, operations and guests, and identify which can be repaired after opening.",
     diagnosisEn: ["Defect type and location", "Safety and service impact", "Temporary isolation options", "Repair owner and evidence"],
     actionsEn: ["Use a common coding system", "Classify by risk, not appearance", "Attach a photograph and location", "Reinspect independently", "Do not close before functional testing"],
     metricsEn: ["Open critical snags", "Repair time", "Reopen rate"],
@@ -531,7 +531,7 @@ export const articles = [
     mistakesAr: ["فتح مبادرات جديدة يوميًا", "حل المشكلة خارج النظام", "بقاء الفريق المؤقت بلا خروج"]
   }, {
     titleEn: "The First 100 Days After Opening: From Excitement to Stability",
-    excerptEn: "Opening begins an intense learning cycle; a control room must govern issues, demand, cash and team while intervention gradually reduces.",
+    excerptEn: "Use the opening months to track service issues, demand, cash and staffing, then scale back supervision as service stabilises.",
     diagnosisEn: ["Failure and complaint recurrence", "Actual demand versus hypothesis", "Roster and leadership capacity", "Cash and suppliers"],
     actionsEn: ["Start with a daily, then weekly cadence", "Rank issues by guest impact", "Standardise process changes", "Refresh forecast and cash", "Transfer ownership to the operating team"],
     metricsEn: ["Service stability", "Issue-resolution time", "Forecast accuracy"],
@@ -547,7 +547,7 @@ export const articles = [
     mistakesAr: ["إعادة عرض تقرير المشغّل", "التدخل في كل تفصيل", "غياب سجل قرار"]
   }, {
     titleEn: "Owner Representation Versus the Operator Report",
-    excerptEn: "The operator report explains performance from inside operations; owner representation tests assumptions, protects rights and connects decisions to asset value.",
+    excerptEn: "Use operator reports to assess performance and confirm which decisions and obligations need the owner's attention.",
     diagnosisEn: ["Decision and approval rights", "Metric definitions", "Contract obligations", "Long-term asset risks"],
     actionsEn: ["Build an owner decision calendar", "Standardise the reporting pack", "Verify samples and invoices", "Record exceptions and waivers", "Connect operations to the asset plan"],
     metricsEn: ["On-time decisions", "Budget variance", "Operator obligations closed"],
@@ -563,7 +563,7 @@ export const articles = [
     mistakesAr: ["مراجعة بند الرسوم وحده", "اعتماد مصطلح غير معرّف", "إهمال الانتقال عند الخروج"]
   }, {
     titleEn: "Owner Questions When Reviewing a Hotel Management Agreement",
-    excerptEn: "Commercial and operating review precedes legal advice and identifies where control, risk, incentive, data and exit rights sit.",
+    excerptEn: "Review the fee structure, operating responsibilities, data access and exit provisions before obtaining legal advice.",
     diagnosisEn: ["Term and termination rights", "Fees and performance tests", "Budget and approval rights", "Data, people and brand"],
     actionsEn: ["Convert the agreement into a rights matrix", "Model fees across scenarios", "Test the performance mechanism in practice", "Define owner-reserved decisions", "Coordinate with licensed legal counsel"],
     metricsEn: ["Fees as a share of cash flow", "Performance-test enforceability", "Dispute-resolution time"],
@@ -579,7 +579,7 @@ export const articles = [
     mistakesAr: ["مؤشر بلا مالك", "نسخ يدوي بين ملفات", "تغيير التعريف لإخفاء الانحراف"]
   }, {
     titleEn: "The Owner Dashboard Dictionary: Ending Arguments About Numbers",
-    excerptEn: "Defining source, owner, timing, formula and exception for each metric turns meetings from reconciliation into decision forums.",
+    excerptEn: "Agree on the formula, source, owner and reporting period for each metric so meetings can focus on decisions.",
     diagnosisEn: ["Source of every number", "Formula and exclusions", "Close timing", "Data-quality owner"],
     actionsEn: ["Approve a numbered dictionary", "Name a system of record", "Document adjustments", "Show data quality", "Review definitions annually"],
     metricsEn: ["Reconciled indicators", "Post-close adjustments", "Pack-production time"],
@@ -595,7 +595,7 @@ export const articles = [
     mistakesAr: ["قائمة رغبات", "ROI بلا خط أساس", "تأجيل أصل حرج لأجل تحسين شكلي"]
   }, {
     titleEn: "Prioritising CapEx in a Hospitality Asset",
-    excerptEn: "Priority should not follow the loudest department; it combines safety, compliance, revenue continuity, lifecycle and guest experience.",
+    excerptEn: "Rank capital requests by safety, compliance, service continuity, equipment life and guest impact.",
     diagnosisEn: ["Safety and compliance risk", "Failure likelihood and impact", "Revenue protected or generated", "Remaining life and alternatives"],
     actionsEn: ["Score projects against common criteria", "Separate maintenance from enhancement", "Estimate the cost of inaction", "Sequence bundles and dependencies", "Review benefits after spend"],
     metricsEn: ["Risk reduced", "Revenue protected", "Cost and schedule variance"],
@@ -611,7 +611,7 @@ export const articles = [
     mistakesAr: ["رفع عقد سري لأداة عامة", "اعتماد ملخص بلا مصدر", "السماح للنموذج باتخاذ قرار نهائي"]
   }, {
     titleEn: "Safe, Useful Document Intelligence in Hospitality",
-    excerptEn: "AI can accelerate extraction and comparison, but it does not replace sources, human review or data protection.",
+    excerptEn: "Use AI to extract and compare information, then check the output against the original documents and restrict access to sensitive data.",
     diagnosisEn: ["Document type and sensitivity", "Use decision and boundary", "Source of truth", "Error and leakage risk"],
     actionsEn: ["Classify data before upload", "Use an appropriate environment and contract", "Require page and clause citations", "Human-review critical samples", "Log model, version and decision"],
     metricsEn: ["Extraction accuracy", "Review time", "Critical errors caught"],
@@ -627,10 +627,10 @@ export const articles = [
     mistakesAr: ["شراء منصة شاملة بلا متطلبات", "تكامل أحادي الاتجاه غير معلن", "بيانات محتجزة عند المورد"]
   }, {
     titleEn: "PMS, CRM and Channel Manager: What Must Integrate?",
-    excerptEn: "Value does not come from the number of systems, but from reliable data flow connecting inventory, rate, guest, payment and reporting.",
+    excerptEn: "Define how the property system, customer records and booking channels share inventory, rates and guest data.",
     diagnosisEn: ["Critical data journeys", "System of record for each entity", "Interfaces and failure modes", "Ownership and permissions"],
     actionsEn: ["Map the current architecture", "Define use cases before procurement", "Test integrations with scenarios", "Monitor reconciliation and errors", "Create an exit and export plan"],
-    metricsEn: ["Sync success", "Conflicting reservations", "Guest-profile completeness"],
+    metricsEn: ["Sync success", "Conflicting reservations", "Completeness of guest records"],
     mistakesEn: ["Buying an all-in-one platform without requirements", "Undisclosed one-way integration", "Vendor-held data with no export route"]
   }, [S.pdpl]),
 
@@ -643,7 +643,7 @@ export const articles = [
     mistakesAr: ["مجلدات بلا مالك", "نسخ متعددة بلا اعتماد", "منح وصول أوسع من الحاجة"]
   }, {
     titleEn: "A Data Room for a Hospitality Project: What Does the Decision Need?",
-    excerptEn: "A good data room is not a crowded archive; it is a versioned, permissioned index connecting every claim to suitable evidence.",
+    excerptEn: "Use an indexed, versioned document room with clear access rights and links to the evidence behind each decision.",
     diagnosisEn: ["Investor and owner questions", "Document classes and versions", "Access and confidentiality", "Gaps and contradictions"],
     actionsEn: ["Build a decision-led index", "Apply stable naming and versioning", "Create a request log", "Separate facts and assumptions", "Review access before sharing"],
     metricsEn: ["Index completeness", "Overdue requests", "Data conflicts"],
@@ -659,7 +659,7 @@ export const articles = [
     mistakesAr: ["نسخ دليل التشغيل حرفيًا", "توقيع مورد قبل التأهيل", "غموض صلاحية الاستثناء"]
   }, {
     titleEn: "An International Operator Entering Saudi Arabia: The Local Execution Layer",
-    excerptEn: "Success requires translating a global model into local regulation, suppliers, talent, demand and contracts without diluting the brand's core.",
+    excerptEn: "Adapt an international operator's model to local regulation, suppliers, staffing, demand and contracts.",
     diagnosisEn: ["Global-model assumptions", "Regulatory and commercial gaps", "Supplier and talent capacity", "Decision rights between head office and local team"],
     actionsEn: ["Build an evidenced gap map", "Test concept and rate locally", "Qualify partners before contracting", "Define a decision matrix", "Start with a controlled pilot"],
     metricsEn: ["Gaps closed", "Local decision time", "Pilot performance"],

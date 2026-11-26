@@ -435,7 +435,7 @@
   });
   if (!document.querySelector('script[data-osoul-enhancer="14"]')) {
     var script = document.createElement("script");
-    script.src = "/site-hostinger-v13.js?v=22";
+    script.src = "/site-hostinger-v13.js?v=23";
     script.defer = true;
     script.dataset.osoulEnhancer = "14";
     document.head.appendChild(script);

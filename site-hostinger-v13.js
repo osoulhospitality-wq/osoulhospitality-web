@@ -144,10 +144,6 @@
       node.textContent = english ? "Facilities & asset management" : "إدارة المرافق والأصول";
     });
     if (!english) {
-      var bilingualRoutes = ["/solutions", "/outputs", "/about", "/scenarios", "/insights", "/contact", "/privacy", "/terms", "/accessibility", "/thank-you"];
-      var currentPath = window.location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "") || "/";
-      var englishPath = currentPath === "/" ? "/en/" : (bilingualRoutes.some(function (route) { return currentPath === route || currentPath.indexOf(route + "/") === 0; }) ? "/en" + currentPath + "/" : "/en/");
-      document.querySelectorAll("a.language-link").forEach(function (node) { node.setAttribute("href", englishPath); });
       document.querySelectorAll('a[href="/solutions"]').forEach(function (node) {
         if (node.textContent.trim() === "كيف تبدأ") node.textContent = "الخدمات";
       });

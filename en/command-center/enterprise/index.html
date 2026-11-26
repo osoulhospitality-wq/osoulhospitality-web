@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en-SA" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Osool Platform | Facilities and Asset Management</title>
+  <meta name="description" content="Secure access to facilities, assets, work orders and service visits for Osool Hospitality owners and operations teams.">
+  <link rel="icon" href="/brand/osool-mark-v8.svg">
+  <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
+  <link rel="stylesheet" href="/command-center/enterprise/app.css">
+  <script src="/command-center/enterprise/config.js" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=18" defer></script>
+<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
+<body>
+  <a class="skip-link" href="#enterprise-app">Skip to sign-in</a>
+  <header class="enterprise-header">
+    <a href="/en/command-center/" class="enterprise-brand" aria-label="Back to the command center">
+      <img src="/brand/osool-mark-v8.svg" width="52" height="52" alt="">
+      <span><strong>Osool Platform</strong><small>Facilities and asset management</small></span>
+    </a>
+    <a class="cc-language" href="/command-center/enterprise/" lang="ar" hreflang="ar">العربية</a>
+    <span class="security-badge">MFA + RLS</span>
+  </header>
+
+  <main id="enterprise-app" class="enterprise-shell">
+    <section class="enterprise-intro" aria-labelledby="enterprise-title">
+      <p class="eyebrow">Owner and operations portal</p>
+      <h1 id="enterprise-title">Track each work order from the first report to <em>approved closure</em>.</h1>
+      <p>Register facilities and assets, assign work and record site visits. Your organization and account permissions determine what you can access.</p>
+      <ul class="security-list">
+        <li><strong>Organization-level isolation</strong><span>Row-level security follows organization membership.</span></li>
+        <li><strong>Multi-factor authentication</strong><span>Use your authenticator app to verify access.</span></li>
+        <li><strong>Private storage</strong><span>PDF and Office files are restricted to the organization.</span></li>
+      </ul>
+    </section>
+
+    <section class="access-card" aria-live="polite">
+      <div id="app-status" class="app-status" role="status">Checking your secure session…</div>
+
+      <form id="sign-in-view" class="app-view" hidden>
+        <p class="step-label">Step 1 of 2</p>
+        <h2>Sign in</h2>
+        <p class="muted">Access is by invitation. Use your authorized business account.</p>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" minlength="10" required>
+        <button class="primary-action" type="submit">Continue</button>
+        <button id="show-password-recovery" class="text-action" type="button" disabled>Forgot your password?</button>
+      </form>
+
+      <form id="recovery-request-view" class="app-view" hidden>
+        <h2>Reset your password</h2>
+        <p class="muted">Enter your business email to receive a password reset link.</p>
+        <label for="recovery-email">Email</label>
+        <input id="recovery-email" name="email" type="email" autocomplete="email" required>
+        <button class="primary-action" type="submit">Send reset link</button>
+        <button id="back-to-sign-in" class="text-action" type="button">Back to sign-in</button>
+      </form>
+
+      <form id="password-update-view" class="app-view" hidden>
+        <h2>Set your password</h2>
+        <p class="muted">Choose a password of at least 10 characters, then complete two-step verification.</p>
+        <label for="new-password">New password</label>
+        <input id="new-password" name="password" type="password" autocomplete="new-password" minlength="10" required>
+        <label for="confirm-password">Confirm password</label>
+        <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="10" required>
+        <button class="primary-action" type="submit">Save password</button>
+        <button class="text-action js-sign-out" type="button">Cancel and sign out</button>
+      </form>
+
+      <form id="mfa-verify-view" class="app-view" hidden>
+        <p class="step-label">Step 2 of 2</p>
+        <h2>Verification code</h2>
+        <p class="muted">Enter the six-digit code from your authenticator app.</p>
+        <label for="mfa-code">Authenticator code</label>
+        <input id="mfa-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        <button class="primary-action" type="submit">Verify and open workspace</button>
+        <button class="text-action js-sign-out" type="button">Sign out</button>
+      </form>
+
+      <div id="mfa-enroll-view" class="app-view" hidden>
+        <p class="step-label">One-time security setup</p>
+        <h2>Connect your authenticator app</h2>
+        <p class="muted">Scan the QR code with your authenticator app and enter the code it displays.</p>
+        <button id="start-enrollment" class="primary-action" type="button">Generate QR code</button>
+        <div id="enrollment-details" hidden>
+          <img id="totp-qr" class="totp-qr" alt="QR code for adding your Osool account to your authenticator app">
+          <details><summary>Cannot scan the code?</summary><code id="totp-secret"></code></details>
+          <form id="mfa-enroll-form">
+            <label for="enroll-code">Confirmation code</label>
+            <input id="enroll-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+            <button class="primary-action" type="submit">Verify and enable MFA</button>
+          </form>
+        </div>
+        <button class="text-action js-sign-out" type="button">Sign out</button>
+      </div>
+
+      <div id="dashboard-view" class="app-view" hidden>
+        <div class="dashboard-head">
+          <div><p class="step-label">Multi-factor session verified</p><h2>Operations dashboard</h2></div>
+          <button class="text-action js-sign-out" type="button">Sign out</button>
+        </div>
+        <p id="session-identity" class="muted"></p>
+        <div id="organization-empty" hidden>
+          <p>This account has no organization yet. Create your first workspace to get started.</p>
+          <form id="create-organization-form">
+            <label for="organization-name">Organization name</label>
+            <input id="organization-name" name="name" type="text" minlength="2" maxlength="180" value="Osool Hospitality" required>
+            <button class="primary-action" type="submit">Create workspace</button>
+          </form>
+        </div>
+        <div id="organization-dashboard" hidden>
+          <label for="organization-select">Organization</label>
+          <select id="organization-select"></select>
+          <div id="kpi-grid" class="kpi-grid"></div>
+          <details id="facility-operations">
+            <summary>Facilities and asset management</summary>
+            <p id="facility-status" role="status"></p>
+            <form id="facility-form">
+              <label>Facility name <input name="name" required minlength="2" maxlength="180"></label>
+              <button type="submit">Add facility</button>
+            </form>
+            <form id="asset-form">
+              <label>Facility <select name="facility_id" required></select></label>
+              <label>Asset code <input name="asset_code" required maxlength="80"></label>
+              <label>Asset name <input name="name" required minlength="2" maxlength="180"></label>
+              <button type="submit">Add asset</button>
+            </form>
+            <form id="work-order-form">
+              <label>Asset <select name="asset_id" required></select></label>
+              <label>Work order description <input name="summary" required minlength="2" maxlength="300"></label>
+              <button type="submit">Open work order</button>
+            </form>
+            <form id="visit-form">
+              <label>Work order in progress <select name="work_order_id" required></select></label>
+              <label>Visit findings <input name="findings" required minlength="2" maxlength="3000"></label>
+              <button type="submit">Record visit</button>
+            </form>
+            <h3>Work orders and visits</h3>
+            <ul id="facility-work-orders"></ul>
+          </details>
+          <p class="privacy-note">Access follows permissions and actions are audited. Share screenshots and files only through approved channels.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="enterprise-footer"><span>© 2026 Osool Hospitality</span><a href="/en/privacy/">Privacy</a><a href="/en/command-center/">Public command center</a></footer>
+  <noscript>Enable JavaScript in your browser to use secure sign-in.</noscript>
+</body>
+</html>

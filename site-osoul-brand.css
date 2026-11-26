@@ -502,6 +502,26 @@ html[data-osoul-public-brand] .output-gallery .sample-table-wrap {
   overscroll-behavior-inline: contain;
 }
 
+html[data-osoul-public-brand][dir="ltr"] .output-gallery .sample-table :is(th, td) {
+  text-align: start;
+}
+
+@media (max-width: 600px) {
+  html[data-osoul-public-brand][dir="ltr"] .output-gallery .output-title {
+    flex-wrap: wrap;
+  }
+
+  html[data-osoul-public-brand][dir="ltr"] .output-gallery .raci-grid {
+    grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, .8fr));
+  }
+
+  html[data-osoul-public-brand][dir="ltr"] .output-gallery .raci-grid > * {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    padding-inline: 4px;
+  }
+}
+
 html[data-osoul-public-brand] :is(.contact-page-layout, .contact-layout) {
   grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
   gap: clamp(1.6rem, 6vw, 5.1rem);

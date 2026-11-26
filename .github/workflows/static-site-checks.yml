@@ -42,7 +42,9 @@ jobs:
         with:
           node-version: '22'
       - name: Run release-readiness assertions
-        run: node scripts/check-release-readiness.mjs
+        run: |
+          node scripts/check-release-readiness.mjs
+          node scripts/check-language-routes.mjs
 
   dragon-workflow:
     runs-on: ubuntu-latest
