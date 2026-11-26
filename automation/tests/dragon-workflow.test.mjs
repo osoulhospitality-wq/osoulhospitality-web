@@ -122,6 +122,17 @@ const retryB = classify(
 assert.notEqual(retryA.idempotencyKey, opened.idempotencyKey);
 assert.equal(retryA.idempotencyKey, retryB.idempotencyKey);
 
+// An explicit retry without a trustworthy source timestamp cannot own a new lock.
+for (const value of [undefined, null, '', 'broken', '2026-02-30T09:00:00Z', 42]) {
+  const event = payload({ action: 'reopened' });
+  event.body.issue.updated_at = value;
+  const decision = classify(event);
+  assert.equal(decision.decision, 'ignored');
+  assert.equal(decision.idempotencyKey, undefined);
+}
+const fractional = classify(payload({ action: 'reopened', updatedAt: '2026-07-27T13:00:00.123Z' }));
+assert.match(fractional.idempotencyKey, /@2026-07-27T13:00:00\.123Z$/);
+
 // Simulate the UNIQUE lock: only the first execution owns each key.
 const locks = new Set();
 const acquire = (key) => (locks.has(key) ? false : (locks.add(key), true));
