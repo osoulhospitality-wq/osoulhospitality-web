@@ -23,6 +23,10 @@ if [[ "$evidence" != '1' ]]; then echo 'No background worker snapshot arrived in
 "${db[@]}" > "$report_dir/council-monitor-scheduler.json" <<'SQL'
 do $$declare snap uuid; facts_ jsonb; projected jsonb;
 begin
+  if not exists (select from cron.job where active and jobname='osoul-approved-field-maintenance'
+    and schedule='*/10 * * * *' and command='select private.field_cycle_tick(25)') then
+    raise exception 'Native maintenance worker registration not found';
+  end if;
   select id,facts into strict snap,facts_ from private.facility_council_monitor_snapshots where facility_id='dd000000-0000-4000-8000-000000000003' and business_day=(now() at time zone 'Asia/Riyadh')::date and run_source='scheduled' and requested_by is null;
   select s into strict projected from jsonb_array_elements(facts_->'signals') s
     where s->>'code'='forecast_above_maximum' and s->>'metric'='occupancy_pct';

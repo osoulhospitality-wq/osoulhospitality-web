@@ -4,6 +4,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 
+import {installCronFixture, useFixtureCron} from './pglite-cron-fixture.mjs';
+
 const folder = new URL('../../supabase/migrations/', import.meta.url);
 const files = (await readdir(folder)).filter(file => file.endsWith('.sql')).sort();
 const foundation = files.find(file => file.endsWith('_bootstrap_enterprise_foundation.sql'));
@@ -13,6 +15,7 @@ const value = async (db, command) => Object.values((await db.query(command)).row
 async function sandbox(t) {
   const db = new PGlite({ extensions: { pgcrypto } });
   t.after(() => db.close());
+  await installCronFixture(db);
   await db.exec(`
     create role anon; create role authenticated; create role service_role;
     create schema auth; create schema storage;
@@ -23,9 +26,6 @@ async function sandbox(t) {
     create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
     create table storage.objects(bucket_id text,name text,owner_id text);
     create function storage.foldername(text) returns text[] language sql as $$select string_to_array($1,'/')$$;
-    create schema cron; create table cron.job(jobid bigint generated always as identity,jobname text, schedule text, command text);
-    create function cron.unschedule(bigint) returns void language sql as $$delete from cron.job where jobid=$1$$;
-    create function cron.schedule(text,text,text) returns bigint language sql as $$insert into cron.job(jobname,schedule,command) values($1,$2,$3) returning jobid$$;
     create schema private;
     create function private.public_probe() returns boolean language sql as $$select true$$;
     grant usage on schema private to anon;
@@ -36,11 +36,10 @@ async function sandbox(t) {
 test('all repository migrations initialize a clean Supabase fixture in lexical order', async t => {
   const db = await sandbox(t);
   for (const file of files) {
-    // WASM has no scheduler extension. Keep the real retention migration and
-    // execute its schedule registration against the explicit local cron fixture.
-    await db.exec((await sql(file)).replace('create extension if not exists pg_cron with schema pg_catalog;', ''));
+    await db.exec(useFixtureCron(await sql(file)));
   }
   assert.equal(await value(db,"select count(*)::int from cron.job where jobname='purge-expired-website-leads'"),1);
+  assert.equal(await value(db,"select count(*)::int from cron.job where jobname='osoul-approved-field-maintenance' and schedule='*/10 * * * *' and command='select private.field_cycle_tick(25)'"),1);
   assert.equal(await value(db,"select to_regprocedure('public.draqon_approve_field(uuid,uuid,uuid)') is not null"),true);
   assert.equal(await value(db,"select to_regclass('public.draqon_field_events') is not null"),true);
   assert.equal(await value(db,"select has_table_privilege('anon','public.website_leads','INSERT')"),true);

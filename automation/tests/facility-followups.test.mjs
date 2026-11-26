@@ -5,13 +5,16 @@ import { readFile, readdir } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 
+import {installCronFixture, useFixtureCron} from './pglite-cron-fixture.mjs';
+
 test('unresolved property work survives subsequent rounds until an explicit verified resolution',async t=>{
   const db=new PGlite({extensions:{pgcrypto}});t.after(()=>db.close());
+  await installCronFixture(db);
   const root=new URL('../../',import.meta.url);
   await db.exec('create role anon;create role authenticated;create role service_role');
   await db.exec(await readFile(new URL('automation/e2e/dr/fixture.sql',root),'utf8'));
   for(const name of (await readdir(new URL('supabase/migrations/',root))).filter(n=>n>='20261125190000' && !n.includes('website')).sort())
-    await db.exec(await readFile(new URL('supabase/migrations/'+name,root),'utf8'));
+    await db.exec(useFixtureCron(await readFile(new URL('supabase/migrations/'+name,root),'utf8')));
   const [org,site,otherSite,owner,operator,asset]=Array.from({length:6},randomUUID);
   const q=(sql,values=[])=>db.query(sql,values);
   const val=async(sql,values=[])=>Object.values((await q(sql,values)).rows[0])[0];
