@@ -29,8 +29,10 @@ enabled = true
 site_url = "http://127.0.0.1:3000"
 enable_signup = false
 
+# The local email provider is also required for password sign-in.
+# Global public signup remains disabled; the fixture creates users via Auth Admin.
 [auth.email]
-enable_signup = false
+enable_signup = true
 enable_confirmations = false
 
 [auth.mfa.totp]
