@@ -30,4 +30,5 @@ if ! supabase start >"$project_dir/start.log" 2>&1; then
 fi
 supabase status -o env >"$project_dir/local.env" 2>"$project_dir/status.log"
 cd "$repo"
+DRAQON_DISPOSABLE_LOCAL=draqon-ci-auth bash automation/e2e/council-monitor-scheduler.sh "$report_dir"
 node automation/e2e/real-auth.mjs "$project_dir/local.env" "$report_dir"

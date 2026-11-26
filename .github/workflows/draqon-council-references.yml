@@ -1,0 +1,31 @@
+name: DRAQON public reference watch
+on:
+  schedule:
+    - cron: '35 3 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'docs/draqon/council-sources.json'
+      - 'command-center/enterprise/src/facility-council.mjs'
+      - 'automation/enterprise/council-reference-watch.mjs'
+      - '.github/workflows/draqon-council-references.yml'
+permissions:
+  contents: read
+jobs:
+  publisher-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check published methodology links
+        run: node automation/enterprise/council-reference-watch.mjs "$RUNNER_TEMP/council-publisher-status.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: council-publisher-status
+          path: ${{ runner.temp }}/council-publisher-status.json
+          retention-days: 60

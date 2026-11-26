@@ -1,4 +1,5 @@
 import {setupBuildingMemory} from "./building-memory.js";
+import {setupFacilityCouncilMonitor} from "./facility-council-monitor.js";
 import {setupBuildingDesk} from "./building-desk.js";
 import {setupPreventiveMaintenance} from "./preventive-maintenance.js";
 import {setupFacilityBenchmark} from "./facility-benchmark.js";
@@ -247,6 +248,7 @@ if (!configReady) {
   setupFacilityOperations(supabase);
   setupFieldHandoff(supabase);
   setupBuildingDesk(supabase);
+  setupFacilityCouncilMonitor(supabase,document.getElementById("facility-council-monitor"));
   setupBuildingMemory(supabase, document.getElementById("draqon-building-memory"));
   setupPreventiveMaintenance(supabase, document.getElementById("facility-pm"));
   setupFacilityInsights(supabase, document.getElementById("facility-insights"));

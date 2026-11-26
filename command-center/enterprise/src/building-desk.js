@@ -1,3 +1,5 @@
+import {mountFacilityCouncil} from "./facility-council-ui.js";
+import {mountInvestmentCase} from "./facility-investment-ui.js";
 import {uiText as t} from "./locale.js";
 import {exportFacilityDossier} from "./facility-dossier-export.js";
 import {insightTopics} from "./facility-insights.js";
@@ -109,6 +111,12 @@ export function setupBuildingDesk(client){
       if(!keys.length)output.append(el("li",t("حدّد المعلومة المطلوبة، مثل عدد المصاعد أو موعد الصيانة أو البنود المفتوحة.","Name a property detail such as lifts, maintenance dates or open items.")));
     }
     form.addEventListener("submit",e=>{e.preventDefault();const q=input.value.trim(),direct=routeFacilityQuestion(q);
+      if(/(?:استبدال|إصلاح أم|اصلاح ام|دراسة استثمار|repair or replace|repair vs|investment case|lifecycle cost)/iu.test(q)){
+        investment.open=true;investment.scrollIntoView({block:"start"});return;
+      }
+      if(/(?:تنب[ؤئوي]|توق[عّ]|مجلس|اللجن[ةه]|دراسة المنشأة|دراسه المنشاه|مخاطر المنشأة|forecast|outlook|committee|council|property study)/iu.test(q)){
+        council.open=true;council.scrollIntoView({block:"start"});return;
+      }
       if(direct.length){respond(direct);return;}
       if(previousKeys.includes("area_ambiguous")){
         if(/^(?:ال)?(?:أرض|ارض|قطعة الأرض)|^(?:the )?(?:land|plot|lot)$/i.test(q)){respond(["land_area_m2"]);return;}
@@ -135,6 +143,9 @@ export function setupBuildingDesk(client){
     controls.append(download);
     body.append(form,controls,output,el("p",t("ملاحظات تنتظر التحقق","Observations awaiting verification")+" · "+b.unverified));
     const nav=el("div");nav.className="memory-inline";for(const k of Object.keys(topics))nav.append(jump(k));body.append(nav);
+    const council=mountFacilityCouncil(client,o,s,b,()=>valid(v,o,s));
+    const investment=mountInvestmentCase();
+    body.append(council,investment);
     async function mutate(btn,rpc,extra){
       if(btn.disabled||!valid(v,o,s)||currentBrief!==b)return;
       btn.disabled=true;

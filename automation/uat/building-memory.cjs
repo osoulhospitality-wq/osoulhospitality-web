@@ -141,6 +141,15 @@ async function exerciseBuildingMemory(a,b,options) {
           const csv=await fs.readFile(await download.path(),'utf8');
           assert(csv.startsWith('\uFEFF') && csv.includes(source) && csv.includes(token) && csv.includes(assetId));
         }
+        if(options.checkExport){
+          const council=desk.locator('[data-facility-council]');
+          await council.locator('summary').first().click();
+          await council.getByText(lang==='ar'?'أعطال متكررة وشكاوى متزايدة':'Recurring faults and rising complaints',{exact:true}).waitFor();
+          const market=council.locator('details').filter({has:council.page().getByText(lang==='ar'?'بحوث السوق والتجارة':'Market research and commerce',{exact:true})}).first();
+          await market.locator('summary').first().click();
+          assert.match(await market.innerText(),/52|٥٢/);
+          await council.locator('summary').first().click();
+        }
         await desk.getByRole('button',{name:jump,exact:true}).click();
         await page.waitForFunction(id=>document.querySelector('#draqon-building-memory').open&&document.querySelector('#memory-site').value===id,siteId);
       });

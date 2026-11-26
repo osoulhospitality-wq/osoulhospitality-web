@@ -1,3 +1,4 @@
+import {verifyCouncil} from "./council-acceptance.mjs";
 import { verifyFacilityDesk } from "./facility-acceptance.mjs";
 import { createClient } from '@supabase/supabase-js';
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
@@ -129,6 +130,7 @@ COMMIT;\n`, encoding:'utf8',timeout:15000
     return row.approved_by===approver.id && row.submitted_by===operator.id && row.assigned_to===operator.id && row.work_order_id===order && closed.status==='completed' && Boolean(closed.completed_at);
   });
   await verifyFacilityDesk({operator,approver,org,site,otherSite,asset,verify,checked});
+  await verifyCouncil({operator,approver,org,site:browserSite,otherSite,verify,checked});
   console.log('Local Auth and PostgREST checks passed:',report.cases.length);
   // A verified TOTP cannot be replayed in the same time slot. A fresh browser signs in independently.
   await delay(30_000 - Date.now()%30_000 + 800);
