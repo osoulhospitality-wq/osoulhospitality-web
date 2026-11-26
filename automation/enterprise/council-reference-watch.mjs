@@ -1,5 +1,5 @@
 // Public publisher documents only. Never pass a facility, private document, cookie or API key.
-import {readFile,writeFile} from "node:fs/promises";
+import {appendFile,readFile,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {references,referenceReviewDate} from "../../command-center/enterprise/src/facility-council.mjs";
 
@@ -38,5 +38,19 @@ const list=[...entries];
 for(let i=0;i<list.length;i+=4){
   results.push(...await Promise.all(list.slice(i,i+4).map(([url,ref])=>inspect(url,ref))));
 }
-await writeFile(destination,JSON.stringify({scope:"public reference accessibility; claim applicability requires human review",results},null,2));
-console.log("Publisher endpoints checked:",results.length,"retrieved:",results.filter(x=>x.status==="retrieved").length);
+const retrieved = results.filter(row => row.status === "retrieved").length;
+const overview = {
+  status: retrieved === results.length && retrieved > 0 ? "retrieved_all" : "requires_review",
+  checked: results.length, retrieved, requiresReview: results.length - retrieved
+};
+await writeFile(destination, JSON.stringify({
+  scope: "public reference accessibility; claim applicability requires human review", overview, results
+}, null, 2));
+console.log("Publisher endpoints checked:", overview.checked, "retrieved:", retrieved);
+if (process.env.GITHUB_STEP_SUMMARY) {
+  await appendFile(process.env.GITHUB_STEP_SUMMARY,
+    `Public reference retrieval: ${retrieved}/${overview.checked}. Endpoints requiring review: ${overview.requiresReview}.\n`);
+}
+if (process.env.GITHUB_ACTIONS === "true" && overview.status === "requires_review") {
+  console.log("::warning title=Public reference availability::See the source-status artifact for endpoints awaiting review.");
+}
