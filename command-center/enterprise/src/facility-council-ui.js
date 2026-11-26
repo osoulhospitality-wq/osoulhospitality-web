@@ -81,6 +81,7 @@ function studyCard(card){
     detail.append(line(t("آخر مشاهدة موثقة","Latest supported observation"),[formatted(card.latest.value,unit),String(card.latest.month).slice(0,7),card.latest.source_ref].filter(Boolean).join(" · ")));
   }else{detail.append(line(t("المشاهدة","Observation"),t("لا توجد قيمة موثقة متاحة.","No supported value available.")));}
   const out=card.outlook||{};
+  const errorUnit=card.metric?.endsWith("_pct")?t("نقطة مئوية","percentage points"):unit;
   if(out.status==="forecast" && out.estimate!=null && Number.isFinite(Number(out.estimate))){
     detail.append(line(t("تقدير الشهر التالي لآخر إقفال","Estimate for the month after the latest close"),[out.nextMonth,formatted(out.estimate,unit)].filter(Boolean).join(" · ")));
     if(methods[out.method])detail.append(line(t("طريقة التقدير","Estimation method"),text(methods[out.method])));
@@ -88,12 +89,12 @@ function studyCard(card){
     detail.append(line(t("التوقع الشهري","Monthly outlook"),text(decisionState[out.status])||t("لم يصدر تقدير.","No estimate issued.")));
   }
   if(out.mae!=null&&Number.isFinite(Number(out.mae))){
-    detail.append(line(t("متوسط الخطأ المطلق في الاختبار التاريخي","Historical mean absolute error"),formatted(out.mae,unit)));
-    if(out.baselineMae!=null&&Number.isFinite(Number(out.baselineMae)))detail.append(line(t("خطأ المقارنة عند تكرار آخر قيمة","Comparison error using last observed value"),formatted(out.baselineMae,unit)));
+    detail.append(line(t("متوسط الخطأ المطلق في الاختبار التاريخي","Historical mean absolute error"),formatted(out.mae,errorUnit)));
+    if(out.baselineMae!=null&&Number.isFinite(Number(out.baselineMae)))detail.append(line(t("خطأ المقارنة عند تكرار آخر قيمة","Comparison error using last observed value"),formatted(out.baselineMae,errorUnit)));
   }
   detail.append(line(t("الإشارة","Signal"),text(card.signal)),line(t("الإجراء العملي","Recommended action"),text(card.action)),line(t("مسؤول المتابعة","Responsible role"),text(card.owner)));
   const gaps=text(card.gaps);if(gaps)detail.append(line(t("حدود الدليل","Evidence limitations"),gaps));
-  if(card.source?.title||card.source?.url){const p=el("p");p.append(el("strong",t("مرجع المنهجية · ","Method reference · ")),cite(card.source));if(referenceReviewDate)p.append(document.createTextNode(" · "+t("مراجعة المرجع","Reference reviewed")+" "+referenceReviewDate));detail.append(p);}
+  if(card.source?.title||card.source?.url){const p=el("p");p.append(el("strong",t("مرجع المنهجية · ","Method reference · ")),cite(card.source));if(referenceReviewDate)p.append(document.createTextNode(" · "+t("مراجعة المرجع","Reference reviewed")+" "+"\u2066"+referenceReviewDate+"\u2069"));detail.append(p);}
   return detail;
 }
 
@@ -103,7 +104,7 @@ function printStudy(panel,content,property,asOf){
   panel.querySelector("iframe[data-council-print]")?.remove();frame.dataset.councilPrint="";panel.append(frame);
   const doc=frame.contentDocument;doc.documentElement.dir=document.documentElement.dir;doc.documentElement.lang=document.documentElement.lang;
   doc.title=t("دراسة المنشأة","Property study");const css=doc.createElement("style");
-  css.textContent="@page{size:A4;margin:15mm}body{font:12pt/1.65 Arial,Tahoma,sans-serif;color:#173d33}h1,h2,h3,h4,h5,summary{color:#0a5140;break-after:avoid}summary,h5{font-size:14pt;font-weight:700}details{margin-block:10pt;padding-top:7pt;border-top:1px solid #aaa}p{margin:4pt 0}li,p{overflow-wrap:anywhere}a{color:#164b41}article{margin-bottom:12pt}small{display:block}";
+  css.textContent="@page{size:A4;margin:15mm}body{font:12pt/1.65 Arial,Tahoma,sans-serif;color:#173d33}h1,h2,h3,h4,h5,summary{color:#0a5140;break-after:avoid}summary,h5{font-size:14pt;font-weight:700}details{break-inside:avoid;margin-block:10pt;padding-top:7pt;border-top:1px solid #aaa}p{margin:4pt 0}li,p{overflow-wrap:anywhere}a{color:#164b41}article{margin-bottom:12pt}small{display:block}";
   doc.head.append(css);const heading=doc.createElement("h1");heading.textContent=doc.title;
   const context=doc.createElement("p");context.textContent=[property,asOf].filter(Boolean).join(" · ");
   const copy=content.cloneNode(true);copy.querySelectorAll("details").forEach(d=>{d.open=true;});
