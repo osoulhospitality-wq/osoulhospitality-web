@@ -1,0 +1,20 @@
+.cc-language {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding-inline: .8rem;
+  color: #103b34;
+  font-weight: 700;
+  text-underline-offset: .2em;
+}
+.enterprise-header .cc-language { margin-inline-start: auto; }
+.cc-language:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+html[dir=ltr] .cc-note, html[dir=ltr] .privacy-note {
+  border-right: 0;
+  border-inline-start: 3px solid var(--cc-gold, #b98b2f);
+}
+@media (max-width: 800px) {
+  .site-header:has(.cc-language) .header-actions { display: flex; }
+  .site-header:has(.cc-language) .header-actions .button { display: none; }
+}

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { articles, categories } from "../content/articles-ar-en.mjs";
+import { examples } from "../content/insight-examples-ar-en.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
@@ -33,6 +34,12 @@ assert(new Set(articles.map((x) => x.titleAr)).size === 40, "All Arabic titles a
 assert(new Set(articles.map((x) => x.titleEn)).size === 40, "All English titles are unique");
 for (const cat of categories) assert(articles.filter((x) => x.category === cat.id).length === 8, `Category ${cat.id} contains 8 articles`);
 
+for (const [lang, index] of [["ar", 0], ["en", 1]]) {
+  const passages = articles.map((article) => examples[article.slug]?.[index]);
+  assert(passages.every((example) => typeof example === "string" && example.trim().split(/\s+/u).length >= 20), `Every ${lang} article has a substantial worked example`);
+  assert(new Set(passages).size === articles.length, `Every ${lang} article has a distinct worked example`);
+}
+const escapedText = (value) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const blocked = /\b(?:lorem|ipsum|todo|tbd|fixme|coming soon)\b/i;
 for (const article of articles) {
   for (const lang of ["ar", "en"]) {
@@ -41,7 +48,13 @@ for (const article of articles) {
     if (!exists(relative)) continue;
     const html = read(relative);
     const text = visible(html);
-    assert(text.split(/\s+/).length >= 650, `${relative} has substantial editorial depth`);
+    const articleBody = html.match(/<article class="osoul-article-body">([\s\S]*?)<\/article>/u)?.[1] ?? "";
+    const example = examples[article.slug]?.[lang === "ar" ? 0 : 1] ?? "";
+    assert(example && articleBody.includes(escapedText(example)), `${relative} displays its worked example`);
+    const suffix = lang === "ar" ? "Ar" : "En";
+    const keyPoints = ["diagnosis", "actions", "metrics", "mistakes"].flatMap((key) => article[`${key}${suffix}`]);
+    assert(keyPoints.length >= 12 && keyPoints.every((item) => articleBody.includes(`<li>${escapedText(item)}</li>`)), `${relative} retains its diagnostic, action, measurement, and warning points`);
+    assert(!/Convert this step into a defined task|The first 30 days|خطة أول 30 يومًا|حوّل هذه الخطوة إلى مهمة/u.test(articleBody), `${relative} contains no shared editorial filler`);
     assert(!blocked.test(text), `${relative} contains no placeholder language`);
     assert(html.includes('type="application/ld+json"'), `${relative} includes structured data`);
     assert(html.includes('rel="canonical"'), `${relative} includes a canonical URL`);

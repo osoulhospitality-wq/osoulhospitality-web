@@ -1,3 +1,4 @@
+import { uiText } from "./locale.js";
 import { createClient } from "@supabase/supabase-js";
 import { setupFacilityOperations } from "./facility-operations.js";
 
@@ -29,11 +30,11 @@ function showView(name) {
 
 function friendlyError(error) {
   const message = String(error?.message || "").toLowerCase();
-  if (message.includes("invalid login")) return "تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.";
-  if (message.includes("expired") || message.includes("invalid totp")) return "الرمز غير صحيح أو انتهت صلاحيته. جرّب الرمز الحالي.";
-  if (message.includes("rate limit")) return "محاولات كثيرة خلال وقت قصير. انتظر قليلًا ثم أعد المحاولة.";
-  if (message.includes("mfa")) return "تعذر إكمال التحقق متعدد العوامل. أعد المحاولة أو تواصل مع مسؤول النظام.";
-  return "تعذر إكمال العملية الآمنة. أعد المحاولة، ثم تواصل مع مسؤول النظام إذا استمرت المشكلة.";
+  if (message.includes("invalid login")) return uiText("تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.", "Sign-in failed. Check your email and password.");
+  if (message.includes("expired") || message.includes("invalid totp")) return uiText("الرمز غير صحيح أو انتهت صلاحيته. جرّب الرمز الحالي.", "That code is invalid or has expired. Enter the current code.");
+  if (message.includes("rate limit")) return uiText("محاولات كثيرة خلال وقت قصير. انتظر قليلًا ثم أعد المحاولة.", "Too many attempts. Wait a moment and try again.");
+  if (message.includes("mfa")) return uiText("تعذر إكمال التحقق متعدد العوامل. أعد المحاولة أو تواصل مع مسؤول النظام.", "Multi-factor verification could not be completed. Try again or contact your administrator.");
+  return uiText("تعذر إكمال العملية الآمنة. أعد المحاولة، ثم تواصل مع مسؤول النظام إذا استمرت المشكلة.", "The operation could not be completed. Try again, then contact your administrator if the problem persists.");
 }
 
 function setBusy(form, busy) {
@@ -41,12 +42,12 @@ function setBusy(form, busy) {
 }
 
 async function signOut() {
-  setStatus("جارٍ إنهاء الجلسة…");
+  setStatus(uiText("جارٍ إنهاء الجلسة…", "Signing out…"));
   await supabase.auth.signOut();
   activeFactorId = null;
   passwordUpdateUserId = null;
   showView("signIn");
-  setStatus("تم إنهاء الجلسة بأمان.", "success");
+  setStatus(uiText("تم إنهاء الجلسة بأمان.", "You have signed out securely."), "success");
 }
 
 async function initializeSession(callback) {
@@ -61,14 +62,14 @@ async function initializeSession(callback) {
   if (callback.has("error") || (callbackToken
     && (callbackType === "invite" || callbackType === "recovery")
     && !passwordUpdateUserId)) {
-    setStatus("رابط الدخول غير صالح أو انتهت صلاحيته. اطلب رابط استعادة جديدًا.", "error");
+    setStatus(uiText("رابط الدخول غير صالح أو انتهت صلاحيته. اطلب رابط استعادة جديدًا.", "This sign-in link is invalid or has expired. Request a new reset link."), "error");
   }
 }
 
 async function beginEnrollment() {
   const button = document.querySelector("#start-enrollment");
   button.disabled = true;
-  setStatus("جارٍ إنشاء عامل تحقق جديد…");
+  setStatus(uiText("جارٍ إنشاء عامل تحقق جديد…", "Creating an authenticator setup code…"));
   try {
     const listed = await supabase.auth.mfa.listFactors();
     if (listed.error) throw listed.error;
@@ -88,7 +89,7 @@ async function beginEnrollment() {
     document.querySelector("#totp-secret").textContent = data.totp.secret;
     document.querySelector("#enrollment-details").hidden = false;
     button.hidden = true;
-    setStatus("امسح الرمز وأدخل رمز التأكيد لتفعيل MFA.", "success");
+    setStatus(uiText("امسح الرمز وأدخل رمز التأكيد لتفعيل MFA.", "Scan the QR code and enter the confirmation code to enable MFA."), "success");
     document.querySelector("#enroll-code").focus();
   } catch (error) {
     setStatus(friendlyError(error), "error");
@@ -99,17 +100,17 @@ async function beginEnrollment() {
 async function verifyFactor(form, factorId) {
   const code = new FormData(form).get("code")?.toString().trim();
   if (!/^\d{6}$/.test(code || "")) {
-    setStatus("أدخل رمزًا صحيحًا من 6 أرقام.", "error");
+    setStatus(uiText("أدخل رمزًا صحيحًا من 6 أرقام.", "Enter a six-digit code."), "error");
     return;
   }
   setBusy(form, true);
-  setStatus("جارٍ التحقق من الرمز…");
+  setStatus(uiText("جارٍ التحقق من الرمز…", "Checking the code…"));
   try {
     const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
     if (error) throw error;
     await supabase.auth.refreshSession();
     form.reset();
-    setStatus("تم التحقق متعدد العوامل بنجاح.", "success");
+    setStatus(uiText("تم التحقق متعدد العوامل بنجاح.", "Multi-factor verification succeeded."), "success");
     await routeSession();
   } catch (error) {
     setStatus(friendlyError(error), "error");
@@ -126,8 +127,8 @@ async function getOrganizations() {
 
 async function loadCounts(organizationId) {
   const definitions = [
-    ["suppliers", "الموردون"], ["products", "المنتجات"], ["quotes", "عروض الأسعار"],
-    ["contracts", "العقود"], ["requests", "الطلبات"], ["approvals", "الاعتمادات"]
+    ["suppliers", uiText("الموردون", "Suppliers")], ["products", uiText("المنتجات", "Products")], ["quotes", uiText("عروض الأسعار", "Quotations")],
+    ["contracts", uiText("العقود", "Contracts")], ["requests", uiText("الطلبات", "Requests")], ["approvals", uiText("الاعتمادات", "Approvals")]
   ];
   const results = await Promise.all(definitions.map(async ([table, label]) => {
     const { count, error } = await supabase.from(table).select("*", { count: "exact", head: true }).eq("organization_id", organizationId);
@@ -139,7 +140,7 @@ async function loadCounts(organizationId) {
 
 async function showDashboard(session) {
   showView("dashboard");
-  document.querySelector("#session-identity").textContent = `الحساب: ${session.user.email || "مستخدم مؤسسي"}`;
+  document.querySelector("#session-identity").textContent = uiText("الحساب", "Account") + ": " + (session.user.email || uiText("مستخدم مؤسسي", "Business user"));
   try {
     const organizations = await getOrganizations();
     const empty = document.querySelector("#organization-empty");
@@ -147,7 +148,7 @@ async function showDashboard(session) {
     if (!organizations.length) {
       empty.hidden = false;
       dashboard.hidden = true;
-      setStatus("الجلسة محمية. أنشئ مساحة المنشأة الأولى للبدء.", "success");
+      setStatus(uiText("الجلسة محمية. أنشئ مساحة المنشأة الأولى للبدء.", "Your session is secure. Create your first organization workspace."), "success");
       return;
     }
     empty.hidden = true;
@@ -161,7 +162,7 @@ async function showDashboard(session) {
     });
     select.replaceChildren(...options);
     await loadCounts(select.value);
-    setStatus("الجلسة محمية بـ MFA، وتم تحميل البيانات المصرح بها فقط.", "success");
+    setStatus(uiText("الجلسة محمية بـ MFA، وتم تحميل البيانات المصرح بها فقط.", "Your session is protected by MFA. Only authorized data has been loaded."), "success");
   } catch (error) {
     setStatus(friendlyError(error), "error");
   }
@@ -178,7 +179,7 @@ async function routeSession() {
   if (!session) {
     passwordUpdateUserId = null;
     showView("signIn");
-    setStatus("الوصول بدعوة فقط؛ سجّل الدخول بحسابك المؤسسي.");
+    setStatus(uiText("الوصول بدعوة فقط؛ سجّل الدخول بحسابك المؤسسي.", "Access is by invitation. Sign in with your business account."));
     return;
   }
 
@@ -190,7 +191,7 @@ async function routeSession() {
   if (passwordUpdateUserId === session.user.id
     && (aal.currentLevel === "aal2" || aal.nextLevel !== "aal2")) {
     showView("passwordUpdate");
-    setStatus("تم التحقق من الرابط. عيّن كلمة المرور للمتابعة.");
+    setStatus(uiText("تم التحقق من الرابط. عيّن كلمة المرور للمتابعة.", "Link verified. Set your password to continue."));
     document.querySelector("#new-password").focus();
     return;
   }
@@ -208,20 +209,20 @@ async function routeSession() {
   if (verified) {
     activeFactorId = verified.id;
     showView("verify");
-    setStatus("أكمل رمز التحقق لرفع مستوى الجلسة إلى aal2.");
+    setStatus(uiText("أكمل رمز التحقق لرفع مستوى الجلسة إلى aal2.", "Enter the authenticator code to verify your session."));
     document.querySelector("#mfa-code").focus();
   } else {
     showView("enroll");
     document.querySelector("#start-enrollment").hidden = false;
     document.querySelector("#start-enrollment").disabled = false;
     document.querySelector("#enrollment-details").hidden = true;
-    setStatus("يلزم ربط تطبيق مصادقة قبل إتاحة بيانات العمل.");
+    setStatus(uiText("يلزم ربط تطبيق مصادقة قبل إتاحة بيانات العمل.", "Connect your authenticator app to access operational data."));
   }
 }
 
 if (!configReady) {
   showView("signIn");
-  setStatus("إعداد الاتصال الآمن غير مكتمل. تواصل مع مسؤول النظام.", "error");
+  setStatus(uiText("إعداد الاتصال الآمن غير مكتمل. تواصل مع مسؤول النظام.", "The secure connection is not configured. Contact your administrator."), "error");
 } else {
   const callback = new URLSearchParams(window.location.hash.slice(1));
   supabase = createClient(config.supabaseUrl, config.supabasePublishableKey, {
@@ -250,10 +251,10 @@ if (!configReady) {
     const email = new FormData(form).get("email").trim();
     setBusy(form, true);
     try {
-      const redirectTo = new URL(window.location.pathname, window.location.origin).href;
+      const redirectTo = new URL("/command-center/enterprise/", window.location.origin).href;
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       if (error) throw error;
-      setStatus("إذا كان البريد مرتبطًا بحساب، فسيصلك رابط الاستعادة.", "success");
+      setStatus(uiText("إذا كان البريد مرتبطًا بحساب، فسيصلك رابط الاستعادة.", "If the email belongs to an account, you will receive a reset link."), "success");
     } catch (error) {
       setStatus(friendlyError(error), "error");
     } finally {
@@ -266,7 +267,7 @@ if (!configReady) {
     const values = new FormData(form);
     const password = values.get("password");
     if (password !== values.get("confirmPassword")) {
-      setStatus("كلمتا المرور غير متطابقتين.", "error");
+      setStatus(uiText("كلمتا المرور غير متطابقتين.", "The passwords do not match."), "error");
       return;
     }
     setBusy(form, true);
@@ -276,7 +277,7 @@ if (!configReady) {
       if (!passwordUpdateUserId || data.session?.user.id !== passwordUpdateUserId) {
         passwordUpdateUserId = null;
         await routeSession();
-        setStatus("انتهت جلسة تعيين كلمة المرور. اطلب رابط استعادة جديدًا.", "error");
+        setStatus(uiText("انتهت جلسة تعيين كلمة المرور. اطلب رابط استعادة جديدًا.", "Your password setup session has expired. Request a new reset link."), "error");
         return;
       }
       const { error } = await supabase.auth.updateUser({ password });
@@ -296,7 +297,7 @@ if (!configReady) {
     const form = event.currentTarget;
     const values = new FormData(form);
     setBusy(form, true);
-    setStatus("جارٍ التحقق من بيانات الدخول…");
+    setStatus(uiText("جارٍ التحقق من بيانات الدخول…", "Checking your sign-in details…"));
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: values.get("email")?.toString().trim(),
@@ -323,10 +324,10 @@ if (!configReady) {
   document.querySelector("#start-enrollment").addEventListener("click", beginEnrollment);
   document.querySelectorAll(".js-sign-out").forEach((button) => button.addEventListener("click", signOut));
   document.querySelector("#organization-select").addEventListener("change", async (event) => {
-    setStatus("جارٍ تحميل مؤشرات المنشأة…");
+    setStatus(uiText("جارٍ تحميل مؤشرات المنشأة…", "Loading organization metrics…"));
     try {
       await loadCounts(event.currentTarget.value);
-      setStatus("تم تحميل البيانات المصرح بها.", "success");
+      setStatus(uiText("تم تحميل البيانات المصرح بها.", "Authorized data loaded."), "success");
     } catch (error) {
       setStatus(friendlyError(error), "error");
     }
@@ -336,7 +337,7 @@ if (!configReady) {
     const form = event.currentTarget;
     const name = new FormData(form).get("name")?.toString().trim();
     setBusy(form, true);
-    setStatus("جارٍ إنشاء مساحة المنشأة وعزلها…");
+    setStatus(uiText("جارٍ إنشاء مساحة المنشأة وعزلها…", "Creating the organization workspace…"));
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData.user) throw userError || new Error("No authenticated user");
