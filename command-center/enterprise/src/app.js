@@ -1,3 +1,8 @@
+import {setupBuildingMemory} from "./building-memory.js";
+import {setupBuildingDesk} from "./building-desk.js";
+import {setupPreventiveMaintenance} from "./preventive-maintenance.js";
+import {setupFacilityBenchmark} from "./facility-benchmark.js";
+import {setupFacilityInsights} from "./facility-insights.js";
 import { uiText } from "./locale.js";
 import { createClient } from "@supabase/supabase-js";
 import { setupFieldHandoff } from "./field-handoff.js";
@@ -19,6 +24,7 @@ const statusNode = document.querySelector("#app-status");
 let activeFactorId = null;
 let passwordUpdateUserId = null;
 let supabase = null;
+let dashboardRevision = 0;
 
 function setStatus(message = "", type = "") {
   statusNode.textContent = message;
@@ -26,6 +32,7 @@ function setStatus(message = "", type = "") {
 }
 
 function showView(name) {
+  if (name !== "dashboard") dashboardRevision++;
   Object.entries(views).forEach(([key, node]) => { node.hidden = key !== name; });
 }
 
@@ -126,7 +133,7 @@ async function getOrganizations() {
   return data || [];
 }
 
-async function loadCounts(organizationId) {
+async function loadCounts(organizationId, revision = dashboardRevision) {
   const definitions = [
     ["suppliers", uiText("الموردون", "Suppliers")], ["products", uiText("المنتجات", "Products")], ["quotes", uiText("عروض الأسعار", "Quotations")],
     ["contracts", uiText("العقود", "Contracts")], ["requests", uiText("الطلبات", "Requests")], ["approvals", uiText("الاعتمادات", "Approvals")]
@@ -136,14 +143,17 @@ async function loadCounts(organizationId) {
     if (error) throw error;
     return { label, count: count || 0 };
   }));
+  if (dashboardRevision !== revision || document.querySelector("#organization-select").value !== organizationId) return;
   document.querySelector("#kpi-grid").innerHTML = results.map(({ label, count }) => `<div class="kpi"><strong>${count}</strong><span>${label}</span></div>`).join("");
 }
 
 async function showDashboard(session) {
   showView("dashboard");
+  const revision = ++dashboardRevision;
   document.querySelector("#session-identity").textContent = uiText("الحساب", "Account") + ": " + (session.user.email || uiText("مستخدم مؤسسي", "Business user"));
   try {
     const organizations = await getOrganizations();
+    if (revision !== dashboardRevision) return;
     const empty = document.querySelector("#organization-empty");
     const dashboard = document.querySelector("#organization-dashboard");
     if (!organizations.length) {
@@ -161,8 +171,12 @@ async function showDashboard(session) {
       option.textContent = org.name;
       return option;
     });
+    const previous = select.value;
     select.replaceChildren(...options);
-    await loadCounts(select.value);
+    if (organizations.some(org => org.id === previous)) select.value = previous;
+    if (previous && previous !== select.value) select.dispatchEvent(new Event("change"));
+    await loadCounts(select.value, revision);
+    if (revision !== dashboardRevision) return;
     setStatus(uiText("الجلسة محمية بـ MFA، وتم تحميل البيانات المصرح بها فقط.", "Your session is protected by MFA. Only authorized data has been loaded."), "success");
   } catch (error) {
     setStatus(friendlyError(error), "error");
@@ -232,6 +246,11 @@ if (!configReady) {
   });
   setupFacilityOperations(supabase);
   setupFieldHandoff(supabase);
+  setupBuildingDesk(supabase);
+  setupBuildingMemory(supabase, document.getElementById("draqon-building-memory"));
+  setupPreventiveMaintenance(supabase, document.getElementById("facility-pm"));
+  setupFacilityInsights(supabase, document.getElementById("facility-insights"));
+  setupFacilityBenchmark(supabase, document.getElementById("facility-benchmark"));
 
   const recoveryButton = document.querySelector("#show-password-recovery");
   recoveryButton.disabled = false;

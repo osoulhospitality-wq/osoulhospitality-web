@@ -24,7 +24,7 @@ jobs:
           mkdir -p evidence
           install_code=0; node_code=0; memory_code=0
           npm ci >evidence/install.log 2>&1 || install_code=$?
-          node --test --test-reporter=tap automation/tests/*.test.mjs >evidence/node.tap 2>&1 || node_code=$?
+          node --test --test-concurrency=2 --test-reporter=tap automation/tests/*.test.mjs >evidence/node.tap 2>&1 || node_code=$?
           DRAQON_MEMORY_TEST_REPORT=evidence/memory.json python3 automation/enterprise/memory/verify_memory.py >evidence/memory.log 2>&1 || memory_code=$?
           printf '{"install":%s,"node":%s,"memory":%s}\n' "$install_code" "$node_code" "$memory_code" >evidence/status.json
           if (( install_code || node_code || memory_code )); then

@@ -152,6 +152,12 @@ async function run() {
       const sorted=[...report.timingMs].sort((x,y)=>x-y);
       report.intake={sampleSize:sorted.length,p50Ms:+sorted[Math.ceil(sorted.length*.50)-1].toFixed(2),p95Ms:+sorted[Math.ceil(sorted.length*.95)-1].toFixed(2),method:'Serial Playwright click to durable separate read in visible queue plus success status; includes driver scheduling, local mobile viewport; excludes typing, sign-in, WAN and production traffic.'};
     });
+    if(env.UAT_MEMORY_REPORT_PATH){
+      await require('./building-memory.cjs').exerciseBuildingMemory(a,b,{
+        checkExport:env.UAT_CHECK_DOSSIER==='true',siteId:must('UAT_FACILITY'),secondSiteId:env.UAT_SECOND_SITE,issueBase,output:env.UAT_MEMORY_REPORT_PATH,
+        pdfPath:env.UAT_LABEL_PDF,screenshotPath:env.UAT_MEMORY_SCREENSHOT,desktopScreenshot:env.UAT_DESK_SCREENSHOT
+      });
+    }
     await verify('No browser application errors',async()=>assert.deepEqual([...op.unhandled,...approver.unhandled],[]));
     report.result='pass';report.browser=browser.version();
   }finally{await browser.close();await new Promise(r=>server.close(r));}

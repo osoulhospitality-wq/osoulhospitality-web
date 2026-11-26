@@ -8,9 +8,9 @@
   <meta name="description" content="Secure access to facilities, assets, work orders and service visits for Osool Hospitality owners and operations teams.">
   <link rel="icon" href="/brand/osool-mark-v8.svg">
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
-  <link rel="stylesheet" href="/command-center/enterprise/app.css">
+  <link rel="stylesheet" href="/command-center/enterprise/app.css?v=21">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=20" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=21" defer></script>
 <link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">Skip to sign-in</a>
@@ -115,6 +115,54 @@
           <label for="organization-select">Organization</label>
           <select id="organization-select"></select>
           <div id="kpi-grid" class="kpi-grid"></div>
+
+          <details id="draqon-building-desk" class="portal-module">
+            <summary>Ask DRAQON about the property</summary><div data-content></div>
+          </details>
+          <details id="draqon-building-memory" class="portal-module">
+            <summary>Building memory and asset register</summary>
+            <div class="memory-workspace">
+              <label for="memory-site">Property</label>
+              <select id="memory-site"></select>
+              <details class="memory-editor"><summary>Add a property to this organization</summary><form id="memory-site-create"><label>Property name<input name="name" required minlength="2" maxlength="180"></label><button>Save property</button></form></details>
+              <p id="memory-message" class="memory-message" role="status" aria-live="polite"></p>
+              <div id="memory-site-work" hidden>
+                <div class="memory-grid">
+                  <section class="memory-card">
+                    <h3>Assets and labels</h3>
+                    <form id="memory-scan"><label for="memory-token">Scan with a connected reader or enter the asset tag</label><div class="memory-inline"><input id="memory-token" dir="ltr" name="token" required maxlength="120" autocomplete="off" spellcheck="false"><button>Find asset</button></div></form>
+                    <label class="memory-photo-action" for="memory-photo">Take or choose a photo of the QR label</label>
+                    <input id="memory-photo" type="file" accept="image/*" capture="environment" aria-describedby="memory-photo-note">
+                    <small id="memory-photo-note">The photo is read on your device for the selected property.</small>
+                    <label for="memory-asset">Select from the asset register</label><select id="memory-asset"></select>
+                    <details class="memory-editor"><summary>Register an asset</summary>
+                      <form id="memory-asset-create"><label>Site asset code<input name="code" required maxlength="80"></label><label>Asset name<input name="name" required minlength="2" maxlength="180"></label><button>Save asset</button></form>
+                    </details>
+                    <div id="memory-label-output" hidden><div id="memory-label-preview" class="asset-tag"></div><button type="button" id="memory-print">Print asset label</button></div>
+                  </section>
+                  <section class="memory-card">
+                    <h3>Building memory</h3>
+                    <form id="memory-recall"><label for="memory-search">Search stored facts</label><div class="memory-inline"><input type="search" id="memory-search" name="query" maxlength="180"><button>Recall</button></div><label>Recall scope<select name="scope"></select></label></form>
+                    <p class="memory-caption">Each entry retains its source and date. The newest observations appear first.</p>
+                    <ul id="memory-results" class="memory-records"></ul>
+                    <details class="memory-editor"><summary>Record a sourced fact</summary>
+                      <form id="memory-fact-form">
+                        <label>Applies to<select name="asset"><option value="">Property</option></select></label>
+                        <label>Fact type<select name="kind" required></select></label>
+                        <label>Observed value<input name="text" required maxlength="1000" aria-describedby="memory-value-hint"></label><small id="memory-value-hint"></small>
+                        <label>Source reference<input name="source" required minlength="2" maxlength="400"></label>
+                        <label>Observation or source date<input type="date" name="date" required></label>
+                        <button>Save fact</button>
+                      </form>
+                    </details>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </details>
+          <details id="facility-pm" class="portal-module"><summary>Preventive maintenance plan</summary><div data-content></div></details>
+          <details id="facility-insights" class="portal-module"><summary>Property and location SWOT</summary><div data-content></div></details>
+          <details id="facility-benchmark" class="portal-module"><summary>Service and material price benchmarks</summary><div data-content></div></details>
           <details id="facility-operations">
             <summary>Facilities and asset management</summary>
             <p id="facility-status" role="status"></p>

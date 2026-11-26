@@ -1,3 +1,4 @@
+import { verifyFacilityDesk } from "./facility-acceptance.mjs";
 import { createClient } from '@supabase/supabase-js';
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -53,7 +54,7 @@ async function run() {
   await unlink(settings);
   if (env.API_URL !== localOrigin || !env.ANON_KEY || !env.SERVICE_ROLE_KEY) throw new Error('unexpected_local_stack');
   const org = randomUUID(), other = randomUUID(), site = randomUUID(), otherSite = randomUUID(),
-    asset = randomUUID(), proposal = randomUUID();
+    asset = randomUUID(), proposal = randomUUID(), browserSite = randomUUID();
   const admin = createClient(localOrigin, env.SERVICE_ROLE_KEY, options);
   const users = {};
   for (const role of ['operator','approver']) {
@@ -70,14 +71,14 @@ async function run() {
     });
   }
   const {operator,approver} = users;
-  const ids={org,other,site,otherSite,asset,op:operator.id,owner:approver.id};
+  const ids={org,other,site,otherSite,browserSite,asset,op:operator.id,owner:approver.id};
   const psqlArgs = Object.entries(ids).flatMap(([key,value]) => ['--set', key+'='+value]);
   // Bootstrapping is confined to the fixed CLI project's local PostgreSQL container.
   const seed = spawnSync('docker',['exec','-i','supabase_db_draqon-ci-auth','psql','-X','-v','ON_ERROR_STOP=1','-U','postgres','-d','postgres',...psqlArgs],{
     input:`BEGIN;
 INSERT INTO public.organizations(id,name,created_by) VALUES (:'org','Synthetic Hotel',:'owner'),(:'other','Other Test Property',:'owner');
 INSERT INTO public.organization_members(organization_id,user_id,full_name,role) VALUES (:'org',:'op','Synthetic Coordinator','analyst');
-INSERT INTO public.facilities(id,organization_id,name) VALUES (:'site',:'org','Test Hotel'),(:'otherSite',:'other','Other Property');
+INSERT INTO public.facilities(id,organization_id,name) VALUES (:'site',:'org','Test Hotel'),(:'otherSite',:'other','Other Property'),(:'browserSite',:'org','Synthetic walkthrough property');
 INSERT INTO public.facility_assets(id,organization_id,facility_id,asset_code,name) VALUES (:'asset',:'org',:'site','AHU-01','Synthetic test unit');
 INSERT INTO private.draqon_field_pilot(organization_id,enabled) VALUES (:'org',true);
 COMMIT;\n`, encoding:'utf8',timeout:15000
@@ -127,12 +128,14 @@ COMMIT;\n`, encoding:'utf8',timeout:15000
     const closed=checked(await approver.client.from('facility_work_orders').select('status,completed_at').eq('id',order).single());
     return row.approved_by===approver.id && row.submitted_by===operator.id && row.assigned_to===operator.id && row.work_order_id===order && closed.status==='completed' && Boolean(closed.completed_at);
   });
+  await verifyFacilityDesk({operator,approver,org,site,otherSite,asset,verify,checked});
   console.log('Local Auth and PostgREST checks passed:',report.cases.length);
   // A verified TOTP cannot be replayed in the same time slot. A fresh browser signs in independently.
   await delay(30_000 - Date.now()%30_000 + 800);
   const browserEnv = {PATH:process.env.PATH,HOME:process.env.HOME,NODE_PATH:process.env.NODE_PATH,
     UAT_SUPABASE_URL:localOrigin,UAT_SUPABASE_KEY:env.ANON_KEY,UAT_ORG:org,UAT_ASSET:asset,
-    UAT_OPERATOR_ID:operator.id,UAT_REPORT_PATH:resolve(destination,'field-browser.json')};
+    UAT_OPERATOR_ID:operator.id,UAT_REPORT_PATH:resolve(destination,'field-browser.json'),
+    UAT_CHECK_DOSSIER:'true',UAT_FACILITY:browserSite,UAT_SECOND_SITE:site,UAT_MEMORY_REPORT_PATH:resolve(destination,'building-memory-browser.json')};
   for(const [name,user] of Object.entries(users)){
     const p='UAT_'+name.toUpperCase()+'_'; browserEnv[p+'EMAIL']=user.email;
     browserEnv[p+'PASSWORD']=user.password; browserEnv[p+'TOTP']=user.secret;
