@@ -27,12 +27,14 @@ jobs:
           "$RUNNER_TEMP/draqon-browser/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/draqon-browser/node_modules" >> "$GITHUB_ENV"
       - name: Exercise local Auth and PostgREST
+        env:
+          DRAQON_UAT_REPORT_DIR: ${{ runner.temp }}/draqon-field-receipts
         run: bash automation/e2e/run-local-auth.sh
       - name: Retain sanitized assertions
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: draqon-local-auth-e2e
-          path: evidence/local-auth/*.json
-          if-no-files-found: warn
+          path: ${{ runner.temp }}/draqon-field-receipts/*.json
+          if-no-files-found: error
           retention-days: 14
