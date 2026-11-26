@@ -1,6 +1,11 @@
 -- Dragon Intake Production — idempotency lock, audit log, and least-privilege
 -- PostgREST access for n8n. No raw API key or production key hash belongs here.
 
+-- Run manually as the Dragon object owner in a dedicated environment. In the same
+-- session SET draqon.install_repository and SET draqon.install_sender first.
+-- Values are validated and stored as policy literals, never taken from an API request.
+BEGIN;
+
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 CREATE SCHEMA IF NOT EXISTS private;
 
@@ -68,8 +73,8 @@ AS $function$
     WHERE k.active
       AND k.key_hash = encode(
         extensions.digest(
-          COALESCE(
-            current_setting('request.headers', true)::jsonb
+          NULLIF(
+            NULLIF(current_setting('request.headers', true), '')::jsonb
               ->> 'x-app-api-key',
             ''
           ),
@@ -80,25 +85,37 @@ AS $function$
   );
 $function$;
 
-REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated, service_role;
+-- Preserve the existing ACL on this shared schema. RLS resolves its helper at
+-- policy creation; clients need no new schema-wide privilege.
 REVOKE ALL ON TABLE private.dragon_api_keys
   FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION private.dragon_request_authorized()
   FROM PUBLIC, authenticated, service_role;
-GRANT USAGE ON SCHEMA private TO anon;
 GRANT EXECUTE ON FUNCTION private.dragon_request_authorized() TO anon;
 
--- Ensure a temporary diagnostic endpoint can never survive deployment.
-DROP FUNCTION IF EXISTS public.dragon_debug_auth();
+-- A callable legacy diagnostic requires a separate owner decision. Preserve the
+-- existing definition and abort the transaction while it is exposed to API roles.
+DO $diagnostic$
+DECLARE
+  diagnostic regprocedure := to_regprocedure('public.dragon_debug_auth()');
+BEGIN
+  IF diagnostic IS NOT NULL AND EXISTS (
+    SELECT 1 FROM (VALUES ('anon'), ('authenticated'), ('service_role')) AS api(role_name)
+    WHERE has_function_privilege(api.role_name::name, diagnostic, 'EXECUTE')
+  ) THEN
+    RAISE EXCEPTION 'Restrict the legacy Dragon diagnostic under a separate approved change before installation';
+  END IF;
+END;
+$diagnostic$;
 
 REVOKE ALL ON TABLE public.dragon_locks
-  FROM anon, authenticated, service_role;
+  FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON TABLE public.dragon_events_log
-  FROM anon, authenticated, service_role;
+  FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON SEQUENCE public.dragon_locks_id_seq
-  FROM anon, authenticated, service_role;
+  FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON SEQUENCE public.dragon_events_log_id_seq
-  FROM anon, authenticated, service_role;
+  FROM PUBLIC, anon, authenticated, service_role;
 
 -- n8n authenticates as anon with a Supabase publishable key plus x-app-api-key.
 GRANT SELECT, INSERT ON TABLE public.dragon_locks TO anon;
@@ -120,61 +137,81 @@ DROP POLICY IF EXISTS dragon_locks_n8n_update ON public.dragon_locks;
 DROP POLICY IF EXISTS dragon_events_n8n_select ON public.dragon_events_log;
 DROP POLICY IF EXISTS dragon_events_n8n_insert ON public.dragon_events_log;
 
-CREATE POLICY dragon_locks_n8n_select
-ON public.dragon_locks
-FOR SELECT
-TO anon
-USING (
-  repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND (SELECT private.dragon_request_authorized())
-);
+DO $install$
+DECLARE
+  repo text := current_setting('draqon.install_repository', true);
+  actor text := current_setting('draqon.install_sender', true);
+BEGIN
+  IF repo IS NULL OR repo !~ '^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$'
+    OR actor IS NULL OR actor !~ '^[A-Za-z0-9][A-Za-z0-9-]{0,38}$' THEN
+    RAISE EXCEPTION 'Set a valid repository (owner/name) and sender for this environment before installing Dragon';
+  END IF;
+  EXECUTE format($policy$
+    CREATE POLICY dragon_locks_n8n_select
+    ON public.dragon_locks
+    FOR SELECT
+    TO anon
+    USING (
+      repository = %1$L
+      AND (SELECT private.dragon_request_authorized())
+    )
+  $policy$, repo);
+  EXECUTE format($policy$
+    CREATE POLICY dragon_locks_n8n_insert
+    ON public.dragon_locks
+    FOR INSERT
+    TO anon
+    WITH CHECK (
+      repository = %1$L
+      AND sender = %2$L
+      AND status = 'processing'
+      AND (SELECT private.dragon_request_authorized())
+    )
+  $policy$, repo, actor);
+  EXECUTE format($policy$
+    CREATE POLICY dragon_locks_n8n_update
+    ON public.dragon_locks
+    FOR UPDATE
+    TO anon
+    USING (
+      repository = %1$L
+      AND (SELECT private.dragon_request_authorized())
+    )
+    WITH CHECK (
+      repository = %1$L
+      AND status IN ('completed', 'failed')
+      AND finished_at IS NOT NULL
+      AND (SELECT private.dragon_request_authorized())
+    )
+  $policy$, repo);
+  EXECUTE format($policy$
+    CREATE POLICY dragon_events_n8n_select
+    ON public.dragon_events_log
+    FOR SELECT
+    TO anon
+    USING (
+      repository = %1$L
+      AND (SELECT private.dragon_request_authorized())
+    )
+  $policy$, repo);
+  EXECUTE format($policy$
+    CREATE POLICY dragon_events_n8n_insert
+    ON public.dragon_events_log
+    FOR INSERT
+    TO anon
+    WITH CHECK (
+      repository = %1$L
+      AND decision IN ('proceed', 'duplicate', 'unauthorized', 'ignored')
+      AND (SELECT private.dragon_request_authorized())
+    )
+  $policy$, repo);
+END;
+$install$;
 
-CREATE POLICY dragon_locks_n8n_insert
-ON public.dragon_locks
-FOR INSERT
-TO anon
-WITH CHECK (
-  repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND sender = 'osoulhospitality-wq'
-  AND status = 'processing'
-  AND (SELECT private.dragon_request_authorized())
-);
-
-CREATE POLICY dragon_locks_n8n_update
-ON public.dragon_locks
-FOR UPDATE
-TO anon
-USING (
-  repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND (SELECT private.dragon_request_authorized())
-)
-WITH CHECK (
-  repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND status IN ('completed', 'failed')
-  AND finished_at IS NOT NULL
-  AND (SELECT private.dragon_request_authorized())
-);
-
-CREATE POLICY dragon_events_n8n_select
-ON public.dragon_events_log
-FOR SELECT
-TO anon
-USING (
-  repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND (SELECT private.dragon_request_authorized())
-);
-
-CREATE POLICY dragon_events_n8n_insert
-ON public.dragon_events_log
-FOR INSERT
-TO anon
-WITH CHECK (
-  repository = 'osoulhospitality-wq/osoulhospitality-web'
-  AND decision IN ('proceed', 'duplicate', 'unauthorized', 'ignored')
-  AND (SELECT private.dragon_request_authorized())
-);
+COMMIT;
 
 -- Lock acquisition through PostgREST:
 --   POST /rest/v1/dragon_locks?on_conflict=repository,issue_number,command_version
 --   Prefer: return=representation,resolution=ignore-duplicates
--- Zero rows returned means another execution owns the exact command cycle.
+-- On an empty/ambiguous insert result, read the exact lock and verify its owner
+-- and state before continuing or classifying a duplicate.
