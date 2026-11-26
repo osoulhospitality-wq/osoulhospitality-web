@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/command-center/enterprise/app.css">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=18" defer></script>
-<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
+  <script src="/command-center/enterprise/app.bundle.js?v=19" defer></script>
+<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"><script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Osoul client portal", "url": "https://osoulhospitality.com/command-center/enterprise/", "inLanguage": "ar-SA"}</script></head>
 <body>
   <a class="skip-link" href="#enterprise-app">انتقل إلى بوابة الدخول</a>
   <header class="enterprise-header">
@@ -20,7 +20,7 @@
       <span><strong>نظام أصول</strong><small>إدارة المرافق والأصول</small></span>
     </a>
     <a class="cc-language" href="/en/command-center/enterprise/" lang="en" hreflang="en">English</a>
-    <span class="security-badge">MFA + RLS</span>
+    <span class="security-badge">دخول العملاء</span>
   </header>
 
   <main id="enterprise-app" class="enterprise-shell">
@@ -28,11 +28,7 @@
       <p class="eyebrow">بوابة المالك وفريق التشغيل</p>
       <h1 id="enterprise-title">تابع المرفق من البلاغ إلى <em>اعتماد الإغلاق</em>.</h1>
       <p>سجّل منشآتك وأصولك، وتابع أوامر العمل من بدء التنفيذ إلى توثيق الزيارة واعتماد الإغلاق. تظهر البيانات حسب صلاحيات حسابك ومؤسستك.</p>
-      <ul class="security-list">
-        <li><strong>عزل متعدد العملاء</strong><span>سياسات RLS مرتبطة بعضوية المنشأة.</span></li>
-        <li><strong>تحقق متعدد العوامل</strong><span>تطبيق مصادقة TOTP مطلوب للوصول.</span></li>
-        <li><strong>تخزين خاص</strong><span>ملفات PDF وOffice غير عامة ومقيّدة بالمنشأة.</span></li>
-      </ul>
+      <ul class="security-list"><li><strong>منشأتك</strong><span>راجع المعدات والأعمال المتاحة لحسابك.</span></li><li><strong>سجل الزيارة</strong><span>اقرأ ملاحظة المختص إلى جانب البلاغ الأصلي.</span></li><li><strong>الاستلام</strong><span>تابع ما أُنجز وما ينتظر اعتماد الإغلاق.</span></li></ul>
     </section>
 
     <section class="access-card" aria-live="polite">
@@ -74,7 +70,7 @@
         <p class="step-label">الخطوة 2 من 2</p>
         <h2>رمز التحقق</h2>
         <p class="muted">أدخل الرمز المؤقت المكون من 6 أرقام من تطبيق المصادقة.</p>
-        <label for="mfa-code">رمز TOTP</label>
+        <label for="mfa-code">رمز تطبيق المصادقة</label>
         <input id="mfa-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
         <button class="primary-action" type="submit">تحقق وافتح المركز</button>
         <button class="text-action js-sign-out" type="button">تسجيل الخروج</button>
@@ -84,14 +80,14 @@
         <p class="step-label">إعداد أمني لمرة واحدة</p>
         <h2>فعّل تطبيق المصادقة</h2>
         <p class="muted">امسح الرمز عبر تطبيق مصادقة موثوق، ثم أدخل الرمز الظاهر فيه.</p>
-        <button id="start-enrollment" class="primary-action" type="button">إنشاء رمز MFA</button>
+        <button id="start-enrollment" class="primary-action" type="button">إعداد تطبيق المصادقة</button>
         <div id="enrollment-details" hidden>
           <img id="totp-qr" class="totp-qr" alt="رمز QR لإضافة حساب أصول إلى تطبيق المصادقة">
           <details><summary>تعذر مسح الرمز؟</summary><code id="totp-secret"></code></details>
           <form id="mfa-enroll-form">
             <label for="enroll-code">رمز التأكيد</label>
             <input id="enroll-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
-            <button class="primary-action" type="submit">تأكيد وتفعيل MFA</button>
+            <button class="primary-action" type="submit">تأكيد وتفعيل التحقق</button>
           </form>
         </div>
         <button class="text-action js-sign-out" type="button">تسجيل الخروج</button>
@@ -99,7 +95,7 @@
 
       <div id="dashboard-view" class="app-view" hidden>
         <div class="dashboard-head">
-          <div><p class="step-label">جلسة موثقة aal2</p><h2>لوحة تشغيل أصول</h2></div>
+          <div><p class="step-label">جلسة موثقة</p><h2>لوحة تشغيل أصول</h2></div>
           <button class="text-action js-sign-out" type="button">خروج</button>
         </div>
         <p id="session-identity" class="muted"></p>

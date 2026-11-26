@@ -1,0 +1,32 @@
+<form action="/submit.php" method="post" class="project-brief-form quick-enquiry" data-quick-enquiry>
+  <input type="hidden" name="form_name" value="facilities_service_proposal">
+  <input type="hidden" name="language" value="ar">
+  <input type="hidden" name="brief_mode" value="quick">
+  <label class="honeypot" aria-hidden="true"><span>اترك هذا الحقل فارغًا</span><input name="website" tabindex="-1" autocomplete="off"></label>
+  <noscript><p>لإرسال طلبك بدون JavaScript، راسل <a href="mailto:info@osoulhospitality.com">info@osoulhospitality.com</a>.</p></noscript>
+  <div class="form-grid">
+    <label>الاسم<input name="name" autocomplete="name" maxlength="120" required></label>
+    <div>
+      <div id="quick-contact-phone">
+        <label>رقم الجوال أو واتساب<input name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" dir="ltr" required></label>
+      </div>
+      <div id="quick-contact-email" hidden>
+        <label>البريد الإلكتروني<input name="email" type="email" autocomplete="email" maxlength="180" dir="ltr" disabled></label>
+      </div>
+      <button type="button" class="quick-enquiry-channel" aria-controls="quick-contact-phone quick-contact-email" hidden>استخدم البريد الإلكتروني بدلًا من الرقم</button>
+    </div>
+  </div>
+  <label class="quick-enquiry-service">الخدمة المطلوبة<select name="requested_support" required><option value="" selected>اختر الخدمة</option><option>الصيانة والأنظمة الفنية</option><option>النظافة وخدمات الموقع</option><option>إدارة الأصول والعقود</option><option>إدارة مرافق متكاملة</option></select></label>
+  <details class="quick-enquiry-details">
+    <summary>أضف تفاصيل (اختياري)</summary>
+    <div class="form-grid">
+      <label>اسم المنشأة<input name="organization" autocomplete="organization" maxlength="180"></label>
+      <label>المدينة<input name="city" autocomplete="address-level2" maxlength="120"></label>
+      <label>نوع المنشأة<input name="asset_type" maxlength="120"></label>
+    </div>
+    <label class="form-wide">صف احتياجك باختصار<textarea name="description" rows="3" maxlength="2000"></textarea></label>
+  </details>
+  <label class="form-consent"><input type="checkbox" name="consent" value="yes" required><span>أوافق على معالجة طلبي وفق <a href="/privacy/">إشعار الخصوصية</a>.</span></label>
+  <button type="submit" class="button">اطلب عرض خدمة</button>
+  <p class="quick-enquiry-feedback" role="status" aria-live="polite"></p>
+</form>

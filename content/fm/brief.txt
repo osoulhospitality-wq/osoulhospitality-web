@@ -1,0 +1,33 @@
+@cover|واجهة المنشأة ومسار الوصول من الشارع إلى المدخل|Property entrance and the approach from the street|التقط في منشأة مأذونة من مستوى الماشي، خارج سيارات الضيوف ولوحاتها.
+@team|فريق أصول يراجع خطة الوردية بزي الموقع|Osoul team reviewing the shift plan in site uniform|تصوير الفريق الفعلي بموافقته، واظهر دور مسؤول العقد والمشرف.
+@owner-board|لوحة المالك تعرض اعتماد تكلفة مع الخدمة المتأثرة|Owner board showing a pending cost decision and affected service|لقطة فعلية من حساب عرض، حالة تحتاج قرارًا وخياراتها. لا تعرض معرّف عميل أو مؤشرًا غير متاح.
+@asset-history|سجل معدة يعرض زياراتها وبلاغاتها المتكررة|Equipment history showing visits and recurring faults|اعرض رمز أصل تجريبيًا وتسلسل الزيارات، ولا تعرض تنبيهًا تنبؤيًا إلا إذا ظهر فعلًا.
+@closeout|تقرير استلام يربط حالة الأصل قبل الإصلاح بنتيجة الفحص|Handback report linking the original condition to the acceptance check|التقط التقرير من شاشة فعلية بصور مأذونة بعد إخفاء أسماء العملاء ومواقع وحداتهم.
+فني تكييف يفحص وحدة مناولة الهواء|HVAC specialist inspecting an air handling unit|أظهر المعدة وأداة القياس دون كشف أرقام الموقع.
+فني كهرباء يراجع لوحة التوزيع وفق إجراء الموقع|Electrical specialist checking a distribution board|صوّر من خارج حيز العمل الآمن وراع تعليمات المختص.
+مختص يتابع قراءة مضخة في غرفة الخدمات|Specialist checking a pump reading in a plant room|ضمّن جسم المضخة ونقطة الفحص في الإطار.
+مختص المصاعد يوثق زيارة صيانة عند مصعد الخدمة|Lift specialist documenting a service visit|التقط من منطقة يسمح بها المقاول.
+مختص السلامة يراجع بطاقة فحص نظام الحريق|Safety specialist reviewing a fire system inspection tag|أظهر بطاقة خالية من بيانات شخصية.
+فني الشبكات يتتبع وصلة في خزانة الاتصالات|Network technician checking a link at the communications cabinet|تجنب عناوين الشبكة والرموز الظاهرة.
+فني الموقع يستلم مهمة من مشرف الوردية|Resident technician receiving a shift assignment|اظهر الزي وتعريف الدور بإذن.
+فني ميداني يطابق أمر العمل مع الأصل في الموقع|Field technician matching a work order to the equipment|التقط يد المختص والمعدة بالمشهد نفسه.
+مشرف التدبير يفحص تجهيز شقة بعد التنظيف|Housekeeping supervisor inspecting a prepared apartment|اختر وحدة خالية من أمتعة النزيل.
+فريق النظافة المقيم يجهز العربة للوردية|Resident cleaning team preparing a shift trolley|ركّز على فصل المستلزمات وتجهيز الفريق.
+فريق متخصص ينظف واجهة المبنى|Specialist contractor cleaning the building facade|من منطقة آمنة ومع موافقة المقاول.
+مختص يوثق فحص خزان المياه|Specialist documenting a water tank inspection|صوّر من نقطة الوصول المسموحة.
+مختص مكافحة الآفات يراجع نقطة مراقبة|Pest management specialist checking a monitoring point|لا تظهر محاليل مجهولة أو خلط مواد.
+فريق الموقع يراجع نقطة تجميع النفايات|Site team inspecting the waste collection point|صوّر وقت الخدمة مع إخفاء أي ملصقات شخصية.
+موظف أمن ينظم دخول مورد عند المدخل|Security officer managing contractor access|زي العمل الفعلي، دون وجوه زوار أو تفاصيل سجلات.
+مسؤول العقد ينسق مهام الصيانة والنظافة|Contract lead coordinating engineering and cleaning tasks|استخدم جدول وردية منزوعة الهوية.
+مشرف الجودة يراجع محضر استلام مع مورد|Quality supervisor reviewing a vendor handover record|أظهر معيار القبول، وأخف قيمة العقد واسم العميل.
+أمين المخزون يطابق المواد مع طلب الصرف|Storekeeper matching supplies to an issue note|التقط تحققًا حقيقيًا من الصنف.
+فني يطابق بطاقة الأصل مع السجل|Technician matching an asset label to its record|رمز عرض غير مرتبط بحساب فعلي.
+مهندس يراجع حالة معدة مع بياناتها التاريخية|Engineer reviewing equipment condition and service history|اجمع ظاهر المعدة وتقريرًا مأذونًا.
+مشرف الصيانة يراجع الأعمال الوقائية المستحقة|Maintenance supervisor reviewing planned work due|موعد ومعدة ونتيجة متوقعة في الإطار.
+موظف الموقع يسجل عطلًا على أصل محدد|Site employee recording a fault against an asset|استخدم حساب عرض وبيانات غير شخصية.
+فريق الاستلام يثبت تحفظًا في محضر نقل مسؤولية|Handover team documenting an exception|تجنب تواقيع الأطراف في النسخة المنشورة.
+مسؤول الامتثال يطابق سجل السلامة مع المعدة|Compliance lead reconciling a safety record to equipment|لا تستخدم شعار الجهة الرسمية كاعتماد.
+مختص التشغيل يراجع مستندات نشاط الضيافة|Operations specialist reviewing accommodation activity records|لا تظهر أرقام تراخيص عميل.
+منسق الرخص يطابق النشاط مع بيانات الموقع|Licensing coordinator checking activity and site details|استخدم نموذجًا محجوب البيانات.
+مسؤول العقود يراجع تكلفة إصلاح مع أمر الشراء|Contract lead checking repair cost against a purchase order|احجب الأسعار والأسماء غير المصرح بها.
+مشرف الموقع يراجع تقرير مستويات الخدمة|Site supervisor reviewing a service level report|اعرض نتيجة موضحة المصدر بإذن، أو استخدم بيانات تدريب.

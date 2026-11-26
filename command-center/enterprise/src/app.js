@@ -89,7 +89,7 @@ async function beginEnrollment() {
     document.querySelector("#totp-secret").textContent = data.totp.secret;
     document.querySelector("#enrollment-details").hidden = false;
     button.hidden = true;
-    setStatus(uiText("امسح الرمز وأدخل رمز التأكيد لتفعيل MFA.", "Scan the QR code and enter the confirmation code to enable MFA."), "success");
+    setStatus(uiText("امسح الرمز وأدخل رمز التأكيد لتفعيل التحقق.", "Scan the QR code and enter the confirmation code to enable verification."), "success");
     document.querySelector("#enroll-code").focus();
   } catch (error) {
     setStatus(friendlyError(error), "error");
@@ -162,7 +162,7 @@ async function showDashboard(session) {
     });
     select.replaceChildren(...options);
     await loadCounts(select.value);
-    setStatus(uiText("الجلسة محمية بـ MFA، وتم تحميل البيانات المصرح بها فقط.", "Your session is protected by MFA. Only authorized data has been loaded."), "success");
+    setStatus(uiText("اكتمل التحقق من حسابك، وتم تحميل البيانات المصرح بها فقط.", "Your account has been verified. Only authorized data has been loaded."), "success");
   } catch (error) {
     setStatus(friendlyError(error), "error");
   }
@@ -209,7 +209,7 @@ async function routeSession() {
   if (verified) {
     activeFactorId = verified.id;
     showView("verify");
-    setStatus(uiText("أكمل رمز التحقق لرفع مستوى الجلسة إلى aal2.", "Enter the authenticator code to verify your session."));
+    setStatus(uiText("أدخل رمز تطبيق المصادقة للتحقق من حسابك.", "Enter the authenticator code to verify your session."));
     document.querySelector("#mfa-code").focus();
   } else {
     showView("enroll");

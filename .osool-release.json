@@ -1,108 +1,16 @@
 {
-  "name": "Osool Hospitality Hostinger public_html",
-  "version": "15.0.0",
-  "date": "2026-08-08",
+  "name": "Osoul Hospitality \u00b7 Facilities and Asset Management",
+  "date": "2026-11-26",
   "domain": "https://osoulhospitality.com",
-  "routes": [
-    "/",
-    "solutions",
-    "outputs",
-    "about",
-    "scenarios",
-    "insights",
-    "contact",
-    "thank-you",
-    "privacy",
-    "terms",
-    "accessibility",
-    "en",
-    "en/solutions",
-    "en/outputs",
-    "en/about",
-    "en/scenarios",
-    "en/insights",
-    "en/contact",
-    "en/privacy",
-    "en/terms",
-    "en/accessibility",
-    "en/thank-you",
-    "command-center",
-    "command-center/app",
-    "command-center/enterprise"
+  "languages": [
+    "ar-SA",
+    "en-SA"
   ],
-  "form": "submit.php -> info@osoulhospitality.com",
-  "analytics": {
-    "provider": "HubSpot",
-    "portal_id": "149059794",
-    "data_region": "EU1",
-    "mode": "opt-in only",
-    "global_privacy_control": "honored",
-    "non_hubspot_form_capture": "tracking code ready; account setting must remain enabled"
-  },
   "content_library": {
-    "articles": 40,
-    "languages": ["ar-SA", "en-SA"],
-    "published_pages": 80,
-    "tracks": 5,
-    "features": ["search", "category filters", "canonical URLs", "hreflang", "Article JSON-LD", "official source references"]
+    "articles": 8,
+    "language_editions": 16
   },
-  "quality_gates": {
-    "release_assertions": 796,
-    "html_files_link_checked": 108,
-    "generated_html_standard_validation": "pass",
-    "automation_tests": "pass",
-    "licensing_claim_gate": "pass — no unevidenced licensing claim is published"
-  },
-  "command_center": {
-    "mode": "public pilot plus private Supabase enterprise portal",
-    "server_storage": "disabled",
-    "features": [
-      "sanitized public Dragon request center",
-      "request status conflict detection, response thread, filters and qualified executive KPIs",
-      "public-data consent gate before authenticated GitHub handoff",
-      "paginated GitHub issue and comment retrieval",
-      "safe formatted response rendering and latest-output copy",
-      "supplier master",
-      "product and normalized price master",
-      "quotation comparison",
-      "contract expiry and risk register",
-      "decision ledger",
-      "JSON backup and restore",
-      "local document fingerprinting",
-      "local audit trail",
-      "multi-tenant Supabase enterprise activation pack with MFA, RLS, approvals and private storage"
-    ]
-  },
-  "enterprise_activation": {
-    "pack": "command-center/enterprise",
-    "public_upload": true,
-    "database_status": "schema applied; security advisor clean; MFA and RLS enforced; no owner user or verified TOTP factor yet",
-    "requires": [
-      "owner account enrollment",
-      "live MFA factor verification",
-      "role-based negative test sessions",
-      "backup and restore test",
-      "PDPL data classification and retention decision",
-      "cross-border transfer approval for the selected project region"
-    ]
-  },
-  "website_positioning": {
-    "model": "integrated Saudi tourism advisory house: advisory, execution and intelligence",
-    "primary_audiences": [
-      "new tourism investors and developers",
-      "existing hospitality assets requiring compliance or performance improvement",
-      "owners requiring operator oversight and asset management",
-      "international operators and advisers entering Saudi Arabia"
-    ],
-    "service_families": [
-      "strategy and feasibility",
-      "licensing, classification and compliance",
-      "development and operational design",
-      "pre-opening and operations",
-      "performance, profitability, contracts and suppliers",
-      "revenue, sales and distribution",
-      "owner representation and asset management",
-      "institutional and digital transformation"
-    ]
-  }
+  "routes": "sitemap.xml",
+  "form": "submit.php",
+  "release_status": "prepared for owner verification"
 }

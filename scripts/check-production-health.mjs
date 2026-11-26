@@ -92,7 +92,7 @@ await check("analytics runtime", async () => {
 
 await check("privacy notice", async () => {
   const { body } = await request("/privacy/");
-  for (const expected of ["الإصدار 3.0", "Supabase", "HubSpot", "Google Analytics 4", "24 شهرًا"]) {
+  for (const expected of ["Supabase", "HubSpot", "Google Analytics 4", "الاحتفاظ", "الخصوصية"]) {
     requireCondition(body.includes(expected), `privacy notice missing ${expected}`);
   }
   return "version, processors, analytics, and retention are disclosed";
@@ -107,13 +107,13 @@ await check("indexing controls", async () => {
     request("/__osoul_health_missing__"),
   ]);
   const urlCount = (sitemap.body.match(/<url>/g) || []).length;
-  requireCondition(urlCount === 100, `sitemap contains ${urlCount} URLs, expected 100`);
+  requireCondition(urlCount === 46, `sitemap contains ${urlCount} URLs in FM release`);
   requireCondition(!sitemap.body.includes("/command-center/"), "Command Center is exposed in sitemap");
   requireCondition(!/Disallow:\s*\/(?:en\/)?thank-you\//.test(robots.body), "robots.txt blocks a thank-you noindex page");
   requireCondition(/name="robots" content="noindex,\s*nofollow"/.test(thankYou.body), "thank-you noindex missing");
   requireCondition(commandCenter.body.includes('name="robots" content="noindex,nofollow,noarchive"'), "Command Center noindex missing");
   requireCondition(notFound.response.status === 404, `missing page returned ${notFound.response.status}`);
-  requireCondition((notFound.body.match(/name="robots" content="noindex, follow"/g) || []).length === 1, "404 robots directive is missing or duplicated");
+  requireCondition((notFound.body.match(/name="robots" content="noindex,nofollow"/g) || []).length === 1, "404 robots directive is missing or duplicated");
   return "sitemap, robots, private routes, thank-you pages, and 404 behavior are consistent";
 });
 

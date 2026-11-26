@@ -1,14 +1,4 @@
-OSOOL HOSPITALITY - HOSTINGER RELEASE 15
-
-1. Back up the existing public_html directory.
-2. Upload the ZIP contents directly into public_html.
-3. Confirm index.html and .htaccess are directly inside public_html.
-4. Confirm PHP mail is enabled and test the contact form.
-5. Clear Hostinger and browser cache.
-6. Verify https://osoulhospitality.com, /insights/, /en/, /en/insights/, /contact/, /en/contact/, sitemap.xml and robots.txt.
-7. Test search and all five category filters in both insight libraries.
-8. Open one Arabic article and its English counterpart; verify the language switch preserves the article.
-9. Submit non-sensitive test briefs from Arabic and English; verify language-specific success redirects and mailbox delivery.
-
-The contact form sends to info@osoulhospitality.com through submit.php.
-If PHP mail is disabled, configure SMTP or Hostinger email routing before launching campaigns.
+OSOUL HOSPITALITY — FM RELEASE
+Replace verified company fields and authorised media using content/fm in the source checkout.
+Run python3 scripts/build-fm-site.py, npm test, node scripts/check-language-routes.mjs, and python3 scripts/generate-checksums.py.
+Stage the generated release with Apache rewrite and PHP. Preserve private host configuration outside the release. Verify bilingual enquiries, hotline dialing, retired URLs and domain aliases in staging before switching production. Keep a rollback snapshot.

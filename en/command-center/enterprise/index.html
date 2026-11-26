@@ -4,23 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <title>Osool Platform | Facilities and Asset Management</title>
-  <meta name="description" content="Secure access to facilities, assets, work orders and service visits for Osool Hospitality owners and operations teams.">
+  <title>Osoul Platform | Facilities and Asset Management</title>
+  <meta name="description" content="Secure access to facilities, assets, work orders and service visits for Osoul Hospitality owners and operations teams.">
   <link rel="icon" href="/brand/osool-mark-v8.svg">
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/command-center/enterprise/app.css">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=18" defer></script>
-<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
+  <script src="/command-center/enterprise/app.bundle.js?v=19" defer></script>
+<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"><script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Osoul client portal", "url": "https://osoulhospitality.com/en/command-center/enterprise/", "inLanguage": "en-SA"}</script></head>
 <body>
   <a class="skip-link" href="#enterprise-app">Skip to sign-in</a>
   <header class="enterprise-header">
     <a href="/en/command-center/" class="enterprise-brand" aria-label="Back to the command center">
       <img src="/brand/osool-mark-v8.svg" width="52" height="52" alt="">
-      <span><strong>Osool Platform</strong><small>Facilities and asset management</small></span>
+      <span><strong>Osoul Platform</strong><small>Facilities and asset management</small></span>
     </a>
     <a class="cc-language" href="/command-center/enterprise/" lang="ar" hreflang="ar">العربية</a>
-    <span class="security-badge">MFA + RLS</span>
+    <span class="security-badge">Client access</span>
   </header>
 
   <main id="enterprise-app" class="enterprise-shell">
@@ -28,11 +28,7 @@
       <p class="eyebrow">Owner and operations portal</p>
       <h1 id="enterprise-title">Track each work order from the first report to <em>approved closure</em>.</h1>
       <p>Register facilities and assets, assign work and record site visits. Your organization and account permissions determine what you can access.</p>
-      <ul class="security-list">
-        <li><strong>Organization-level isolation</strong><span>Row-level security follows organization membership.</span></li>
-        <li><strong>Multi-factor authentication</strong><span>Use your authenticator app to verify access.</span></li>
-        <li><strong>Private storage</strong><span>PDF and Office files are restricted to the organization.</span></li>
-      </ul>
+      <ul class="security-list"><li><strong>Property view</strong><span>Find the equipment and jobs available to your account.</span></li><li><strong>Visit record</strong><span>Review findings against the original request.</span></li><li><strong>Handover</strong><span>Follow the work through acceptance.</span></li></ul>
     </section>
 
     <section class="access-card" aria-live="polite">
@@ -86,12 +82,12 @@
         <p class="muted">Scan the QR code with your authenticator app and enter the code it displays.</p>
         <button id="start-enrollment" class="primary-action" type="button">Generate QR code</button>
         <div id="enrollment-details" hidden>
-          <img id="totp-qr" class="totp-qr" alt="QR code for adding your Osool account to your authenticator app">
+          <img id="totp-qr" class="totp-qr" alt="QR code for adding your Osoul account to your authenticator app">
           <details><summary>Cannot scan the code?</summary><code id="totp-secret"></code></details>
           <form id="mfa-enroll-form">
             <label for="enroll-code">Confirmation code</label>
             <input id="enroll-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
-            <button class="primary-action" type="submit">Verify and enable MFA</button>
+            <button class="primary-action" type="submit">Verify and enable verification</button>
           </form>
         </div>
         <button class="text-action js-sign-out" type="button">Sign out</button>
@@ -107,7 +103,7 @@
           <p>This account has no organization yet. Create your first workspace to get started.</p>
           <form id="create-organization-form">
             <label for="organization-name">Organization name</label>
-            <input id="organization-name" name="name" type="text" minlength="2" maxlength="180" value="Osool Hospitality" required>
+            <input id="organization-name" name="name" type="text" minlength="2" maxlength="180" value="Osoul Hospitality" required>
             <button class="primary-action" type="submit">Create workspace</button>
           </form>
         </div>
@@ -147,7 +143,7 @@
     </section>
   </main>
 
-  <footer class="enterprise-footer"><span>© 2026 Osool Hospitality</span><a href="/en/privacy/">Privacy</a><a href="/en/command-center/">Public command center</a></footer>
+  <footer class="enterprise-footer"><span>© 2026 Osoul Hospitality</span><a href="/en/privacy/">Privacy</a><a href="/en/command-center/">Public command center</a></footer>
   <noscript>Enable JavaScript in your browser to use secure sign-in.</noscript>
 </body>
 </html>
