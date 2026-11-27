@@ -348,3 +348,17 @@ dialog header button,.detail-header>button { border:0; background:transparent; c
 }
 
 .top-actions .ghost[href] { color: #fff; text-decoration: underline; text-underline-offset: .18em; }
+
+.scope-picker { display:flex; gap:.4rem; align-items:center; font-size:.8rem; flex-wrap:wrap; }
+.scope-picker select { max-width:100%; min-height:42px; border:1px solid var(--line); color:var(--ink); background:white; border-radius:8px; padding:.3rem; font:inherit; }
+.sr-only { position:absolute; clip-path:inset(50%); width:1px; height:1px; overflow:hidden; }
+.exec-decision { margin-bottom:1rem; }
+.exec-decision div { display:flex; flex-wrap:wrap; gap:.5rem; }
+.exec-decision a { text-decoration:none; }
+@media (max-width:760px) {
+  .nav-item { width:auto; min-width:max-content; padding-inline:11px; }
+  .nav-item>b { display:block; font-size:.7rem; }
+  .nav-item>span { display:none; }
+  .nav-item>em { position:static; transform:none; }
+  .status-panel .panel-head { flex-wrap:wrap; }
+}

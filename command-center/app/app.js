@@ -1,3 +1,5 @@
+import {feedLabels, labelNames, matchesScope, mergeFeeds, scopeOf, terminalShare} from "./request-feed.js";
+
 (() => {
   "use strict";
 
@@ -7,12 +9,11 @@
 
   const APP_VERSION = "13.0.0";
   const STORAGE_KEY = "osoul-command-center-v13";
-  const DRAGON_CACHE_KEY = "osoul-dragon-feed-v13";
-  const DRAGON_API = "https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues?state=all&labels=dragon-task&per_page=100";
+  const DRAGON_CACHE_KEY = "osoul-dragon-feed-v14";
   const DRAGON_ISSUE_API = "https://api.github.com/repos/osoulhospitality-wq/osoulhospitality-web/issues";
   const DRAGON_NEW_URL = "https://github.com/osoulhospitality-wq/osoulhospitality-web/issues/new";
-  const AUTO_REFRESH_MS = 300000;
-  const CACHE_MAX_AGE_MS = 900000;
+  const AUTO_REFRESH_MS = 600000;
+  let fetchingDragon = false;
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -20,7 +21,7 @@
   const today = () => new Date().toISOString().slice(0, 10);
   const money = value => new Intl.NumberFormat(locale, {style:"currency", currency:"SAR", maximumFractionDigits:2}).format(Number(value || 0));
   const date = value => value ? new Intl.DateTimeFormat(locale, {dateStyle:"medium"}).format(new Date(value.length === 10 ? `${value}T12:00:00` : value)) : "—";
-  const dateTime = value => value ? new Intl.DateTimeFormat(locale, {dateStyle:"medium", timeStyle:"short"}).format(new Date(value)) : "—";
+  const dateTime = value => value ? new Intl.DateTimeFormat(locale, {dateStyle:"medium", timeStyle:"short", timeZone:"Asia/Riyadh"}).format(new Date(value)) : "—";
   const daysTo = value => Math.ceil((new Date(`${value}T12:00:00`) - new Date()) / 86400000);
   const escape = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[character]));
   const markdown = value => {
@@ -72,8 +73,8 @@
   };
 
   try {
-    const cached = JSON.parse(localStorage.getItem(DRAGON_CACHE_KEY) || localStorage.getItem("osoul-dragon-feed-v12"));
-    if (cached?.issues?.length) {
+    const cached = JSON.parse(localStorage.getItem(DRAGON_CACHE_KEY));
+    if (Array.isArray(cached?.issues) && Number.isFinite(Date.parse(cached.savedAt))) {
       dragon.issues = cached.issues;
       dragon.lastSync = cached.savedAt;
       dragon.loading = false;
@@ -143,7 +144,6 @@
     return `<span class="badge ${item[1]}">${item[0]}</span>`;
   };
 
-  const labelNames = issue => (issue.labels || []).map(label => typeof label === "string" ? label : label.name);
   const requestStatus = issue => {
     const labels = new Set(labelNames(issue));
     const terminalCount = Number(labels.has("dragon-failed")) + Number(labels.has("dragon-completed"));
@@ -157,12 +157,11 @@
   const statusInfo = status => ({
     new:{label:tr("جديد", "New"), className:"new"},
     processing:{label:tr("قيد المعالجة", "In progress"), className:"processing"},
-    completed:{label:tr("مكتمل", "Completed"), className:"completed"},
+    completed:{label:tr("سُلّمت المسودة", "Draft delivered"), className:"completed"},
     failed:{label:tr("متعثر", "Failed"), className:"failed"},
     conflict:{label:tr("تعارض حالة", "Conflicting status"), className:"conflict"},
     archived:{label:tr("مؤرشف", "Archived"), className:"archived"}
   }[status]);
-  const isTestRequest = issue => /(?:acceptance|\be2e\b|\btest\b|\bqa\b|smoke|fixture|اختبار|تجريب)/i.test(`${issue.title} ${issue.body || ""}`) && !/\[LIVE-START/i.test(issue.title);
   const controlValue = (issue, name) => {
     const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const match = (issue.body || "").match(new RegExp(`^-\\s*${escapedName}\\s*:\\s*(.+)$`, "im"));
@@ -208,22 +207,20 @@
     const status = requestStatus(issue), ageMs = Date.now() - new Date(issue.updated_at).getTime();
     const due = requestDueDate(issue);
     return {
-      overdue: Boolean(due && new Date(`${due}T23:59:59`) < new Date() && !["completed", "archived"].includes(status)),
+      overdue: Boolean(due && new Date(`${due}T23:59:59+03:00`) < new Date() && !["completed", "archived"].includes(status)),
       stale: status === "processing" ? ageMs > 15 * 60 * 1000 : status === "new" ? ageMs > 60 * 60 * 1000 : false,
       conflict: status === "conflict"
     };
   };
-  const cycleMilliseconds = issue => issue.closed_at ? new Date(issue.closed_at) - new Date(issue.created_at) : null;
-  const duration = milliseconds => {
-    if (milliseconds === null || !Number.isFinite(milliseconds)) return "—";
-    const minutes = Math.max(0, Math.round(milliseconds / 60000));
-    if (minutes < 60) return `${minutes}${tr(" د", " min")}`;
-    const hours = Math.floor(minutes / 60), remaining = minutes % 60;
-    if (hours < 24) return remaining ? `${hours}${tr(" س ", " h ")}${remaining}${tr(" د", " min")}` : `${hours}${tr(" س", " h")}`;
-    return `${Math.floor(hours / 24)}${tr(" يوم", " d")}`;
-  };
-  const currentRequestScope = () => $("[data-filter=requestScope]")?.value || "operational";
-  const scopedRequests = () => currentRequestScope() === "all" ? dragon.issues : dragon.issues.filter(issue => !isTestRequest(issue));
+  const currentRequestScope = () => $("[data-filter=requestScope]")?.value || "queue";
+  const scopedRequests = () => dragon.issues.filter(issue => matchesScope(issue, currentRequestScope()));
+  const scopeLabel = scope => ({
+    queue:tr("قائمة المتابعة العامة", "Public work queue"),
+    operational:tr("موسوم تشغيليًا", "Labelled operational"),
+    unclassified:tr("بانتظار التصنيف", "Unclassified"),
+    pilot:tr("اختبار تجريبي", "Pilot test"),
+    all:tr("كل السجلات", "All records")
+  })[scope];
 
   async function fetchPages(baseUrl, {maxPages = 5, signal} = {}) {
     const records = [];
@@ -238,12 +235,15 @@
       if (!response.ok) throw new Error(response.status === 403 ? tr("تم بلوغ حد التحديث المؤقت", "The temporary refresh limit has been reached") : `${tr("تعذر جلب البيانات (", "Could not retrieve the data (")}${response.status})`);
       const pageRecords = await response.json();
       records.push(...pageRecords);
-      if (pageRecords.length < 100) break;
+      const links = response.headers.get("Link");
+      if (pageRecords.length < 100 || (links && !links.includes('rel="next"'))) break;
+      if (page === maxPages) throw new Error(tr("تجاوز السجل حد العرض؛ تعذر حساب مجموعة كاملة.", "The feed exceeds the display limit; no complete snapshot is available."));
     }
     return records;
   }
 
   async function loadDragon({force = false, quiet = false} = {}) {
+    if (fetchingDragon) return;
     if (!navigator.onLine) {
       dragon.error = tr("لا يوجد اتصال بالإنترنت — يتم عرض آخر نسخة محفوظة", "You are offline. Showing the last saved copy.");
       dragon.loading = false;
@@ -254,22 +254,28 @@
       renderRequests();
       return;
     }
+    fetchingDragon = true;
     dragon.loading = true;
     dragon.error = "";
     renderConnection();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const issues = await fetchPages(DRAGON_API, {maxPages:5, signal:controller.signal});
-      dragon.issues = issues.filter(issue => !issue.pull_request);
+      const feeds = await Promise.all(feedLabels.map(label =>
+        fetchPages(`${DRAGON_ISSUE_API}?state=all&labels=${label}&per_page=100`, {signal:controller.signal})
+      ));
+      dragon.issues = mergeFeeds(feeds);
+      dragon.comments.clear();
       dragon.lastSync = new Date().toISOString();
-      localStorage.setItem(DRAGON_CACHE_KEY, JSON.stringify({savedAt:dragon.lastSync, issues:dragon.issues}));
+      try { localStorage.setItem(DRAGON_CACHE_KEY, JSON.stringify({savedAt:dragon.lastSync, issues:dragon.issues})); } catch { /* The live view still works when storage is full. */ }
       if (!quiet && force) toast(tr("تم تحديث طلبات Dragon", "Dragon requests updated"));
     } catch (error) {
-      const hasFreshCache = dragon.issues.length && dragon.lastSync && Date.now() - new Date(dragon.lastSync).getTime() < CACHE_MAX_AGE_MS;
-      dragon.error = `${error.name === "AbortError" ? tr("انتهت مهلة الاتصال", "Connection timed out") : error.message}${hasFreshCache ? tr(" — يتم عرض آخر نسخة محفوظة", " — showing the last saved copy") : ""}`;
+      controller.abort();
+      const hasSnapshot = Boolean(dragon.lastSync);
+      dragon.error = `${error.name === "AbortError" ? tr("انتهت مهلة الاتصال", "Connection timed out") : error.message}${hasSnapshot ? tr(" — يتم عرض آخر نسخة محفوظة", " — showing the last saved copy") : ""}`;
     } finally {
       clearTimeout(timeout);
+      fetchingDragon = false;
       dragon.loading = false;
       renderRequests();
     }
@@ -282,30 +288,29 @@
       stateElement.querySelector("span").textContent = tr("جاري التحديث", "Refreshing");
     } else if (dragon.error) {
       stateElement.className = "system-state warning";
-      stateElement.querySelector("span").textContent = tr("عرض محفوظ", "Saved view");
+      stateElement.querySelector("span").textContent = dragon.lastSync ? tr("عرض محفوظ", "Saved view") : tr("البيانات غير متاحة", "Feed unavailable");
     } else {
       stateElement.className = "system-state connected";
-      stateElement.querySelector("span").textContent = tr("Dragon متصل", "Dragon connected");
+      stateElement.querySelector("span").textContent = tr("السجل متصل", "Feed connected");
     }
     lastSync.textContent = `${tr("آخر مزامنة: ", "Last sync: ")}${dragon.lastSync ? dateTime(dragon.lastSync) : "—"}`;
     if (banner) {
       banner.classList.toggle("warning", Boolean(dragon.error));
       const title = banner.querySelector("b"), note = banner.querySelector("small");
-      title.textContent = dragon.error ? tr("تعذر التحديث المباشر", "Live update unavailable") : tr("مزامنة مباشرة مع Dragon", "Live Dragon feed");
-      const rateWarning = Number(dragon.rateRemaining) <= 10 ? tr(" • السعة العامة منخفضة", " • Few API requests remaining") : "";
-      note.textContent = dragon.error || `${tr("سجل عام تجريبي • تحديث كل 5 دقائق", "Public pilot log • Refreshes every five minutes")}${dragon.rateRemaining ? `${tr(" • سعة الاتصال ", " • API requests remaining: ")}${dragon.rateRemaining}` : ""}${rateWarning}`;
+      title.textContent = dragon.error ? tr("تعذر التحديث المباشر", "Live update unavailable") : tr("سجل طلبات دراقون العام", "Public Dragon request feed");
+      const rateWarning = dragon.rateRemaining !== null && Number(dragon.rateRemaining) <= 10 ? tr(" • السعة العامة منخفضة", " • Few API requests remaining") : "";
+      note.textContent = dragon.error ? [dragon.error, dragon.lastSync && dateTime(dragon.lastSync)].filter(Boolean).join(" · ") : `${tr("سجل عام تجريبي • تحديث كل 10 دقائق", "Public pilot log • Refreshes every ten minutes")}${dragon.rateRemaining ? `${tr(" • سعة الاتصال ", " • API requests remaining: ")}${dragon.rateRemaining}` : ""}${rateWarning}`;
     }
   }
 
   function requestMetrics(requests) {
     const counts = {new:0, processing:0, completed:0, failed:0, conflict:0, archived:0};
     requests.forEach(issue => counts[requestStatus(issue)]++);
-    const concluded = counts.completed + counts.failed + counts.conflict;
-    const success = concluded ? Math.round(counts.completed / concluded * 100) : 0;
-    const cycleValues = requests.filter(issue => requestStatus(issue) === "completed").map(cycleMilliseconds).filter(value => value !== null);
-    const averageCycle = cycleValues.length ? cycleValues.reduce((total, value) => total + value, 0) / cycleValues.length : null;
+    const success = terminalShare(counts);
+    const needsDecision = issue => ["failed", "conflict"].includes(requestStatus(issue)) || requestFlags(issue).overdue || requestFlags(issue).stale;
+    const attention = requests.filter(needsDecision);
     const flags = requests.map(requestFlags);
-    return {counts, success, averageCycle, total:requests.length, overdue:flags.filter(flag => flag.overdue).length, stale:flags.filter(flag => flag.stale).length};
+    return {counts, success, attention, total:requests.length, overdue:flags.filter(flag => flag.overdue).length, stale:flags.filter(flag => flag.stale).length};
   }
 
   function renderRequests() {
@@ -313,18 +318,26 @@
     const requests = scopedRequests();
     const metrics = requestMetrics(requests);
     const navCount = metrics.counts.new + metrics.counts.processing + metrics.counts.failed + metrics.counts.conflict;
-    $("#requestNavCount").textContent = navCount || "✓";
+    $("#requestNavCount").textContent = dragon.lastSync ? navCount : "—";
     $("#requestNavCount").classList.toggle("has-work", navCount > 0);
-    $("#requestScopeLabel").textContent = currentRequestScope() === "all" ? tr("جميع الطلبات والاختبارات", "All requests, including tests") : tr("الطلبات التشغيلية", "Operational requests");
-
+    $("#requestScopeLabel").textContent = scopeLabel(currentRequestScope());
+    const hasData = Boolean(dragon.lastSync);
+    const shareText = metrics.success === null || !hasData ? "—" : `${metrics.success}%`;
+    const unclassified = requests.filter(issue => scopeOf(issue) === "unclassified").length;
+    const sourceText = dragon.lastSync ? dateTime(dragon.lastSync) : (dragon.error || tr("بانتظار المزامنة", "Awaiting sync"));
+    const queueAttention = currentRequestScope() === "queue" ? metrics.attention.length : requestMetrics(dragon.issues.filter(issue => matchesScope(issue, "queue"))).attention.length;
+    $("#executiveQueue").textContent = hasData
+      ? tr(`تحتاج ${queueAttention} من طلبات السجل العام إلى مراجعة. آخر مزامنة: ${sourceText}.`,
+           `${queueAttention} public requests need review. Last sync: ${sourceText}.`)
+      : sourceText;
     $("#requestKpis").innerHTML = [
-      {label:tr("إجمالي الطلبات", "Total requests"), value:metrics.total, note:tr("ضمن النطاق المحدد", "Within the selected scope"), className:"neutral"},
+      {label:tr("إجمالي الطلبات", "Total requests"), value:metrics.total, note:tr(`بانتظار التصنيف: ${unclassified}`, `Unclassified: ${unclassified}`), className:"neutral"},
       {label:tr("تحت العمل", "Active requests"), value:metrics.counts.new + metrics.counts.processing, note:`${metrics.counts.new}${tr(" جديد • ", " new • ")}${metrics.counts.processing}${tr(" معالجة", " in progress")}`, className:"processing"},
-      {label:tr("مكتملة حاليًا", "Completed"), value:metrics.counts.completed, note:tr("وفق آخر حالة ظاهرة", "Current status"), className:"completed"},
-      {label:tr("تحتاج تدخلًا", "Need attention"), value:metrics.counts.failed + metrics.counts.conflict + metrics.overdue + metrics.stale, note:`${metrics.counts.failed}${tr(" فشل • ", " failed • ")}${metrics.counts.conflict}${tr(" تعارض • ", " conflicting • ")}${metrics.overdue}${tr(" متأخر", " overdue")}`, className:(metrics.counts.failed + metrics.counts.conflict + metrics.overdue + metrics.stale) ? "failed" : "completed"},
-      {label:tr("نسبة نجاح الحالة النهائية", "Terminal success rate"), value:`${metrics.success}%`, note:tr("لا تشمل محاولات الفشل التاريخية", "Excludes earlier failed attempts"), className:"gold"},
-      {label:tr("متوسط مدة الإغلاق", "Average time to closure"), value:duration(metrics.averageCycle), note:tr("إنشاء GitHub ← إغلاقه", "From GitHub issue creation to closure"), className:"neutral"}
-    ].map(item => `<article class="request-kpi ${item.className}"><small>${item.label}</small><b>${item.value}</b><span>${item.note}</span></article>`).join("");
+      {label:tr("مسودات مسلّمة", "Drafts delivered"), value:metrics.counts.completed, note:tr("بحسب وسم الطلب", "From the issue status label"), className:"completed"},
+      {label:tr("تحتاج تدخلًا", "Need attention"), value:metrics.attention.length, note:`${metrics.counts.failed}${tr(" فشل • ", " failed • ")}${metrics.counts.conflict}${tr(" تعارض • ", " conflicting • ")}${metrics.overdue}${tr(" متأخر", " overdue")}`, className:(metrics.attention.length) ? "failed" : "completed"},
+      {label:tr("نسبة تسليم المسودات", "Draft delivery share"), value:shareText, note:tr("المسلّمة من الحالات النهائية الظاهرة", "Delivered among visible terminal states"), className:"gold"},
+      {label:tr("مدة معالجة المسودة", "Draft processing time"), value:"—", note:tr("تُقاس من سجل التشغيل الخاص", "Measured in the private execution log"), className:"neutral"}
+    ].map(item => `<article class="request-kpi ${item.className}"><small>${item.label}</small><b>${hasData ? item.value : "—"}</b><span>${item.note}</span></article>`).join("");
 
     const statusOrder = ["completed", "processing", "new", "failed", "conflict", "archived"];
     const statusRows = statusOrder.filter(status => metrics.counts[status]).map(status => {
@@ -332,18 +345,18 @@
       return `<div class="health-row"><span><i class="status-dot ${info.className}"></i>${info.label}</span><div class="health-track"><i class="${info.className}" style="width:${percent}%"></i></div><b>${metrics.counts[status]}</b></div>`;
     }).join("");
     const categories = ["strategy", "client", "compliance", "safety", "partnership", "general"].map(category => ({category, count:requests.filter(issue => requestCategory(issue) === category).length})).filter(item => item.count);
-    $("#deliveryHealth").innerHTML = metrics.total ? `<div class="success-gauge" style="--success:${metrics.success}"><div><b>${metrics.success}%</b><span>${tr("نجاح", "success")}</span></div></div><div class="health-breakdown">${statusRows}</div><div class="category-pills">${categories.map(item => `<span>${categoryInfo(item.category).label}<b>${item.count}</b></span>`).join("")}</div>` : empty(tr("لم تصل طلبات تشغيلية بعد.", "No operational requests yet."));
+    $("#deliveryHealth").innerHTML = metrics.total ? `<div class="success-gauge" style="--success:${metrics.success ?? 0}"><div><b>${shareText}</b><span>${tr("تسليم", "delivered")}</span></div></div><div class="health-breakdown">${statusRows}</div><div class="category-pills">${categories.map(item => `<span>${categoryInfo(item.category).label}<b>${item.count}</b></span>`).join("")}</div>` : empty(hasData ? tr("لا توجد طلبات ضمن النطاق المحدد.", "No requests in this scope.") : sourceText);
 
-    const attention = requests.filter(issue => ["failed", "processing", "new", "conflict"].includes(requestStatus(issue)) || requestFlags(issue).overdue || requestFlags(issue).stale).sort((a, b) => {
+    const attention = [...metrics.attention].sort((a, b) => {
       const order = {conflict:0, failed:1, processing:2, new:3};
-      return (order[requestStatus(a)] ?? 4) - (order[requestStatus(b)] ?? 4) || new Date(a.created_at) - new Date(b.created_at);
+      return (order[requestStatus(a)] ?? 4) - (order[requestStatus(b)] ?? 4) || Date.parse(a.created_at) - Date.parse(b.created_at);
     }).slice(0, 5);
     $("#attentionList").innerHTML = attention.length ? attention.map(issue => {
       const status = statusInfo(requestStatus(issue));
       const flags = requestFlags(issue);
       const flagText = flags.overdue ? tr(" • تجاوز الموعد", " • Overdue") : flags.stale ? tr(" • متوقف عن التحديث", " • No recent updates") : "";
       return `<button class="attention-row" type="button" data-request-number="${issue.number}"><span class="status-dot ${status.className}"></span><div><b>#${issue.number} ${escape(issue.title)}</b><small>${status.label}${flagText}${tr(" • آخر تحديث ", " • Last updated ")}${dateTime(issue.updated_at)}</small></div><em>←</em></button>`;
-    }).join("") : `<div class="all-clear"><span>✓</span><div><b>${tr("لا توجد حالات تحتاج تدخلك", "No requests need your attention")}</b><small>${tr("كل الطلبات التشغيلية في حالة نهائية سليمة.", "No delays, failures or conflicting statuses are currently flagged.")}</small></div></div>`;
+    }).join("") : !hasData ? empty(sourceText) : `<div class="all-clear"><span>✓</span><div><b>${tr("لا توجد حالات تحتاج تدخلك", "No requests need your attention")}</b><small>${tr("لا تظهر حالات تعثر أو تأخير ضمن هذا النطاق.", "No delays, failures or conflicting statuses are currently flagged.")}</small></div></div>`;
 
     renderRequestTable(requests);
   }
@@ -357,7 +370,7 @@
       return matchesQuery && (!statusFilter || requestStatus(issue) === statusFilter) && (!categoryFilter || requestCategory(issue) === categoryFilter);
     }).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
     $("#recordCount").textContent = `${visible.length}${tr(" من ", " of ")}${requests.length}`;
-    if (dragon.loading && !dragon.issues.length) {
+    if (dragon.loading && !dragon.lastSync) {
       $("#requestTable").innerHTML = `<div class="loading-state"><span></span><b>${tr("جاري تحميل طلبات Dragon…", "Loading Dragon requests…")}</b></div>`;
       return;
     }
@@ -366,7 +379,7 @@
       const flags = requestFlags(issue);
       return `<tr class="${flags.overdue || flags.stale || flags.conflict ? "needs-attention" : ""}">
         <td><span class="request-id">#${issue.number}</span></td>
-        <td><button class="request-title" type="button" data-request-number="${issue.number}"><b>${escape(issue.title.replace(/^\[LIVE-START \d+\]\s*/i, ""))}</b><small>${escape((issue.body || "").replace(/\s+/g, " ").slice(0, 105))}${(issue.body || "").length > 105 ? "…" : ""}</small></button></td>
+        <td><button class="request-title" type="button" data-request-number="${issue.number}"><b>${escape(issue.title)}</b><small>${scopeLabel(scopeOf(issue))} · ${escape((issue.body || "").replace(/\s+/g, " ").slice(0, 105))}${(issue.body || "").length > 105 ? "…" : ""}</small></button></td>
         <td><span class="category-badge"><i>${category.code}</i>${category.label}</span></td>
         <td><span class="priority ${priority.className}">${priority.label}</span></td>
         <td><span class="request-status ${status.className}"><i></i>${status.label}</span></td>
@@ -375,13 +388,14 @@
         <td><button class="row-action" type="button" data-request-number="${issue.number}" aria-label="${tr("عرض الطلب رقم", "View request")} ${issue.number}">${tr("عرض", "View")}</button></td>
       </tr>`;
     });
-    $("#requestTable").innerHTML = visible.length ? table([tr("الرقم", "Number"), tr("الطلب", "Request"), tr("المسار", "Category"), tr("الأولوية", "Priority"), tr("الحالة", "Status"), tr("التواصل", "Replies"), tr("آخر تحديث", "Last updated"), ""], rows) : empty(tr("لا توجد طلبات مطابقة للفلاتر الحالية.", "No requests match your filters."));
+    $("#requestTable").innerHTML = visible.length ? table([tr("الرقم", "Number"), tr("الطلب", "Request"), tr("المسار", "Category"), tr("الأولوية", "Priority"), tr("الحالة", "Status"), tr("التواصل", "Replies"), tr("آخر تحديث", "Last updated"), ""], rows) : empty(dragon.error && !dragon.lastSync ? dragon.error : tr("لا توجد طلبات مطابقة للفلاتر الحالية.", "No requests match your filters."));
   }
 
   async function openRequestDetail(number) {
     const issue = dragon.issues.find(item => item.number === Number(number));
     if (!issue) return;
     dragon.selectedNumber = issue.number;
+    $("#copyLatestResponse").disabled = true;
     renderRequestDetail(issue);
     $("#requestDetailDialog").showModal();
     if (dragon.comments.has(issue.number)) return;
@@ -389,15 +403,16 @@
     try {
       dragon.comments.set(issue.number, await fetchPages(`${DRAGON_ISSUE_API}/${issue.number}/comments?per_page=100`, {maxPages:5}));
     } catch (error) {
-      dragon.comments.set(issue.number, {error:error.message});
+      if (dragon.selectedNumber === issue.number) $("#detailThread").innerHTML = empty(error.message);
+      return;
     }
-    renderRequestDetail(issue);
+    if (dragon.selectedNumber === issue.number) renderRequestDetail(issue);
   }
 
   function renderRequestDetail(issue) {
     const status = statusInfo(requestStatus(issue)), category = categoryInfo(requestCategory(issue)), priority = requestPriority(issue);
-    $("#detailHeading").innerHTML = `<small>DRAGON REQUEST #${issue.number}</small><h2>${escape(issue.title.replace(/^\[LIVE-START \d+\]\s*/i, ""))}</h2>`;
-    $("#detailMeta").innerHTML = `<span class="request-status ${status.className}"><i></i>${status.label}</span><span class="category-badge"><i>${category.code}</i>${category.label}</span><span class="priority ${priority.className}">${priority.label}</span><span>${tr("أُنشئ", "Created")} ${dateTime(issue.created_at)}</span><span>${tr("دورة الطلب", "Request duration")} ${duration(cycleMilliseconds(issue))}</span>`;
+    $("#detailHeading").innerHTML = `<small>DRAGON REQUEST #${issue.number}</small><h2>${escape(issue.title)}</h2>`;
+    $("#detailMeta").innerHTML = `<span class="request-status ${status.className}"><i></i>${status.label}</span><span class="category-badge"><i>${category.code}</i>${category.label}</span><span class="priority ${priority.className}">${priority.label}</span><span>${tr("أُنشئ", "Created")} ${dateTime(issue.created_at)}</span><span>${scopeLabel(scopeOf(issue))}</span>`;
     $("#detailRequest").innerHTML = markdown(issue.body);
     $("#detailGithubLink").href = issue.html_url;
     const thread = dragon.comments.get(issue.number);
@@ -552,7 +567,7 @@
   }
   function exportRequests() {
     const requests = scopedRequests();
-    const rows = [["Request ID","Title","Category","Priority","Status","Created At","Updated At","Closed At","Comments","URL"], ...requests.map(issue => [issue.number, issue.title, categoryInfo(requestCategory(issue)).label, requestPriority(issue).label, statusInfo(requestStatus(issue)).label, issue.created_at, issue.updated_at, issue.closed_at || "", issue.comments || 0, issue.html_url])];
+    const rows = [["Request ID","Scope","Title","Category","Priority","Status","Created At","Updated At","Closed At","Comments","URL"], ...requests.map(issue => [issue.number, scopeOf(issue), issue.title, categoryInfo(requestCategory(issue)).label, requestPriority(issue).label, statusInfo(requestStatus(issue)).label, issue.created_at, issue.updated_at, issue.closed_at || "", issue.comments || 0, issue.html_url])];
     const csv = "\uFEFF" + rows.map(row => row.map(value => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     download(`osoul-dragon-requests-${today()}.csv`, csv, "text/csv;charset=utf-8");
     toast(tr("تم تصدير تقرير الطلبات", "Request report exported"));
@@ -580,7 +595,7 @@
     const priorities = {normal:tr("عادية", "Normal"), high:tr("مرتفعة", "High"), urgent:tr("عاجلة", "Urgent")};
     const title = `[${categories[data.category]}] ${data.title.trim()}`;
     const body = `## ${tr("ملخص الطلب", "Request summary")}\n${data.details.trim()}\n\n## ${tr("المخرج المطلوب", "Required deliverable")}\n${data.deliverable.trim()}\n\n## ${tr("بيانات التحكم", "Request parameters")}\n- ${tr("المسار", "Category")}: ${categories[data.category]}\n- ${tr("الأولوية", "Priority")}: ${priorities[data.priority]}\n- ${tr("الموعد المستهدف", "Target date")}: ${data.dueDate || tr("غير محدد", "Not specified")}\n- ${tr("مصدر الطلب", "Source")}: Osoul Command Center v${APP_VERSION}\n- ${tr("تصنيف البيانات: عام / منزوع الحساسية", "Data classification: public / anonymised")}\n\n## ${tr("ضوابط التنفيذ", "Delivery instructions")}\n- ${tr("افصل الحقائق عن الافتراضات.", "Distinguish facts from assumptions.")}\n- ${tr("لا تدّع تنفيذ أي إجراء خارجي دون دليل.", "Verify external actions before reporting them as complete.")}\n- ${tr("وضّح أي معلومات ناقصة أو قرارات تحتاج اعتمادًا.", "Identify missing information and decisions requiring approval.")}`;
-    const url = `${DRAGON_NEW_URL}?${new URLSearchParams({title, body, labels:"dragon-task"})}`;
+    const url = `${DRAGON_NEW_URL}?${new URLSearchParams({title, body, labels:"dragon-task,qa"})}`;
     window.open(url, "_blank", "noopener");
     form.closest("dialog").close();
     form.reset();
@@ -631,6 +646,12 @@
   }
 
   document.addEventListener("click", event => {
+    if (event.target.closest("[data-action=reviewQueue]")) {
+      $("[data-filter=requestScope]").value = "queue";
+      renderRequests();
+      activateView("requests");
+      $("#attentionList").scrollIntoView({block:"center"});
+    }
     const nav = event.target.closest("[data-view]");
     if (nav) activateView(nav.dataset.view);
     const opener = event.target.closest("[data-open]");
@@ -656,7 +677,11 @@
     }
   });
 
-  $$('form[data-form]').forEach(form => form.addEventListener("submit", event => { event.preventDefault(); handleForm(form); }));
+  $$('form[data-form]').forEach(form => form.addEventListener("submit", event => {
+    if (event.submitter?.value === "cancel") return;
+    event.preventDefault();
+    handleForm(form);
+  }));
   $$('[data-search], [data-filter]').forEach(element => element.addEventListener("input", () => {
     if (element.dataset.search === "requests" || element.dataset.filter?.startsWith("request")) renderRequests();
     else renderBusiness();
@@ -679,9 +704,9 @@
   });
 
   const initialView = location.hash.slice(1);
-  if (initialView && $(`#view-${initialView}`)) activateView(initialView);
+  if (initialView && document.getElementById("view-" + initialView)) activateView(initialView);
   renderBusiness();
   renderRequests();
-  loadDragon({quiet:true});
+  loadDragon({force:true, quiet:true});
   setInterval(() => { if (document.visibilityState === "visible") loadDragon({force:true, quiet:true}); }, AUTO_REFRESH_MS);
 })();

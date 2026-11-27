@@ -1,0 +1,23 @@
+name: DRAQON native restore drill
+on:
+  pull_request:
+    paths:
+      - 'automation/e2e/dr/**'
+      - 'supabase/migrations/**'
+      - '.github/workflows/draqon-dr.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-restore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cold restore in isolated native PostgreSQL clusters
+        run: python3 automation/e2e/dr/drill.py --bin-dir "$(pg_config --bindir)" --report "$RUNNER_TEMP/restore-receipt.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: draqon-native-restore-receipt
+          path: ${{ runner.temp }}/restore-receipt.json
+          retention-days: 14

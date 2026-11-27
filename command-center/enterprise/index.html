@@ -8,9 +8,9 @@
   <meta name="description" content="شريك تشغيلي لمُلّاك الفنادق والشقق المخدومة ومشغّليها. نتابع الموردين والعقود والصيانة، ونوثّق جودة التنفيذ عبر نظام أصول.">
   <link rel="icon" href="/brand/osool-mark-v8.svg">
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
-  <link rel="stylesheet" href="/command-center/enterprise/app.css">
+  <link rel="stylesheet" href="/command-center/enterprise/app.css?v=21">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=18" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=28ea47127e" defer></script>
 <link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">انتقل إلى بوابة الدخول</a>
@@ -115,6 +115,55 @@
           <label for="organization-select">المنشأة</label>
           <select id="organization-select"></select>
           <div id="kpi-grid" class="kpi-grid"></div>
+
+          <details id="draqon-building-desk" class="portal-module">
+            <summary>اسأل دراقون عن المنشأة</summary><div data-content></div>
+          </details>
+          <details id="draqon-building-memory" class="portal-module">
+            <summary>سجل المبنى والأصول</summary>
+            <div class="memory-workspace">
+              <label for="memory-site">المبنى</label>
+              <select id="memory-site"></select>
+              <details class="memory-editor"><summary>إضافة مبنى إلى المنظمة</summary><form id="memory-site-create"><label>اسم المبنى<input name="name" required minlength="2" maxlength="180"></label><button>حفظ المبنى</button></form></details>
+              <p id="memory-message" class="memory-message" role="status" aria-live="polite"></p>
+              <div id="memory-site-work" hidden>
+                <div class="memory-grid">
+                  <section class="memory-card">
+                    <h3>الأصول والملصقات</h3>
+                    <form id="memory-scan"><label for="memory-token">امسح ملصق الأصل بقارئ متصل أو أدخل رمزه</label><div class="memory-inline"><input id="memory-token" dir="ltr" name="token" required maxlength="120" autocomplete="off" spellcheck="false"><button>فتح الأصل</button></div></form>
+                    <label class="memory-photo-action" for="memory-photo">التقط صورة لملصق QR أو اختر صورة</label>
+                    <input id="memory-photo" type="file" accept="image/*" capture="environment" aria-describedby="memory-photo-note">
+                    <small id="memory-photo-note">تُقرأ الصورة على جهازك داخل المبنى المحدد.</small>
+                    <label for="memory-asset">اختر من سجل الأصول</label><select id="memory-asset"></select>
+                    <details class="memory-editor"><summary>تسجيل أصل</summary>
+                      <form id="memory-asset-create"><label>رمز الأصل في الموقع<input name="code" required maxlength="80"></label><label>اسم الأصل<input name="name" required minlength="2" maxlength="180"></label><button>حفظ الأصل</button></form>
+                    </details>
+                    <div id="memory-label-output" hidden><div id="memory-label-preview" class="asset-tag"></div><button type="button" id="memory-print">طباعة ملصق الأصل</button></div>
+                  </section>
+                  <section class="memory-card">
+                    <h3>ذاكرة المبنى</h3>
+                    <form id="memory-recall"><label for="memory-search">البحث في السجل</label><div class="memory-inline"><input type="search" id="memory-search" name="query" maxlength="180"><button>استرجاع</button></div><label>نطاق الاسترجاع<select name="scope"></select></label></form>
+                    <p class="memory-caption">كل إدخال محفوظ مع مصدره وتاريخه. تظهر المشاهدات الأحدث أولاً.</p>
+                    <ul id="memory-results" class="memory-records"></ul>
+                    <details class="memory-editor"><summary>تسجيل معلومة موثقة</summary>
+                      <form id="memory-fact-form">
+                        <label>ارتباط المعلومة<select name="asset"><option value="">المبنى</option></select></label>
+                        <label>نوع المعلومة<select name="kind" required></select></label>
+                        <label>القيمة المشاهدة<input name="text" required maxlength="1000" aria-describedby="memory-value-hint"></label><small id="memory-value-hint"></small>
+                        <label>مرجع المصدر<input name="source" required minlength="2" maxlength="400"></label>
+                        <label>تاريخ المشاهدة أو المصدر<input type="date" name="date" required></label>
+                        <button>حفظ المعلومة</button>
+                      </form>
+                    </details>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </details>
+          <details id="facility-council-monitor" class="portal-module"><summary>المراقبة اليومية للمنشأة</summary><div data-content></div></details>
+          <details id="facility-pm" class="portal-module"><summary>خطة الصيانة الوقائية</summary><div data-content></div></details>
+          <details id="facility-insights" class="portal-module"><summary>تحليل المنشأة والموقع (SWOT)</summary><div data-content></div></details>
+          <details id="facility-benchmark" class="portal-module"><summary>مقارنة أسعار الخدمات والمواد</summary><div data-content></div></details>
           <details id="facility-operations">
             <summary>إدارة المرافق والأصول</summary>
             <p id="facility-status" role="status"></p>
@@ -140,6 +189,15 @@
             </form>
             <h3>أوامر العمل والزيارات</h3>
             <ul id="facility-work-orders"></ul>
+          </details>
+          <details id="draqon-field-handoff">
+            <summary>تحويل مسودة دراقون إلى أمر عمل</summary><p>أدخل مرجع المسودة يدويًا وراجع نطاقها. يعتمدها شخص آخر ويختار منسّقًا؛ ويمكن لأعضاء الفريق المخولين تسجيل العمل والزيارات بأسمائهم. إيقاف التجربة يوقف إصدار أوامر جديدة وتستمر متابعة الأوامر القائمة. يتطلب الشراء اعتمادًا ماليًا منفصلًا.</p><p id="draqon-field-status" role="status"></p>
+            <form id="draqon-field-form">
+              <label>رقم طلب GitHub العام <input type="number" name="issue" min="1" max="2147483647" required></label>
+              <label>الأصل (أول ١٠٠ بحسب الرمز في التجربة) <select name="asset" required></select></label>
+              <label>ملخص العمل الروتيني بعد مراجعة المسودة <input name="summary" required minlength="3" maxlength="300"></label>
+              <button type="submit">إرسال للاعتماد</button>
+            </form><h3>أحدث ١٠٠ مقترح وأثرها الميداني</h3><ul id="draqon-field-queue"></ul>
           </details>
           <p class="privacy-note">البيانات المعروضة خاضعة للصلاحيات وسجل التدقيق. لا تشارك لقطات الشاشة أو الملفات خارج القنوات المعتمدة.</p>
         </div>

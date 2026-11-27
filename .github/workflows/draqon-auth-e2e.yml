@@ -1,0 +1,40 @@
+name: DRAQON verified field handoff
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-supabase:
+    name: Local Auth, MFA, RLS and field receipts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.67.3
+      - name: Install repository dependencies
+        run: npm ci
+      - name: Install Chromium for isolated user journeys
+        run: |
+          npm install --prefix "$RUNNER_TEMP/draqon-browser" --no-save --no-audit playwright@1.57.0
+          "$RUNNER_TEMP/draqon-browser/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/draqon-browser/node_modules" >> "$GITHUB_ENV"
+      - name: Exercise local Auth and PostgREST
+        env:
+          DRAQON_UAT_REPORT_DIR: ${{ runner.temp }}/draqon-field-receipts
+        run: bash automation/e2e/run-local-auth.sh
+      - name: Retain sanitized assertions
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: draqon-local-auth-e2e
+          path: ${{ runner.temp }}/draqon-field-receipts/*.json
+          if-no-files-found: error
+          retention-days: 14

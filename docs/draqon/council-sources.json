@@ -1,0 +1,154 @@
+[
+  {
+    "id": "01",
+    "publisher": "وزارة السياحة السعودية",
+    "claim": "إصدار ترخيص تشغيلي جديد لمرفق ضيافة سياحي؛ تحقّق من نوع النشاط والمرفق.",
+    "kind": "خدمة رسمية",
+    "url": "https://mt.gov.sa/ar/eservices/request-to-issue-new-tourism-accommodation-facility-license",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "02",
+    "publisher": "المركز السعودي للتنافسية والأعمال",
+    "claim": "إصدار رخصة بلدية تجارية؛ المتطلبات والربط مع اشتراطات بلدي وسلامة.",
+    "kind": "خدمة رسمية",
+    "url": "https://scbc.gov.sa/eservices/details/3bad7cc9-e6c1-4753-08d2-08dbf015747a",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "03",
+    "publisher": "المديرية العامة للدفاع المدني",
+    "claim": "بوابة سلامة؛ التحقق من خدمة التصريح والمسار المناسب ومرجع الترخيص.",
+    "kind": "بوابة رسمية",
+    "url": "https://salamah.998.gov.sa/",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "04",
+    "publisher": "المركز السعودي لكود البناء",
+    "claim": "الكود الميكانيكي SBC 501، إصدار 2024؛ المرجع الفني للتحقق من اشتراط العمل المنطبق.",
+    "kind": "كود فني",
+    "url": "https://www.sbc.gov.sa/ar/BC/Pages/BuildingCode/BCDetails.aspx?codeId=501&year=2024",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "05",
+    "publisher": "سدايا",
+    "claim": "نظام حماية البيانات الشخصية؛ نطاق المعالجة وحقوق أصحاب البيانات.",
+    "kind": "نص نظامي",
+    "url": "https://dgp.sdaia.gov.sa/wps/portal/pdp/knowledgecenter/details/PDPL",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "06",
+    "publisher": "سدايا",
+    "claim": "اللائحة التنفيذية؛ ضوابط التسويق المباشر والموافقة وسحبها.",
+    "kind": "لائحة",
+    "url": "https://dgp.sdaia.gov.sa/wps/portal/pdp/knowledgecenter/details/PDPL2",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "07",
+    "publisher": "سدايا",
+    "claim": "لائحة نقل البيانات الشخصية إلى خارج المملكة؛ شروط النقل والضمانات وتقييم المخاطر في الحالات المنطبقة.",
+    "kind": "لائحة",
+    "url": "https://sdaia.gov.sa/Documents/RegulationonPersonalDataEN.pdf",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "08",
+    "publisher": "وزارة التجارة",
+    "claim": "دليل حقوق وواجبات المستهلك؛ فصل ضوابط الإعلان الإلكتروني والتضليل.",
+    "kind": "إرشاد رسمي",
+    "url": "https://mc.gov.sa/ar/guides/customerguide/Documents/MCIDoc.pdf",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "09",
+    "publisher": "وزارة التجارة",
+    "claim": "ضوابط التخفيضات التجارية للمنشآت والمتاجر الإلكترونية، 28 فبراير 2024.",
+    "kind": "إرشاد رسمي",
+    "url": "https://mc.gov.sa/ar/mediacenter/News/Pages/28-02-24-01.aspx",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "10",
+    "publisher": "IFMA",
+    "claim": "تعريف إدارة المرافق ووظيفتها في ربط الأشخاص والمكان والعمليات.",
+    "kind": "مرجع مهني",
+    "url": "https://www.ifma.org/about/what-is-fm/",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "11",
+    "publisher": "ISO",
+    "claim": "ISO 41001:2018؛ إطار نظام إدارة المرافق وتلبية احتياجات الجهة المستفيدة.",
+    "kind": "معيار منشور",
+    "url": "https://www.iso.org/standard/68021.html",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "12",
+    "publisher": "JLL",
+    "claim": "دليل تحسين قيمة الفنادق، 6 يونيو 2025؛ مراجعة افتراضات المشغل والعائد وربط رأس المال بهدف المالك.",
+    "kind": "منهج منشور",
+    "url": "https://www.jll.com/en-in/guides/teaming-up-for-value-up-construction",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "13",
+    "publisher": "CBRE",
+    "claim": "Global Hotel Asset Management؛ التقييم التشغيلي والمقارنة المرجعية وتقييم فرص التحسين.",
+    "kind": "منهج منشور",
+    "url": "https://www.cbre.com/services/property-types/hotels/global-hotel-asset-management",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "14",
+    "publisher": "الهيئة السعودية للمراجعين والمحاسبين",
+    "claim": "وثيقة اعتماد معايير التقرير المالي في المملكة؛ تعيين الإطار المنطبق على المنشأة.",
+    "kind": "تبنٍّ محاسبي",
+    "url": "https://www.socpa.org.sa/Socpa/Professional-standards/Accounting-standards/Auditing-Standards-Endorsed/2905.aspx",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "15",
+    "publisher": "مؤسسة المعايير الدولية للتقرير المالي",
+    "claim": "IAS 16؛ الاعتراف بالممتلكات والآلات والمعدات وقياسها وفق شروط الإطار المنطبق.",
+    "kind": "معيار محاسبي",
+    "url": "https://www.ifrs.org/issued-standards/list-of-standards/ias-16-property-plant-and-equipment/",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "16",
+    "publisher": "مؤسسة المعايير الدولية للتقرير المالي",
+    "claim": "IAS 7؛ بيان التدفقات النقدية وتمييز التدفقات التشغيلية والاستثمارية والتمويلية.",
+    "kind": "معيار محاسبي",
+    "url": "https://www.ifrs.org/issued-standards/list-of-standards/ias-7-statement-of-cash-flows/",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "17",
+    "publisher": "وزارة الخزانة البريطانية",
+    "claim": "The Green Book، إصدار 2026؛ تقييم الخيارات والحساسية وقيم التحوّل. يستخدم هنا كمنهج تحليل قابل للتكييف.",
+    "kind": "منهج تقييم",
+    "url": "https://www.gov.uk/government/publications/the-green-book--2/the-green-book-2026",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "18",
+    "publisher": "معهد إدارة المشاريع PMI",
+    "claim": "PMBOK Guide، الطبعة الثامنة؛ إدارة نطاق العمل والقيمة والمخاطر وتكييف حوكمة المشروع.",
+    "kind": "منهج مهني",
+    "url": "https://www.pmi.org/standards/pmbok",
+    "verified_on": "2026-11-26"
+  },
+  {
+    "id": "19",
+    "publisher": "Google Ads",
+    "claim": "Conversion Lift؛ الفرق في التحويلات باستخدام مجموعة معالجة ومجموعة مقارنة حيث تتوافر الشروط.",
+    "kind": "منهج قياس",
+    "url": "https://support.google.com/google-ads/answer/12003020?hl=en",
+    "verified_on": "2026-11-26"
+  }
+]
