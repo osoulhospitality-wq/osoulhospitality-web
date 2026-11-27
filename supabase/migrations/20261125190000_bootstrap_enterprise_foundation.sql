@@ -1,0 +1,659 @@
+-- Bootstrap the previously manual enterprise foundation on an empty Supabase project.
+-- Existing installations follow a read-only adoption path. Partial or incompatible
+-- prerequisites require explicit reconciliation. Unrelated grants and records stay intact.
+-- Install this version before 20261125193000_add_facility_operations.
+do $migration$
+declare
+  foundation_tables text[] := array['organizations', 'organization_members', 'suppliers', 'products', 'quotes', 'quote_lines', 'contracts', 'requests', 'request_events', 'decisions', 'approvals', 'documents', 'audit_events'];
+  relation_name text;
+  found_count integer;
+  control_record record;
+  prior_path text := current_setting('search_path');
+begin
+  select count(*) into found_count from unnest(foundation_tables) as t(name)
+    where to_regclass('public.' || t.name) is not null;
+  if found_count = 0 then
+    -- Plain CREATE fails atomically on conflicting pre-existing types, functions,
+    -- triggers, policies or a bucket. Do not replace or adopt such objects piecemeal.
+    execute $foundation$
+create extension if not exists pgcrypto;
+create schema if not exists private;
+
+create type public.app_role as enum ('owner','approver','analyst','viewer');
+create type public.request_status as enum ('new','accepted','processing','review','completed','failed','cancelled');
+create type public.request_priority as enum ('normal','high','urgent');
+create type public.supplier_status as enum ('under_review','approved','suspended');
+create type public.contract_status as enum ('draft','review','active','expired','terminated');
+create type public.approval_status as enum ('pending','approved','rejected','changes_requested');
+
+create table public.organizations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (char_length(name) between 2 and 180),
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now()
+);
+
+create table public.organization_members (
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  full_name text not null check (char_length(full_name) between 2 and 180),
+  role public.app_role not null default 'viewer',
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  primary key (organization_id, user_id)
+);
+
+create table public.suppliers (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  name text not null check (char_length(name) between 2 and 240),
+  cr_number text,
+  tax_number text,
+  city text,
+  status public.supplier_status not null default 'under_review',
+  coverage text,
+  payment_terms text,
+  qualification_score numeric(5,2) check (qualification_score between 0 and 100),
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (organization_id, cr_number)
+);
+
+create table public.products (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  supplier_id uuid not null references public.suppliers(id) on delete restrict,
+  sku text not null,
+  name text not null,
+  category text,
+  pack_price numeric(14,2) not null check (pack_price >= 0),
+  standard_qty numeric(14,3) not null check (standard_qty > 0),
+  unit text not null,
+  moq numeric(14,3) not null default 1 check (moq > 0),
+  currency char(3) not null default 'SAR',
+  valid_from date,
+  valid_until date,
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (organization_id, supplier_id, sku),
+  check (valid_until is null or valid_from is null or valid_until >= valid_from)
+);
+
+create table public.quotes (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  supplier_id uuid not null references public.suppliers(id) on delete restrict,
+  quote_number text,
+  quote_date date,
+  valid_until date,
+  currency char(3) not null default 'SAR',
+  delivery_cost numeric(14,2) not null default 0 check (delivery_cost >= 0),
+  discount numeric(14,2) not null default 0 check (discount >= 0),
+  tax_rate numeric(5,2) not null default 15 check (tax_rate between 0 and 100),
+  source_document_id uuid,
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (organization_id, supplier_id, quote_number)
+);
+
+create table public.quote_lines (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  quote_id uuid not null references public.quotes(id) on delete cascade,
+  product_id uuid references public.products(id) on delete restrict,
+  description text not null,
+  quantity numeric(14,3) not null check (quantity > 0),
+  pack_price numeric(14,2) not null check (pack_price >= 0),
+  standard_qty numeric(14,3) not null check (standard_qty > 0),
+  unit text not null,
+  created_at timestamptz not null default now()
+);
+
+create table public.contracts (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  supplier_id uuid references public.suppliers(id) on delete restrict,
+  name text not null,
+  building text,
+  annual_value numeric(14,2) check (annual_value >= 0),
+  currency char(3) not null default 'SAR',
+  start_date date,
+  end_date date,
+  notice_days integer not null default 90 check (notice_days between 0 and 730),
+  probability smallint check (probability between 1 and 5),
+  impact smallint check (impact between 1 and 5),
+  risk_text text,
+  status public.contract_status not null default 'draft',
+  version integer not null default 1 check (version > 0),
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (end_date is null or start_date is null or end_date >= start_date)
+);
+
+create table public.requests (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  title text not null check (char_length(title) between 3 and 240),
+  body text not null check (char_length(body) between 3 and 20000),
+  category text not null default 'general',
+  priority public.request_priority not null default 'normal',
+  status public.request_status not null default 'new',
+  due_at timestamptz,
+  requester_id uuid not null references auth.users(id),
+  assigned_to uuid references auth.users(id),
+  external_reference text,
+  source text not null default 'command_center',
+  classification text not null default 'internal',
+  created_at timestamptz not null default now(),
+  accepted_at timestamptz,
+  completed_at timestamptz,
+  updated_at timestamptz not null default now(),
+  unique (organization_id, external_reference)
+);
+
+create table public.request_events (
+  id bigint generated always as identity primary key,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  request_id uuid not null references public.requests(id) on delete cascade,
+  event_type text not null,
+  status public.request_status,
+  execution_id text,
+  idempotency_key text,
+  message text,
+  evidence jsonb not null default '{}'::jsonb,
+  actor_id uuid references auth.users(id),
+  occurred_at timestamptz not null default now(),
+  unique (organization_id, idempotency_key, event_type)
+);
+
+create table public.decisions (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  subject text not null,
+  decision text not null,
+  rationale text not null,
+  evidence_reference text,
+  approver_id uuid not null references auth.users(id),
+  decided_at timestamptz not null default now()
+);
+
+create table public.approvals (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  entity_type text not null,
+  entity_id uuid not null,
+  status public.approval_status not null default 'pending',
+  requested_by uuid not null references auth.users(id),
+  decided_by uuid references auth.users(id),
+  rationale text,
+  requested_at timestamptz not null default now(),
+  decided_at timestamptz,
+  check ((status = 'pending' and decided_at is null) or status <> 'pending')
+);
+
+create table public.documents (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  storage_path text not null unique,
+  file_name text not null,
+  mime_type text not null,
+  file_size bigint not null check (file_size between 1 and 26214400),
+  sha256 text not null check (sha256 ~ '^[0-9a-f]{64}$'),
+  document_type text not null,
+  reference_text text,
+  ocr_status text not null default 'pending' check (ocr_status in ('pending','processing','completed','failed','not_required')),
+  ocr_payload jsonb,
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now(),
+  unique (organization_id, sha256)
+);
+
+create table public.audit_events (
+  id bigint generated always as identity primary key,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  actor_id uuid references auth.users(id),
+  action text not null,
+  entity_type text not null,
+  entity_id text,
+  details jsonb not null default '{}'::jsonb,
+  occurred_at timestamptz not null default now()
+);
+
+alter table public.suppliers add constraint suppliers_org_id_key unique (organization_id, id);
+alter table public.products add constraint products_org_id_key unique (organization_id, id);
+alter table public.quotes add constraint quotes_org_id_key unique (organization_id, id);
+alter table public.requests add constraint requests_org_id_key unique (organization_id, id);
+alter table public.documents add constraint documents_org_id_key unique (organization_id, id);
+alter table public.products add constraint products_supplier_same_org_fk
+  foreign key (organization_id, supplier_id) references public.suppliers (organization_id, id) on delete restrict;
+alter table public.quotes add constraint quotes_supplier_same_org_fk
+  foreign key (organization_id, supplier_id) references public.suppliers (organization_id, id) on delete restrict;
+alter table public.quote_lines add constraint quote_lines_quote_same_org_fk
+  foreign key (organization_id, quote_id) references public.quotes (organization_id, id) on delete cascade;
+alter table public.quote_lines add constraint quote_lines_product_same_org_fk
+  foreign key (organization_id, product_id) references public.products (organization_id, id) on delete restrict;
+alter table public.contracts add constraint contracts_supplier_same_org_fk
+  foreign key (organization_id, supplier_id) references public.suppliers (organization_id, id) on delete restrict;
+alter table public.request_events add constraint request_events_request_same_org_fk
+  foreign key (organization_id, request_id) references public.requests (organization_id, id) on delete cascade;
+alter table public.quotes add constraint quotes_document_same_org_fk
+  foreign key (organization_id, source_document_id) references public.documents (organization_id, id) on delete restrict;
+
+create index organization_members_user_idx on public.organization_members (user_id) where active;
+create index suppliers_org_status_idx on public.suppliers (organization_id, status);
+create index products_org_supplier_idx on public.products (organization_id, supplier_id);
+create index products_org_category_idx on public.products (organization_id, category);
+create index quotes_org_supplier_date_idx on public.quotes (organization_id, supplier_id, quote_date desc);
+create index quote_lines_quote_idx on public.quote_lines (quote_id);
+create index contracts_org_end_idx on public.contracts (organization_id, end_date) where status in ('active','review');
+create index contracts_supplier_idx on public.contracts (supplier_id);
+create index requests_org_status_priority_idx on public.requests (organization_id, status, priority, updated_at desc);
+create index requests_org_due_idx on public.requests (organization_id, due_at) where status not in ('completed','cancelled');
+create index request_events_request_time_idx on public.request_events (request_id, occurred_at);
+create index approvals_org_status_idx on public.approvals (organization_id, status, requested_at);
+create index documents_org_type_idx on public.documents (organization_id, document_type, created_at desc);
+create index audit_org_time_idx on public.audit_events (organization_id, occurred_at desc);
+create index organizations_created_by_idx on public.organizations (created_by);
+create index suppliers_created_by_idx on public.suppliers (created_by);
+create index products_created_by_idx on public.products (created_by);
+create index products_supplier_idx on public.products (supplier_id);
+create index quotes_created_by_idx on public.quotes (created_by);
+create index quotes_supplier_idx on public.quotes (supplier_id);
+create index quotes_org_document_idx on public.quotes (organization_id, source_document_id);
+create index quote_lines_org_idx on public.quote_lines (organization_id);
+create index quote_lines_product_idx on public.quote_lines (product_id);
+create index quote_lines_org_product_idx on public.quote_lines (organization_id, product_id);
+create index quote_lines_org_quote_idx on public.quote_lines (organization_id, quote_id);
+create index contracts_created_by_idx on public.contracts (created_by);
+create index contracts_org_supplier_idx on public.contracts (organization_id, supplier_id);
+create index requests_requester_idx on public.requests (requester_id);
+create index requests_assigned_to_idx on public.requests (assigned_to);
+create index request_events_actor_idx on public.request_events (actor_id);
+create index request_events_org_request_idx on public.request_events (organization_id, request_id);
+create index decisions_org_idx on public.decisions (organization_id);
+create index decisions_approver_idx on public.decisions (approver_id);
+create index approvals_requested_by_idx on public.approvals (requested_by);
+create index approvals_decided_by_idx on public.approvals (decided_by);
+create index documents_created_by_idx on public.documents (created_by);
+create index audit_events_actor_idx on public.audit_events (actor_id);
+
+create function private.current_org_role(target_org uuid)
+returns public.app_role
+language sql stable security definer
+set search_path = ''
+as $$
+  select m.role
+  from public.organization_members m
+  where m.organization_id = target_org
+    and m.user_id = (select auth.uid())
+    and m.active = true
+$$;
+
+create function private.has_org_access(target_org uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$ select private.current_org_role(target_org) is not null $$;
+
+create function private.can_write_org(target_org uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$ select private.current_org_role(target_org) in ('owner','approver','analyst') $$;
+
+create function private.can_approve_org(target_org uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$ select private.current_org_role(target_org) in ('owner','approver') $$;
+
+create function private.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create function private.set_created_by()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.created_by = (select auth.uid());
+  return new;
+end;
+$$;
+
+-- Multi-tenant rows never move between organizations after creation. This
+-- closes a subtle cross-tenant reassignment path for users who belong to more
+-- than one organization.
+create function private.prevent_org_reassignment()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.organization_id is distinct from old.organization_id then
+    raise exception 'organization_id is immutable' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger suppliers_actor before insert on public.suppliers for each row execute function private.set_created_by();
+create trigger products_actor before insert on public.products for each row execute function private.set_created_by();
+create trigger quotes_actor before insert on public.quotes for each row execute function private.set_created_by();
+create trigger contracts_actor before insert on public.contracts for each row execute function private.set_created_by();
+create trigger documents_actor before insert on public.documents for each row execute function private.set_created_by();
+create trigger suppliers_updated before update on public.suppliers for each row execute function private.set_updated_at();
+create trigger products_updated before update on public.products for each row execute function private.set_updated_at();
+create trigger quotes_updated before update on public.quotes for each row execute function private.set_updated_at();
+create trigger contracts_updated before update on public.contracts for each row execute function private.set_updated_at();
+create trigger requests_updated before update on public.requests for each row execute function private.set_updated_at();
+
+create trigger organization_members_org_immutable before update on public.organization_members for each row execute function private.prevent_org_reassignment();
+create trigger suppliers_org_immutable before update on public.suppliers for each row execute function private.prevent_org_reassignment();
+create trigger products_org_immutable before update on public.products for each row execute function private.prevent_org_reassignment();
+create trigger quotes_org_immutable before update on public.quotes for each row execute function private.prevent_org_reassignment();
+create trigger quote_lines_org_immutable before update on public.quote_lines for each row execute function private.prevent_org_reassignment();
+create trigger contracts_org_immutable before update on public.contracts for each row execute function private.prevent_org_reassignment();
+create trigger requests_org_immutable before update on public.requests for each row execute function private.prevent_org_reassignment();
+create trigger request_events_org_immutable before update on public.request_events for each row execute function private.prevent_org_reassignment();
+create trigger decisions_org_immutable before update on public.decisions for each row execute function private.prevent_org_reassignment();
+create trigger approvals_org_immutable before update on public.approvals for each row execute function private.prevent_org_reassignment();
+create trigger documents_org_immutable before update on public.documents for each row execute function private.prevent_org_reassignment();
+
+-- A newly created tenant must immediately have an owner; otherwise its own RLS
+-- boundary would make it unreachable to the creator.
+create function private.bootstrap_org_owner()
+returns trigger
+language plpgsql security definer
+set search_path = ''
+as $$
+declare
+  owner_name text;
+begin
+  select coalesce(
+    nullif(raw_user_meta_data->>'full_name', ''),
+    nullif(email, ''),
+    'Osoul Owner'
+  )
+  into owner_name
+  from auth.users
+  where id = new.created_by;
+
+  insert into public.organization_members (organization_id, user_id, full_name, role, active)
+  values (new.id, new.created_by, coalesce(owner_name, 'Osoul Owner'), 'owner', true)
+  on conflict (organization_id, user_id) do update
+    set role = 'owner', active = true;
+
+  return new;
+end;
+$$;
+
+create trigger organization_owner_bootstrap
+after insert on public.organizations
+for each row execute function private.bootstrap_org_owner();
+
+create function private.append_audit_event()
+returns trigger
+language plpgsql security definer
+set search_path = ''
+as $$
+declare
+  record_data jsonb;
+begin
+  record_data := case when tg_op = 'DELETE' then to_jsonb(old) else to_jsonb(new) end;
+  insert into public.audit_events (organization_id, actor_id, action, entity_type, entity_id, details)
+  values (
+    (record_data->>'organization_id')::uuid,
+    (select auth.uid()),
+    lower(tg_op),
+    tg_table_name,
+    record_data->>'id',
+    jsonb_build_object('source', 'database_trigger')
+  );
+  return case when tg_op = 'DELETE' then old else new end;
+end;
+$$;
+
+create trigger suppliers_audit after insert or update or delete on public.suppliers for each row execute function private.append_audit_event();
+create trigger products_audit after insert or update or delete on public.products for each row execute function private.append_audit_event();
+create trigger quotes_audit after insert or update or delete on public.quotes for each row execute function private.append_audit_event();
+create trigger contracts_audit after insert or update or delete on public.contracts for each row execute function private.append_audit_event();
+create trigger requests_audit after insert or update or delete on public.requests for each row execute function private.append_audit_event();
+create trigger decisions_audit after insert or update or delete on public.decisions for each row execute function private.append_audit_event();
+create trigger approvals_audit after insert or update or delete on public.approvals for each row execute function private.append_audit_event();
+create trigger documents_audit after insert or update or delete on public.documents for each row execute function private.append_audit_event();
+
+-- A pre-existing private schema may serve other modules. Scope ACLs to our own objects.
+grant usage on schema private to authenticated;
+revoke execute on function private.current_org_role(uuid), private.has_org_access(uuid), private.can_write_org(uuid), private.can_approve_org(uuid), private.set_updated_at(), private.set_created_by(), private.prevent_org_reassignment(), private.bootstrap_org_owner(), private.append_audit_event() from public, anon;
+grant execute on function private.current_org_role(uuid), private.has_org_access(uuid), private.can_write_org(uuid), private.can_approve_org(uuid) to authenticated;
+
+
+alter table public.organizations enable row level security;
+alter table public.organization_members enable row level security;
+alter table public.suppliers enable row level security;
+alter table public.products enable row level security;
+alter table public.quotes enable row level security;
+alter table public.quote_lines enable row level security;
+alter table public.contracts enable row level security;
+alter table public.requests enable row level security;
+alter table public.request_events enable row level security;
+alter table public.decisions enable row level security;
+alter table public.approvals enable row level security;
+alter table public.documents enable row level security;
+alter table public.audit_events enable row level security;
+
+create policy "create organization" on public.organizations for insert to authenticated
+with check (created_by = (select auth.uid()));
+create policy "members read organization" on public.organizations for select to authenticated
+using (private.has_org_access(id));
+create policy "owners update organization" on public.organizations for update to authenticated
+using (private.current_org_role(id) = 'owner') with check (private.current_org_role(id) = 'owner');
+
+create policy "members read membership" on public.organization_members for select to authenticated
+using (private.has_org_access(organization_id));
+create policy "owners add membership" on public.organization_members for insert to authenticated
+with check (private.current_org_role(organization_id) = 'owner');
+create policy "owners update membership" on public.organization_members for update to authenticated
+using (private.current_org_role(organization_id) = 'owner')
+with check (private.current_org_role(organization_id) = 'owner');
+create policy "owners delete membership" on public.organization_members for delete to authenticated
+using (private.current_org_role(organization_id) = 'owner');
+
+create policy "members read suppliers" on public.suppliers for select to authenticated using (private.has_org_access(organization_id));
+create policy "team creates suppliers" on public.suppliers for insert to authenticated with check (private.can_write_org(organization_id));
+create policy "team updates suppliers" on public.suppliers for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team deletes suppliers" on public.suppliers for delete to authenticated using (private.can_write_org(organization_id));
+create policy "members read products" on public.products for select to authenticated using (private.has_org_access(organization_id));
+create policy "team creates products" on public.products for insert to authenticated with check (private.can_write_org(organization_id));
+create policy "team updates products" on public.products for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team deletes products" on public.products for delete to authenticated using (private.can_write_org(organization_id));
+create policy "members read quotes" on public.quotes for select to authenticated using (private.has_org_access(organization_id));
+create policy "team creates quotes" on public.quotes for insert to authenticated with check (private.can_write_org(organization_id));
+create policy "team updates quotes" on public.quotes for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team deletes quotes" on public.quotes for delete to authenticated using (private.can_write_org(organization_id));
+create policy "members read quote lines" on public.quote_lines for select to authenticated using (private.has_org_access(organization_id));
+create policy "team creates quote lines" on public.quote_lines for insert to authenticated with check (private.can_write_org(organization_id));
+create policy "team updates quote lines" on public.quote_lines for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "team deletes quote lines" on public.quote_lines for delete to authenticated using (private.can_write_org(organization_id));
+create policy "members read contracts" on public.contracts for select to authenticated using (private.has_org_access(organization_id));
+create policy "approvers create contracts" on public.contracts for insert to authenticated with check (private.can_approve_org(organization_id));
+create policy "approvers update contracts" on public.contracts for update to authenticated using (private.can_approve_org(organization_id)) with check (private.can_approve_org(organization_id));
+create policy "approvers delete contracts" on public.contracts for delete to authenticated using (private.can_approve_org(organization_id));
+create policy "members read requests" on public.requests for select to authenticated using (private.has_org_access(organization_id));
+create policy "team creates requests" on public.requests for insert to authenticated with check (private.can_write_org(organization_id) and requester_id = (select auth.uid()));
+create policy "team updates requests" on public.requests for update to authenticated using (private.can_write_org(organization_id)) with check (private.can_write_org(organization_id));
+create policy "members read request events" on public.request_events for select to authenticated using (private.has_org_access(organization_id));
+create policy "team appends request events" on public.request_events for insert to authenticated with check (private.can_write_org(organization_id) and (actor_id is null or actor_id = (select auth.uid())));
+create policy "members read decisions" on public.decisions for select to authenticated using (private.has_org_access(organization_id));
+create policy "approvers create decisions" on public.decisions for insert to authenticated with check (private.can_approve_org(organization_id) and approver_id = (select auth.uid()));
+create policy "members read approvals" on public.approvals for select to authenticated using (private.has_org_access(organization_id));
+create policy "team requests approvals" on public.approvals for insert to authenticated with check (private.can_write_org(organization_id) and requested_by = (select auth.uid()));
+create policy "approvers decide approvals" on public.approvals for update to authenticated using (private.can_approve_org(organization_id)) with check (private.can_approve_org(organization_id));
+create policy "members read documents" on public.documents for select to authenticated using (private.has_org_access(organization_id));
+create policy "team registers documents" on public.documents for insert to authenticated with check (private.can_write_org(organization_id) and created_by = (select auth.uid()));
+create policy "approvers update documents" on public.documents for update to authenticated using (private.can_approve_org(organization_id)) with check (private.can_approve_org(organization_id));
+create policy "owners read audit" on public.audit_events for select to authenticated using (private.current_org_role(organization_id) = 'owner');
+
+-- MFA is enforced at the database boundary, not only in the interface.
+do $$
+declare
+  table_name text;
+begin
+  foreach table_name in array array[
+    'organizations','organization_members','suppliers','products','quotes','quote_lines',
+    'contracts','requests','request_events','decisions','approvals','documents','audit_events'
+  ]
+  loop
+    execute format(
+      'create policy %I on public.%I as restrictive for all to authenticated using (((select auth.jwt())->>''aal'') = ''aal2'') with check (((select auth.jwt())->>''aal'') = ''aal2'')',
+      'mfa required', table_name
+    );
+  end loop;
+end;
+$$;
+
+revoke all on public.organizations, public.organization_members, public.suppliers, public.products, public.quotes, public.quote_lines, public.contracts, public.requests, public.request_events, public.decisions, public.approvals, public.documents, public.audit_events from public, anon, authenticated;
+grant select, insert, update, delete on public.organizations, public.organization_members, public.suppliers, public.products, public.quotes, public.quote_lines, public.contracts, public.requests, public.decisions, public.approvals, public.documents to authenticated;
+grant select, insert on public.request_events to authenticated;
+grant select on public.audit_events to authenticated;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'command-center-documents',
+  'command-center-documents',
+  false,
+  26214400,
+  array['application/pdf','image/png','image/jpeg','text/csv','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+);
+
+create policy "members read private documents" on storage.objects for select to authenticated
+using (
+  bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
+  and private.has_org_access(
+    case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      then ((storage.foldername(name))[1])::uuid else null end
+  )
+);
+
+create policy "team uploads private documents" on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
+  and private.can_write_org(
+    case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      then ((storage.foldername(name))[1])::uuid else null end
+  )
+  and owner_id = (select auth.uid()::text)
+);
+
+create policy "approvers manage private documents" on storage.objects for update to authenticated
+using (
+  bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
+  and private.can_approve_org(
+    case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      then ((storage.foldername(name))[1])::uuid else null end
+  )
+)
+with check (
+  bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
+  and private.can_approve_org(
+    case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      then ((storage.foldername(name))[1])::uuid else null end
+  )
+);
+
+create policy "owners delete private documents" on storage.objects for delete to authenticated
+using (
+  bucket_id = 'command-center-documents'
+  and ((select auth.jwt())->>'aal') = 'aal2'
+  and private.current_org_role(
+    case when (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      then ((storage.foldername(name))[1])::uuid else null end
+  ) = 'owner'
+);
+$foundation$;
+  elsif found_count <> cardinality(foundation_tables) then
+    raise exception 'Incomplete enterprise foundation: resolve the existing schema before migration' using errcode='55000';
+  end if;
+
+  -- Validate required catalog and authorization contracts on both bootstrap and adoption.
+  -- In particular, do not adopt a permissive grant with no mandatory MFA condition.
+  perform set_config('search_path','pg_catalog,public',true);
+  -- Fingerprint the reviewed PostgreSQL policies (roles by name, never OID).
+  -- A custom policy requires reviewing that installation before adoption.
+  if (select md5(string_agg(concat_ws('|',n.nspname,c.relname,p.polname,p.polcmd,p.polpermissive,
+      (select string_agg(r.rolname,',' order by r.rolname) from pg_roles r where r.oid=any(p.polroles)),
+      pg_get_expr(p.polqual,p.polrelid), pg_get_expr(p.polwithcheck,p.polrelid)), chr(10) order by n.nspname collate "C",c.relname collate "C",p.polname collate "C")) digest
+    from pg_policy p join pg_class c on c.oid=p.polrelid join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relname = any(foundation_tables)) is distinct from '94f2aae34523121a9c25105f2a7831e4' then
+    raise exception 'Incompatible foundation policies: reconcile policy changes before adoption' using errcode='55000';
+  end if;
+  foreach relation_name in array foundation_tables loop
+    if not exists (
+      select 1 from pg_class c join pg_policy p on p.polrelid = c.oid
+      where c.oid = to_regclass('public.' || relation_name) and c.relkind='r' and c.relrowsecurity
+        and p.polname='mfa required' and not p.polpermissive and p.polcmd='*'
+        and p.polroles = array['authenticated'::regrole::oid]
+        and pg_get_expr(p.polqual,p.polrelid) like '%auth.jwt()%'
+        and pg_get_expr(p.polqual,p.polrelid) like '%''aal2''%'
+        and pg_get_expr(p.polqual,p.polrelid) = pg_get_expr(p.polwithcheck,p.polrelid)
+    ) then
+      raise exception 'Incompatible RLS/MFA foundation for %', relation_name using errcode='55000';
+    end if;
+    if has_table_privilege('anon', 'public.'||relation_name, 'select,insert,update,delete') then
+      raise exception 'Unexpected anonymous foundation access on %',relation_name using errcode='55000';
+    end if;
+  end loop;
+
+  for control_record in select * from (values
+         ('current_org_role', '6ebde145530f58cd1544af004b0d33ed'),
+         ('has_org_access', 'c087753e26580ee369a5b667119de38c'),
+         ('can_write_org', '65888f7cae355b044ab34752b6216eec'),
+         ('can_approve_org', '103db875c0e634628f2b91da59b36f15'),
+         ('prevent_org_reassignment', '14ba0392188f9a4b3090a0ee923edef7'),
+         ('bootstrap_org_owner', '6c120a16cbc349bf4744d1622634a945')
+       ) as required(fn,body_md5)
+  loop
+    if not exists (
+      select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='private' and p.proname=control_record.fn and (
+          md5(p.prosrc)=control_record.body_md5
+          -- The existing installation has the same owner trigger with different whitespace.
+          or (control_record.fn='bootstrap_org_owner' and md5(p.prosrc)='365b4af093c127ff713f80dc53fd21d1')
+        )
+        and p.oid=to_regprocedure('private.'||control_record.fn||
+          case when control_record.fn in ('bootstrap_org_owner','prevent_org_reassignment') then '()' else '(uuid)' end)
+        and (p.prosecdef or control_record.fn='prevent_org_reassignment')
+        and array_to_string(p.proconfig,',') in ('search_path=""','search_path=')
+    ) then
+      raise exception 'Incompatible enterprise authorization helper: %', control_record.fn using errcode='55000';
+    end if;
+  end loop;
+  if not exists(
+    select 1 from pg_trigger where tgrelid='public.organizations'::regclass and not tgisinternal
+      and tgfoid='private.bootstrap_org_owner()'::regprocedure and tgenabled in ('O','A')
+  ) or not exists(
+    select 1 from pg_trigger where tgrelid='public.organization_members'::regclass and not tgisinternal
+      and tgfoid='private.prevent_org_reassignment()'::regprocedure and tgenabled in ('O','A')
+  ) or not exists(select 1 from storage.buckets where id='command-center-documents' and public=false) then
+    raise exception 'Missing constraints on organization membership or private storage' using errcode='55000';
+  end if;
+  perform set_config('search_path',prior_path,true);
+end;
+$migration$;
