@@ -31,5 +31,16 @@ for (const route of urls) {
   const switches = html.match(/<a\b[^>]+>\s*(?:EN|English|العربية)\s*<\/a>/g) || [];
   check(switches.length > 0 && switches.every(tag => tag.includes('href="' + counterpart + '"')), "language switch changes the page");
 }
+for (const prefix of ["", "/en"]) {
+  const login = fs.readFileSync(path.join(root, prefix, "login/index.html"), "utf8");
+  const owner = fs.readFileSync(path.join(root, prefix, "command-center/enterprise/index.html"), "utf8");
+  for (const href of [prefix + "/command-center/enterprise/", "/field-forms/", "/field-forms/#decisions"]) {
+    if (!login.includes('href="' + href + '"')) failures.push(prefix + "/login/ missing " + href);
+  }
+  if (!owner.includes('href="/field-forms/"')) failures.push(prefix + " owner portal missing field link");
+  if (/https?:\/\/[^"\s]*(?:chatgpt\.site|chatgpt\.com)/i.test(login + owner)) {
+    failures.push(prefix + " workspace redirects off the Osoul domain");
+  }
+}
 if (failures.length) throw new Error(failures.join("\n"));
 console.log("Verified language direction, reciprocal metadata and client sign-in and language links on " + urls.size + " sitemap pages.");
