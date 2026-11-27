@@ -13,7 +13,7 @@
     "test:enterprise": "node --test --test-concurrency=2 automation/tests/*.test.mjs && python3 automation/enterprise/memory/verify_memory.py"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.112.4",
+    "@supabase/supabase-js": "2.119.2",
     "jsqr": "1.4.0",
     "qrcode-generator": "2.0.4"
   },
