@@ -1,0 +1,7 @@
+.owner-proof{padding-block:clamp(2.5rem,6vw,5rem);background:#f2f5f0;color:#123f37}
+.owner-proof h2,.owner-proof p{margin:0 0 1rem}
+.owner-proof dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1.5rem 0 0}
+.owner-proof dl>div{padding:1.25rem 1.5rem;border-inline-start:.22rem solid #4a7766;background:#fff}
+.owner-proof dt{font-weight:700;font-size:1.1rem;margin:0 0 .45rem}
+.owner-proof dd{margin:0;line-height:1.8;color:#244941}
+@media(max-width:42rem){.owner-proof dl{grid-template-columns:1fr}.owner-proof dl>div{padding:1rem}}

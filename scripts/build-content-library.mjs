@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { articles } from "../content/articles-ar-en.mjs";
 import { examples } from "../content/insight-examples-ar-en.mjs";
 
+import { facilityEvidence } from "../content/facility-evidence-ar-en.mjs";
+
+const revisedOn = "2026-11-27";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const articlesBySlug = new Map(articles.map((article) => [article.slug, article]));
 
@@ -22,6 +25,8 @@ function renderArticleBody(article, lang) {
   const example = examples[article.slug]?.[ar ? 0 : 1];
   if (!example) throw new Error(`Missing ${lang} example for ${article.slug}`);
 
+  const evidence = facilityEvidence[article.slug]?.[ar ? 0 : 1];
+  if (!evidence) throw new Error(`Missing facilities evidence for ${article.slug}`);
   return [
     "<article class=\"osoul-article-body\">",
     `    <h2>${ar ? "مثال تطبيقي" : "Worked example"}</h2>`,
@@ -32,6 +37,8 @@ function renderArticleBody(article, lang) {
     `    ${list(article[`actions${suffix}`], true)}`,
     `    <h2>${ar ? "ما الذي تقيسه؟" : "What to measure"}</h2>`,
     `    ${list(article[`metrics${suffix}`])}`,
+    `    <h2>${ar ? "اختبار عملي للمالك" : "An evidence check for the owner"}</h2>`,
+    `    <p>${escapeHtml(evidence)}</p>`,
     `    <h2>${ar ? "أخطاء تتجنبها" : "Mistakes to avoid"}</h2>`,
     `    ${list(article[`mistakes${suffix}`])}`,
     `    <h2>${ar ? "المصادر والمراجع" : "Sources and references"}</h2>`,
@@ -70,6 +77,7 @@ function refreshDeck(html, article, lang, file) {
       const data = JSON.parse(json);
       if (data["@type"] !== "Article") return original;
       data.description = excerpt;
+      data.dateModified = revisedOn;
       return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>`;
     });
 }
@@ -90,8 +98,12 @@ function refreshArticle(html, article, lang, file) {
   );
   if (!byline.test(withBody)) throw new Error(`Expected article byline missing in ${file}`);
   let revised = withBody.replace(byline, (_, start, end) => `${start}${readTime}${end}`);
-  revised = revised.replace(/Start with a non-confidential brief, then define the decision, evidence and right-sized scope\./u,
-    "Tell us what your property needs so we can agree on the scope of work.");
+  const aside = ar
+    ? '<aside class="osoul-article-aside"><div class="osoul-aside-card"><h2>ما الذي يحتاج إلى متابعة في منشأتك؟</h2><p>اذكر الخدمة المتأثرة والمبنى المعني حتى نحدد نطاق العمل وطريقة التحقق من التنفيذ.</p><a href="/contact/">اطلب عرض خدمة</a></div></aside>'
+    : '<aside class="osoul-article-aside"><div class="osoul-aside-card"><h2>Which service needs attention?</h2><p>Tell us which property and service are affected so we can define the work and agree how to verify delivery.</p><a href="/en/contact/">Request a service quote</a></div></aside>';
+  revised = replaceRequired(revised, /<aside class="osoul-article-aside">[\s\S]*?<\/aside>/u, aside, file);
+  revised = revised.replace(/(<div class="osoul-article-byline">[\s\S]*?<time datetime=")[^"]+">[^<]+/u, (_, start) =>
+    start + revisedOn + '">' + (ar ? 'تحديث 27 نوفمبر 2026' : 'Updated 27 November 2026'));
   return refreshCards(refreshDeck(revised, article, lang, file), lang);
 }
 
@@ -99,8 +111,8 @@ function refreshIndex(html, lang, file) {
   const ar = lang === "ar";
   const title = ar ? "أدلة لمُلّاك ومشغّلي منشآت الضيافة" : "Guides for hospitality owners and operators";
   const deck = ar
-    ? "ابحث عن أدلة للترخيص والافتتاح، والتشغيل والربحية، والمبيعات، والحوكمة والتقنية. يضم كل دليل مثالًا وخطوات عمل ومؤشرات للمتابعة."
-    : "Find guides on licensing and opening, operations and profitability, sales, governance and technology. Each guide includes an example, steps to take and measures to track.";
+    ? "اختر القرار الذي تعمل عليه، من تجديد عقد خدمة إلى تفسير زيادة المصروفات. ستجد في كل دليل اختبارًا يمكنك تطبيقه على سجلات منشأتك لتقييم الأداء وتحديد ما يحتاج إلى تصحيح."
+    : "Choose a decision, from renewing a service contract to explaining a rise in operating costs. Each guide includes an evidence check you can apply to your own property records.";
   const hero = `<section class="osoul-library-hero"><div class="shell"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(deck)}</p></div></section>`;
   return refreshCards(replaceRequired(html, /<section class="osoul-library-hero">[\s\S]*?<\/section>/u, hero, file), lang);
 }
@@ -109,11 +121,19 @@ function update(relative, refresh) {
   const file = path.join(root, relative);
   const html = fs.readFileSync(file, "utf8");
   const revised = refresh(html, relative);
-  if (revised !== html) fs.writeFileSync(file, revised, "utf8");
+  const branded = revised.replaceAll("Osool Hospitality", "Osoul Hospitality")
+    .replaceAll("Last updated: 8 August 2026", "Last updated: 27 November 2026")
+    .replaceAll("آخر تحديث: 8 أغسطس 2026", "آخر تحديث: 27 نوفمبر 2026");
+  if (branded !== html) fs.writeFileSync(file, branded, "utf8");
 }
 
 // The checked-in site owns the page layout, navigation, metadata and language
 // links. Refresh only the editorial blocks on the Insights pages.
+for (const language of [0, 1]) {
+  const checks = articles.map(article => facilityEvidence[article.slug]?.[language]);
+  if (checks.some(check => !check) || new Set(checks).size !== articles.length)
+    throw new Error("Every guide requires a distinct, bilingual facility evidence check.");
+}
 if (Object.keys(examples).length !== articles.length) {
   throw new Error("Each insight requires exactly one bilingual example");
 }

@@ -2,6 +2,9 @@ import { uiText } from "./locale.js";
 import { createClient } from "@supabase/supabase-js";
 import { setupFacilityOperations } from "./facility-operations.js";
 
+import { setupPerformance } from "./facility-performance.js";
+
+let showPerformance;
 const config = window.OSOUL_ENTERPRISE_CONFIG || {};
 const requiredKeys = ["supabaseUrl", "supabasePublishableKey"];
 const configReady = requiredKeys.every((key) => typeof config[key] === "string" && config[key].length > 10);
@@ -25,6 +28,7 @@ function setStatus(message = "", type = "") {
 }
 
 function showView(name) {
+  if (name !== "dashboard") showPerformance?.("");
   Object.entries(views).forEach(([key, node]) => { node.hidden = key !== name; });
 }
 
@@ -126,6 +130,7 @@ async function getOrganizations() {
 }
 
 async function loadCounts(organizationId) {
+  void showPerformance(organizationId);
   const definitions = [
     ["suppliers", uiText("الموردون", "Suppliers")], ["products", uiText("المنتجات", "Products")], ["quotes", uiText("عروض الأسعار", "Quotations")],
     ["contracts", uiText("العقود", "Contracts")], ["requests", uiText("الطلبات", "Requests")], ["approvals", uiText("الاعتمادات", "Approvals")]
@@ -139,6 +144,7 @@ async function loadCounts(organizationId) {
 }
 
 async function showDashboard(session) {
+  showPerformance?.("");
   showView("dashboard");
   document.querySelector("#session-identity").textContent = uiText("الحساب", "Account") + ": " + (session.user.email || uiText("مستخدم مؤسسي", "Business user"));
   try {
@@ -230,6 +236,7 @@ if (!configReady) {
     global: { headers: { "X-Client-Info": "osoul-command-center-v15" } }
   });
   setupFacilityOperations(supabase);
+  showPerformance = setupPerformance(supabase);
 
   const recoveryButton = document.querySelector("#show-password-recovery");
   recoveryButton.disabled = false;

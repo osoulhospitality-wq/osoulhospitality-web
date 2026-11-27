@@ -9,7 +9,6 @@ export const categories = [
 ];
 
 const S = {
-  mtReg: { ar: "لائحة خدمات الاستشارات السياحية — وزارة السياحة", en: "Tourism Consultation Services Regulation — Ministry of Tourism", url: "https://cdn.mt.gov.sa/mtportal/mt-fe-production/content/policies-regulations/documents/tourism-regulations/Tourism-Consultation-Regulations-Ar-V012.pdf" },
   portal: { ar: "بوابة تراخيص الأنشطة السياحية", en: "Tourism Activities Licensing Portal", url: "https://tlg.mt.gov.sa/" },
   services: { ar: "الخدمات الإلكترونية — وزارة السياحة", en: "E-services — Ministry of Tourism", url: "https://mt.gov.sa/e-services" },
   violations: { ar: "جدول مخالفات مرافق الضيافة السياحية", en: "Tourism Hospitality Facilities Violations Schedule", url: "https://cdn.mt.gov.sa/mtportal/mt-fe-production/content/policies-regulations/documents/tourism-regulations/Hospitality-Facilities-Violations-Ar-V011.pdf" },
@@ -88,7 +87,7 @@ export const articles = [
     actionsEn: ["Give every obligation a unique ID", "Record the source without misleading truncation", "Support every status with dated evidence", "Add independent review for critical controls", "Preserve change history instead of overwriting it"],
     metricsEn: ["Evidence coverage", "Average age of open findings", "Reviews completed on time"],
     mistakesEn: ["A list with no evidence links", "Vague accountability", "Deleting the trail of earlier decisions"]
-  }, [S.mtReg, S.violations]),
+  }, [S.services, S.violations]),
 
   entry("hospitality-violations-evidence-control", "compliance", {
     titleAr: "المخالفات المتكررة: كيف يمنعها نظام أدلة؟",
@@ -664,7 +663,7 @@ export const articles = [
     actionsEn: ["Build an evidenced gap map", "Test concept and rate locally", "Qualify partners before contracting", "Define a decision matrix", "Start with a controlled pilot"],
     metricsEn: ["Gaps closed", "Local decision time", "Pilot performance"],
     mistakesEn: ["Copying the operating manual literally", "Contracting before supplier qualification", "Unclear exception authority"]
-  }, [S.mtReg, S.portal, S.saud])
+  }, [S.manage, S.portal, S.saud])
 ];
 
 if (articles.length !== 40) {
