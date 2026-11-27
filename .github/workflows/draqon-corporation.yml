@@ -1,0 +1,22 @@
+name: DRAQON corporation rehearsal
+on:
+  pull_request:
+    paths:
+      - 'automation/corporation/**'
+      - '.github/workflows/draqon-corporation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test automation/corporation/*.test.mjs
+      - run: node automation/corporation/campaign-rehearsal.mjs
