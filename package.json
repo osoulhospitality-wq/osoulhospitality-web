@@ -12,7 +12,7 @@
     "test:mail": "python3 -m unittest scripts/test_send_hostinger_notification.py"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.112.4"
+    "@supabase/supabase-js": "2.119.2"
   },
   "devDependencies": {
     "esbuild": "0.28.2"
