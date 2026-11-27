@@ -21,8 +21,15 @@ for (const route of urls) {
     const matching = tags.filter(tag => tag.includes('hreflang="' + lang + '"'));
     check(matching.length === 1 && matching[0].includes('href="' + base + target + '"'), "incorrect " + lang + " alternate");
   }
+  const portalRoutes = ["/command-center/enterprise/", "/en/command-center/enterprise/"];
+  const portalLinks = [...html.matchAll(/<a\b[^>]*?\bhref=["']([^"']+)["']/gi)]
+    .map(match => new URL(match[1], base + route))
+    .filter(url => url.origin === base && portalRoutes.includes(url.pathname));
+  if (route === "/" || route === "/en/") check(portalLinks.length > 0, "missing client sign-in link");
+  const expectedPortal = portalRoutes[english ? 1 : 0];
+  check(portalLinks.every(url => url.pathname === expectedPortal), "client sign-in should open " + expectedPortal);
   const switches = html.match(/<a\b[^>]+>\s*(?:EN|English|العربية)\s*<\/a>/g) || [];
   check(switches.length > 0 && switches.every(tag => tag.includes('href="' + counterpart + '"')), "language switch changes the page");
 }
 if (failures.length) throw new Error(failures.join("\n"));
-console.log("Verified language direction, reciprocal metadata and language switches on " + urls.size + " sitemap pages.");
+console.log("Verified language direction, reciprocal metadata and client sign-in and language links on " + urls.size + " sitemap pages.");
