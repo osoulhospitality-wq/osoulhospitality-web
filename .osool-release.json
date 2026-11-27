@@ -41,10 +41,20 @@
   },
   "content_library": {
     "articles": 40,
-    "languages": ["ar-SA", "en-SA"],
+    "languages": [
+      "ar-SA",
+      "en-SA"
+    ],
     "published_pages": 80,
     "tracks": 5,
-    "features": ["search", "category filters", "canonical URLs", "hreflang", "Article JSON-LD", "official source references"]
+    "features": [
+      "search",
+      "category filters",
+      "canonical URLs",
+      "hreflang",
+      "Article JSON-LD",
+      "official source references"
+    ]
   },
   "quality_gates": {
     "release_assertions": 796,
@@ -87,22 +97,14 @@
     ]
   },
   "website_positioning": {
-    "model": "integrated Saudi tourism advisory house: advisory, execution and intelligence",
+    "model": "Facilities and asset management for hospitality and residential properties in Saudi Arabia",
     "primary_audiences": [
-      "new tourism investors and developers",
-      "existing hospitality assets requiring compliance or performance improvement",
-      "owners requiring operator oversight and asset management",
-      "international operators and advisers entering Saudi Arabia"
+      "Owners, investors and property operators"
     ],
     "service_families": [
-      "strategy and feasibility",
-      "licensing, classification and compliance",
-      "development and operational design",
-      "pre-opening and operations",
-      "performance, profitability, contracts and suppliers",
-      "revenue, sales and distribution",
-      "owner representation and asset management",
-      "institutional and digital transformation"
+      "Technical maintenance",
+      "Site and hospitality services",
+      "Asset, supplier and contract management"
     ]
   }
 }
