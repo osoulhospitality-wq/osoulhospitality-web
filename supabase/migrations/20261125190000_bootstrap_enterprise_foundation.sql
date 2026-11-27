@@ -632,7 +632,11 @@ $foundation$;
   loop
     if not exists (
       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-      where n.nspname='private' and p.proname=control_record.fn and md5(p.prosrc)=control_record.body_md5
+      where n.nspname='private' and p.proname=control_record.fn and (
+          md5(p.prosrc)=control_record.body_md5
+          -- The existing installation has the same owner trigger with different whitespace.
+          or (control_record.fn='bootstrap_org_owner' and md5(p.prosrc)='365b4af093c127ff713f80dc53fd21d1')
+        )
         and p.oid=to_regprocedure('private.'||control_record.fn||
           case when control_record.fn in ('bootstrap_org_owner','prevent_org_reassignment') then '()' else '(uuid)' end)
         and (p.prosecdef or control_record.fn='prevent_org_reassignment')
