@@ -127,7 +127,7 @@ const robots = read("robots.txt");
 assert(!robots.includes("thank-you"), "robots.txt lets crawlers see thank-you noindex directives");
 
 const sitemap = read("sitemap.xml");
-assert((sitemap.match(/<url>/g) || []).length === 100, "Sitemap contains 100 public URLs");
+assert((sitemap.match(/<url>/g) || []).length === 156, "Sitemap contains 156 public URLs including 56 localized service details");
 assert(!sitemap.includes("/command-center/"), "Sitemap excludes the noindex Command Center");
 assert((sitemap.match(/\/insights\//g) || []).length === 82, "Sitemap contains both library indexes and 80 article URLs");
 
