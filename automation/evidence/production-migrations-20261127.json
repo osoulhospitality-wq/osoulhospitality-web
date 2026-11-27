@@ -1,0 +1,43 @@
+{
+  "project": "fdkfxlvsluiqrgedokdm",
+  "captured_on": "2026-11-27",
+  "sources": {
+    "applied": "Observed by this session: SELECT version, name FROM supabase_migrations.schema_migrations WHERE version >= '20261125000000' ORDER BY version (read-only, production).",
+    "recorded": "User-reported results from production read-only adoption checks in the same task. Not reproduced by this session; recorded as given. The second production query in this task was denied and was not retried."
+  },
+  "applied": [
+    { "version": "20261125193457", "name": "add_facility_operations" },
+    { "version": "20261125231431", "name": "allow_phone_only_website_leads" },
+    { "version": "20261126190000", "name": "draqon_field_handoff" },
+    { "version": "20261126210000", "name": "facility_survey" },
+    { "version": "20261126211000", "name": "facility_pm" },
+    { "version": "20261126213451", "name": "field_forms_for_technicians" },
+    { "version": "20261126215141", "name": "field_form_quality_reviews" },
+    { "version": "20261126215207", "name": "field_site_lookup_and_financial_review" },
+    { "version": "20261126220843", "name": "retain_prechange_field_release_snapshot" },
+    { "version": "20261126222249", "name": "field_release_verified_building_and_maintenance" },
+    { "version": "20261126224253", "name": "draqon_verified_contact_receipts" },
+    { "version": "20261126224643", "name": "draqon_management_decision_inbox" },
+    { "version": "20261127031000", "name": "field_asset_cycle" },
+    { "version": "20261127031100", "name": "field_asset_evidence" },
+    { "version": "20261127031200", "name": "field_building_verified_facts" },
+    { "version": "20261127031300", "name": "field_cycle_scheduler" }
+  ],
+  "recorded": {
+    "rls": { "total": 13, "enabled": 13, "note": "user-reported" },
+    "policyDigest": "94f2aae34523121a9c25105f2a7831e4",
+    "policyDigestNote": "user-reported as passing the exact pin",
+    "helpers": {
+      "current_org_role": { "note": "user-reported: passed", "observedMd5": "6ebde145530f58cd1544af004b0d33ed" },
+      "has_org_access": { "note": "user-reported: passed", "observedMd5": "c087753e26580ee369a5b667119de38c" },
+      "can_write_org": { "note": "user-reported: passed", "observedMd5": "65888f7cae355b044ab34752b6216eec" },
+      "can_approve_org": { "note": "user-reported: passed", "observedMd5": "103db875c0e634628f2b91da59b36f15" },
+      "prevent_org_reassignment": { "note": "user-reported: passed", "observedMd5": "14ba0392188f9a4b3090a0ee923edef7" },
+      "bootstrap_org_owner": {
+        "note": "user-reported: failed the full read-only adoption block with SQLSTATE 55000. User manually compared the two source bodies and found only whitespace differences outside literals. Whitespace-normalised equivalence has not been machine-verified.",
+        "observedMd5": "365b4af093c127ff713f80dc53fd21d1",
+        "sqlstate": "55000"
+      }
+    }
+  }
+}
