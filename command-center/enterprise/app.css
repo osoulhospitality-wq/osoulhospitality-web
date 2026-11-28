@@ -18,3 +18,16 @@ button{font:inherit;cursor:pointer}.primary-action{width:100%;margin-top:22px;bo
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
 .facility-performance{margin-block:2rem;padding-block:1.25rem;border-block:1px solid var(--line)}.facility-performance label{display:grid;gap:.4rem}.performance-cards{display:grid;gap:.8rem}.performance-cards section{border:1px solid var(--line);border-radius:14px;padding:1rem;min-width:0}.performance-cards h4{margin:0 0 1rem;color:var(--forest)}.performance-cards dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.5rem}.performance-cards dd{margin:0}.performance-cards p,.facility-performance [role=status]{font-size:.85rem;line-height:1.6;color:var(--muted)}.performance-meter{display:flex;align-items:center;gap:.6rem;margin-block:.5rem}.performance-meter span{flex:1}.performance-meter progress{width:34%;accent-color:var(--forest)}.performance-cards summary{cursor:pointer;padding:.5rem 0}
+
+.enterprise-shell:has(#dashboard-view:not([hidden])),.enterprise-shell:has(#provider-view:not([hidden])){display:block;width:min(78rem,100%);margin-inline:auto}
+.enterprise-shell:has(#dashboard-view:not([hidden])) .enterprise-intro,.enterprise-shell:has(#provider-view:not([hidden])) .enterprise-intro{display:none}
+#organization-dashboard > details,.facility-performance > details{margin-block:.8rem;border:1px solid var(--line);border-radius:12px;padding:.85rem 1rem;min-width:0}
+#organization-dashboard summary,.facility-performance summary{cursor:pointer;font-weight:650}
+#organization-dashboard table,#provider-body table{border-collapse:collapse;width:100%}
+#organization-dashboard th,#organization-dashboard td{padding:.5rem;text-align:start;vertical-align:top;border-bottom:1px solid var(--line)}
+#organization-dashboard details,#provider-body{overflow-x:auto}
+#provider-body input,#provider-body textarea,#provider-reviews textarea{max-width:100%;font:inherit}
+#provider-body section,#provider-reviews li{margin-block:1rem}
+#provider-body button,#provider-reviews button{min-height:44px;cursor:pointer}
+@media print{.enterprise-header,.enterprise-footer,.enterprise-intro,.js-sign-out{display:none}.enterprise-shell,.access-card{width:100%;padding:0;margin:0;border:0;box-shadow:none}}
+.panel-finder{margin-block:1rem}.panel-finder input{width:min(100%,32rem)}.panel-finder button{margin:.3rem;padding:.45rem .9rem;border:1px solid var(--line);border-radius:.6rem;background:transparent;min-height:44px}.panel-finder button:focus-visible,summary:focus-visible{outline:3px solid #97651e;outline-offset:3px}

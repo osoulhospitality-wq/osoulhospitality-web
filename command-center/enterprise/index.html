@@ -8,14 +8,14 @@
   <meta name="description" content="شريك تشغيلي لمُلّاك الفنادق والشقق المخدومة ومشغّليها. نتابع الموردين والعقود والصيانة، ونوثّق جودة التنفيذ عبر نظام أصول.">
   <link rel="icon" href="/brand/osool-mark-v8.svg">
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
-  <link rel="stylesheet" href="/command-center/enterprise/app.css?v=71edaa7159">
+  <link rel="stylesheet" href="/command-center/enterprise/app.css?v=1ae773b173">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=582ba57ee8" defer></script>
-<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
+  <script src="/command-center/enterprise/app.bundle.js?v=629715e1d0" defer></script>
+<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css?v=c6b48eaf9e"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">انتقل إلى بوابة الدخول</a>
   <header class="enterprise-header">
-    <a href="/login/" class="enterprise-brand" aria-label="اختيار واجهة الدخول">
+    <a href="/login/" class="enterprise-brand" title="اختيار واجهة الدخول">
       <img src="/brand/osool-mark-v8.svg" width="52" height="52" alt="">
       <span><strong>نظام أصول</strong><small>إدارة المرافق والأصول</small></span>
     </a>
@@ -97,6 +97,11 @@
         <button class="text-action js-sign-out" type="button">تسجيل الخروج</button>
       </div>
 
+      <section id="provider-view" class="app-view" hidden>
+        <div class="dashboard-head"><h2>عقود مقدم الخدمة</h2><button type="button" class="text-action js-sign-out">خروج</button></div>
+        <p>اختر العقد لتقديم مرجع التقرير أو الفاتورة ومتابعة قرار المراجع.</p>
+        <div id="provider-body"></div>
+      </section>
       <div id="dashboard-view" class="app-view" hidden>
         <div class="dashboard-head">
           <div><p class="step-label">تم التحقق من هويتك</p><h2>لوحة تشغيل أصول</h2></div>
@@ -113,7 +118,8 @@
             <p id="profile-status" role="status"></p>
           </form>
         </details>
-        <nav aria-label="النماذج والخدمات">
+
+        <details id="facility-shortcuts"><summary>الوصول السريع للنماذج والخدمات</summary>        <nav aria-label="النماذج والخدمات">
           <h3>النماذج والخدمات</h3>
           <ul>
             <li><a href="/solutions/">اختيار خدمة وتفاصيل تنفيذها</a></li>
@@ -122,7 +128,7 @@
             <li><a href="/field-forms/?form=F16#form-picker">نموذج مستويات الخدمة</a></li>
             <li><a href="/field-forms/?form=F17#form-picker">نموذج تقييم المورد</a></li>
           </ul>
-        </nav>
+        </nav></details>
         <div id="organization-empty" hidden>
           <p>لا توجد منشأة مرتبطة بهذا الحساب بعد. أنشئ مساحة أصول الأولى.</p>
           <form id="create-organization-form">
@@ -134,7 +140,14 @@
         <div id="organization-dashboard" hidden>
           <label for="organization-select">المنشأة</label>
           <select id="organization-select"></select>
+          <div class="panel-finder">
+            <label for="panel-search">بحث في أدوات اللوحة</label>
+            <input type="search" id="panel-search" placeholder="مثال: العقود، الأصول، الصيانة" autocomplete="off">
+            <div id="panel-matches" role="status" aria-live="polite"></div>
+          </div>
           <div id="kpi-grid" class="kpi-grid"></div>
+          <details id="provider-reviews"><summary>مراجعة مراسلات مقدمي الخدمات</summary>
+            <p>قبول المستند يسجّل قرار المراجعة. يتطلب الصرف إجراءً ماليًا منفصلًا.</p><div data-inbox></div></details>
           <details id="contract-register">
             <summary>سجل عقود المؤسسة</summary>
             <p role="status"></p><ul></ul>

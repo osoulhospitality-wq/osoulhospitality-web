@@ -1,7 +1,10 @@
 function updateWorkspaceTitle() {
-  const title = location.hash === "#decisions" ? "واجهة المشغّل – قرارات المنشأة" : "نماذج الفني";
+  const english = document.documentElement.lang === "en";
+  const title = location.hash === "#decisions"
+    ? (english ? "Operator decision desk" : "واجهة المشغّل – قرارات المنشأة")
+    : (english ? "Technician workspace" : "نماذج الفني");
   document.querySelector("#workspace-title").textContent = title;
-  document.title = title + " | أصول لإدارة المرافق";
+  document.title = title + (english ? " | Osoul Facilities Management" : " | أصول لإدارة المرافق");
 }
 updateWorkspaceTitle();
 window.addEventListener("hashchange", updateWorkspaceTitle);
@@ -32,3 +35,28 @@ if (requested && Array.from(picker.options).some(option => option.value === requ
 new MutationObserver(() => {
   if (!search.value) picker.value = "";
 }).observe(templates, { childList: true });
+
+document.querySelector("#field-shortcuts").addEventListener("click", event => {
+  const button = event.target.closest("button[data-section]");
+  if (!button) return;
+  const section = document.getElementById(button.dataset.section);
+  if (!section || section.closest("[hidden]")) return;
+  const heading = section.querySelector("summary,h2");
+  // The existing summary click loads the authorized records on demand.
+  if (section.tagName === "DETAILS" && !section.open) heading.click();
+  heading.tabIndex = -1;
+  heading.focus();
+  heading.scrollIntoView({ block: "start" });
+});
+
+document.querySelector("[data-field-language]").addEventListener("click", event => {
+  const current = new URL(location.href);
+  const target = new URL(event.currentTarget.href);
+  target.search = "";
+  for (const key of ["site", "asset", "form"]) {
+    const values = current.searchParams.getAll(key);
+    if (values.length === 1) target.searchParams.set(key, values[0]);
+  }
+  target.hash = current.hash;
+  event.currentTarget.href = target.href;
+});

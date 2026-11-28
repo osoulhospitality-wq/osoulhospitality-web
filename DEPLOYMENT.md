@@ -1,6 +1,14 @@
 # Osool Hospitality Deployment
 
-Last updated: 2026-08-08 UTC
+Last updated 2026-11-28
+
+## Facilities control release, November 2026
+
+The current acceptance matrix and role-specific gaps are in [FM_CONTROL_COVERAGE_AR.md](docs/FM_CONTROL_COVERAGE_AR.md). Keep customer onboarding separate from the release of the sign-in pages. Verify the version of the static assets, the corresponding database functions, real assigned accounts and independent review before accepting an operational pilot.
+
+To roll back the web release, redeploy its Git parent and check the Arabic and English login and field portals on the official host. Preserve recorded reports and evidence. An authorized owner can disable the reporting schedule for the affected facility and cadence without changing the maintenance scheduler. Reconcile the deployed migration history before applying any further database changes. Restoring customer records requires a separately verified backup and recovery exercise.
+
+The August deployment history follows.
 
 ## Website v15 — CRM, consent-first analytics and enterprise security
 
