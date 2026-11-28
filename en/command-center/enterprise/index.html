@@ -8,9 +8,11 @@
   <meta name="description" content="Secure access to facilities, assets, work orders and service visits for Osoul Hospitality owners and operations teams.">
   <link rel="icon" href="/brand/osool-mark-v8.svg">
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
-  <link rel="stylesheet" href="/command-center/enterprise/app.css?v=1ae773b173">
+  <link rel="stylesheet" href="/command-center/enterprise/app.css?v=d4e2893b45">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=629715e1d0" defer></script>
+  <link rel="stylesheet" href="/command-center/history-view.css?v=20261128-report1">
+  <script defer src="/command-center/history-view.js?v=20261128-report1"></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=aa6a036d81" defer></script>
 <link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css?v=c6b48eaf9e"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">Skip to sign-in</a>
@@ -104,31 +106,9 @@
       </section>
       <div id="dashboard-view" class="app-view" hidden>
         <div class="dashboard-head">
-          <div><p class="step-label">Multi-factor session verified</p><h2>Operations dashboard</h2></div>
+          <div><p class="step-label">Facility owner dashboard</p><h2>Facility command center</h2></div>
           <button class="text-action js-sign-out" type="button">Sign out</button>
         </div>
-        <p id="session-identity" class="muted"></p>
-        <details>
-          <summary>Account settings</summary>
-          <form id="display-name-form">
-            <label for="display-name">Display name</label>
-            <input id="display-name" name="displayName" type="text" maxlength="80" autocomplete="nickname" required>
-            <p>This name appears on your dashboard. Continue using your email to sign in.</p>
-            <button type="submit">Save name</button>
-            <p id="profile-status" role="status"></p>
-          </form>
-        </details>
-
-        <details id="facility-shortcuts"><summary>Forms and service shortcuts</summary>        <nav aria-label="Forms and services">
-          <h3>Forms and services</h3>
-          <ul>
-            <li><a href="/en/solutions/">Browse services and delivery details</a></li>
-            <li><a href="/en/field-forms/#form-picker">All facility forms</a></li>
-            <li><a href="/en/field-forms/?form=F15#form-picker">Service contract scope form</a></li>
-            <li><a href="/en/field-forms/?form=F16#form-picker">Service level form</a></li>
-            <li><a href="/en/field-forms/?form=F17#form-picker">Supplier evaluation form</a></li>
-          </ul>
-        </nav></details>
         <div id="organization-empty" hidden>
           <p>This account has no organization yet. Create your first workspace to get started.</p>
           <form id="create-organization-form">
@@ -183,6 +163,29 @@
           </details>
           <p class="privacy-note">Access follows permissions and actions are audited. Share screenshots and files only through approved channels.</p>
         </div>
+        <p id="session-identity" class="muted"></p>
+        <details>
+          <summary>Account settings</summary>
+          <form id="display-name-form">
+            <label for="display-name">Display name</label>
+            <input id="display-name" name="displayName" type="text" maxlength="80" autocomplete="nickname" required>
+            <p>This name appears on your dashboard. Continue using your email to sign in.</p>
+            <button type="submit">Save name</button>
+            <p id="profile-status" role="status"></p>
+          </form>
+        </details>
+
+        <details id="facility-shortcuts"><summary>Forms and service shortcuts</summary>        <nav aria-label="Forms and services">
+          <h3>Forms and services</h3>
+          <ul>
+            <li><a href="/en/solutions/">Browse services and delivery details</a></li>
+            <li><a href="/en/field-forms/#form-picker">All facility forms</a></li>
+            <li><a href="/en/field-forms/?form=F15#form-picker">Service contract scope form</a></li>
+            <li><a href="/en/field-forms/?form=F16#form-picker">Service level form</a></li>
+            <li><a href="/en/field-forms/?form=F17#form-picker">Supplier evaluation form</a></li>
+          </ul>
+        </nav></details>
+
       </div>
     </section>
   </main>

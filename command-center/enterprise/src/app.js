@@ -238,7 +238,7 @@ async function showDashboard(session) {
     if(generation!==dashboardGeneration)return;
     if(workspace==="portfolio") {
       const portfolio=document.getElementById("portfolio-desk");
-      if(portfolio && !portfolio.hidden){portfolio.open=true;portfolio.scrollIntoView({block:"start"});}
+      if(portfolio && !portfolio.hidden){portfolio.open=true;}
     }
     setStatus(uiText("تم فتح لوحة المنشأة.", "Your facility dashboard is open."), "success");
   } catch (error) {
@@ -336,8 +336,16 @@ if (!configReady) {
   showContracts = setupContracts(supabase);
   providerDesk = setupProviderDesk(supabase);
   showCommercial = setupCommercialIntelligence(supabase);
-  showPortfolio = setupPortfolio(supabase);
+  showPortfolio = setupPortfolio(supabase,workspace==="portfolio");
+  if(workspace==="portfolio"){
+    document.querySelector("#dashboard-view .dashboard-head h2").textContent=uiText("غرفة قيادة محفظة أصول","Osoul portfolio command center");
+    document.querySelector("#dashboard-view .dashboard-head .step-label").textContent=uiText("إدارة أصول الضيافة","Osoul central operations");
+  }
   if(workspace==="provider"||workspace==="portfolio"){
+    const language=document.querySelector(".enterprise-header .cc-language");
+    const otherLocale=new URL(language.href);
+    otherLocale.searchParams.set("workspace",workspace);
+    language.href=otherLocale.href;
     const title=workspace==="provider"?uiText("بوابة مقدم الخدمة","Service provider portal"):uiText("غرفة إدارة المحفظة","Portfolio command center");
     document.getElementById("enterprise-title").textContent=title;
     document.title=title+" | Osoul";
