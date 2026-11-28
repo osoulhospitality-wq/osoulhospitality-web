@@ -1,5 +1,7 @@
 import { uiText as t } from "./locale.js";
 
+import {setupClientPortfolio} from "./client-portfolio.js";
+
 const statuses = {
   draft: t("مسودة", "Draft"), review: t("قيد المراجعة", "In review"),
   active: t("ساري", "Active"), expired: t("منتهي", "Expired"), terminated: t("منهى", "Terminated")
@@ -10,6 +12,8 @@ export function setupContracts(client) {
   const records = panel.querySelector("ul");
   const status = panel.querySelector("[role=status]");
   const next = panel.querySelector("button");
+  panel.insertBefore(document.createElement("h4"),status).textContent=t("عقود الموردين","Supplier agreements");
+  const showClients=setupClientPortfolio(client);
   let organization = "", offset = 0, version = 0;
   async function load() {
     if (!panel.open || !organization) return;
@@ -30,7 +34,7 @@ export function setupContracts(client) {
       }
       offset += rows.length;
       next.hidden = data.length <= 20;
-      status.textContent = offset ? "" : t("لا تظهر عقود لهذه المؤسسة ضمن صلاحيات حسابك.", "No contracts are visible to your account for this organization.");
+      status.textContent = offset ? "" : t("لا تظهر عقود موردين لهذه المؤسسة ضمن صلاحيات حسابك.", "No supplier agreements are visible for this organization.");
     } catch {
       if (request !== version) return;
       status.textContent = t("تعذرت قراءة العقود. أعد المحاولة.", "Contracts could not be loaded. Try again.");
@@ -43,6 +47,7 @@ export function setupContracts(client) {
     version++;
     panel.open = false;
     organization = id;
+    void showClients(id);
     offset = 0;
     records.replaceChildren();
     status.textContent = "";
