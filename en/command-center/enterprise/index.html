@@ -4,23 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <title>Osool Platform | Facilities and Asset Management</title>
+  <title>Osoul Platform | Facilities and Asset Management</title>
   <meta name="description" content="Secure access to facilities, assets, work orders and service visits for Osoul Hospitality owners and operations teams.">
   <link rel="icon" href="/brand/osool-mark-v8.svg">
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/command-center/enterprise/app.css?v=71edaa7159">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=c2d04f5e49" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=5aa9696c9e" defer></script>
 <link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">Skip to sign-in</a>
   <header class="enterprise-header">
-    <a href="/en/command-center/" class="enterprise-brand" aria-label="Back to the command center">
+    <a href="/en/login/" class="enterprise-brand" aria-label="Choose a workspace">
       <img src="/brand/osool-mark-v8.svg" width="52" height="52" alt="">
-      <span><strong>Osool Platform</strong><small>Facilities and asset management</small></span>
+      <span><strong>Osoul Platform</strong><small>Facilities and asset management</small></span>
     </a>
     <a class="cc-language" href="/command-center/enterprise/" lang="ar" hreflang="ar">العربية</a>
-    <span class="security-badge">MFA + RLS</span>
+    <span class="security-badge">Secure access</span>
   </header>
 
   <main id="enterprise-app" class="enterprise-shell">
@@ -29,7 +29,7 @@
       <h1 id="enterprise-title">Track each work order from the first report to <em>approved closure</em>.</h1>
       <p>Register facilities and assets, assign work and record site visits. Your organization and account permissions determine what you can access.</p>
       <ul class="security-list">
-        <li><strong>Organization-level isolation</strong><span>Row-level security follows organization membership.</span></li>
+        <li><strong>Your facilities</strong><span>See the facilities assigned to your account.</span></li>
         <li><strong>Multi-factor authentication</strong><span>Use your authenticator app to verify access.</span></li>
         <li><strong>Private storage</strong><span>PDF and Office files are restricted to the organization.</span></li>
       </ul>
@@ -86,12 +86,12 @@
         <p class="muted">Scan the QR code with your authenticator app and enter the code it displays.</p>
         <button id="start-enrollment" class="primary-action" type="button">Generate QR code</button>
         <div id="enrollment-details" hidden>
-          <img id="totp-qr" class="totp-qr" alt="QR code for adding your Osool account to your authenticator app">
+          <img id="totp-qr" class="totp-qr" alt="QR code for adding your Osoul account to your authenticator app">
           <details><summary>Cannot scan the code?</summary><code id="totp-secret"></code></details>
           <form id="mfa-enroll-form">
             <label for="enroll-code">Confirmation code</label>
             <input id="enroll-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
-            <button class="primary-action" type="submit">Verify and enable MFA</button>
+            <button class="primary-action" type="submit">Confirm and enable verification</button>
           </form>
         </div>
         <button class="text-action js-sign-out" type="button">Sign out</button>
@@ -103,6 +103,26 @@
           <button class="text-action js-sign-out" type="button">Sign out</button>
         </div>
         <p id="session-identity" class="muted"></p>
+        <details>
+          <summary>Account settings</summary>
+          <form id="display-name-form">
+            <label for="display-name">Display name</label>
+            <input id="display-name" name="displayName" type="text" maxlength="80" autocomplete="nickname" required>
+            <p>This name appears on your dashboard. Continue using your email to sign in.</p>
+            <button type="submit">Save name</button>
+            <p id="profile-status" role="status"></p>
+          </form>
+        </details>
+        <nav aria-label="Forms and services">
+          <h3>Forms and services</h3>
+          <ul>
+            <li><a href="/en/solutions/">Browse services and delivery details</a></li>
+            <li><a href="/field-forms/#form-picker">All facility forms (Arabic)</a></li>
+            <li><a href="/field-forms/?form=F15#form-picker">Service contract scope form (Arabic)</a></li>
+            <li><a href="/field-forms/?form=F16#form-picker">Service level form (Arabic)</a></li>
+            <li><a href="/field-forms/?form=F17#form-picker">Supplier evaluation form (Arabic)</a></li>
+          </ul>
+        </nav>
         <div id="organization-empty" hidden>
           <p>This account has no organization yet. Create your first workspace to get started.</p>
           <form id="create-organization-form">
@@ -115,6 +135,12 @@
           <label for="organization-select">Organization</label>
           <select id="organization-select"></select>
           <div id="kpi-grid" class="kpi-grid"></div>
+          <details id="contract-register">
+            <summary>Organization contract register</summary>
+            <p role="status"></p><ul></ul>
+            <button type="button" hidden>Load contracts</button>
+          </details>
+          <p><a href="/field-forms/#decisions">Operator decision desk (Arabic)</a></p>
           <p><a class="primary-action" href="/field-forms/">Technician forms and inspection photos (Arabic)</a></p>
           <details id="facility-operations">
             <summary>Facilities and asset management</summary>

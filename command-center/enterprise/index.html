@@ -10,17 +10,17 @@
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
   <link rel="stylesheet" href="/command-center/enterprise/app.css?v=71edaa7159">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=c2d04f5e49" defer></script>
+  <script src="/command-center/enterprise/app.bundle.js?v=5aa9696c9e" defer></script>
 <link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">انتقل إلى بوابة الدخول</a>
   <header class="enterprise-header">
-    <a href="/command-center/" class="enterprise-brand" aria-label="العودة إلى مركز القيادة">
+    <a href="/login/" class="enterprise-brand" aria-label="اختيار واجهة الدخول">
       <img src="/brand/osool-mark-v8.svg" width="52" height="52" alt="">
       <span><strong>نظام أصول</strong><small>إدارة المرافق والأصول</small></span>
     </a>
     <a class="cc-language" href="/en/command-center/enterprise/" lang="en" hreflang="en">English</a>
-    <span class="security-badge">MFA + RLS</span>
+    <span class="security-badge">دخول آمن</span>
   </header>
 
   <main id="enterprise-app" class="enterprise-shell">
@@ -29,8 +29,8 @@
       <h1 id="enterprise-title">تابع المرفق من البلاغ إلى <em>اعتماد الإغلاق</em>.</h1>
       <p>سجّل منشآتك وأصولك، وتابع أوامر العمل من بدء التنفيذ إلى توثيق الزيارة واعتماد الإغلاق. تظهر البيانات حسب صلاحيات حسابك ومؤسستك.</p>
       <ul class="security-list">
-        <li><strong>عزل متعدد العملاء</strong><span>سياسات RLS مرتبطة بعضوية المنشأة.</span></li>
-        <li><strong>تحقق متعدد العوامل</strong><span>تطبيق مصادقة TOTP مطلوب للوصول.</span></li>
+        <li><strong>منشآتك</strong><span>تظهر لك المنشآت المرتبطة بحسابك.</span></li>
+        <li><strong>تحقق متعدد العوامل</strong><span>أكّد هويتك بالرمز الموقت من تطبيق التحقق.</span></li>
         <li><strong>تخزين خاص</strong><span>ملفات PDF وOffice غير عامة ومقيّدة بالمنشأة.</span></li>
       </ul>
     </section>
@@ -74,7 +74,7 @@
         <p class="step-label">الخطوة 2 من 2</p>
         <h2>رمز التحقق</h2>
         <p class="muted">أدخل الرمز المؤقت المكون من 6 أرقام من تطبيق المصادقة.</p>
-        <label for="mfa-code">رمز TOTP</label>
+        <label for="mfa-code">رمز تطبيق التحقق</label>
         <input id="mfa-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
         <button class="primary-action" type="submit">تحقق وافتح المركز</button>
         <button class="text-action js-sign-out" type="button">تسجيل الخروج</button>
@@ -84,14 +84,14 @@
         <p class="step-label">إعداد أمني لمرة واحدة</p>
         <h2>فعّل تطبيق المصادقة</h2>
         <p class="muted">امسح الرمز عبر تطبيق مصادقة موثوق، ثم أدخل الرمز الظاهر فيه.</p>
-        <button id="start-enrollment" class="primary-action" type="button">إنشاء رمز MFA</button>
+        <button id="start-enrollment" class="primary-action" type="button">ربط تطبيق التحقق</button>
         <div id="enrollment-details" hidden>
           <img id="totp-qr" class="totp-qr" alt="رمز QR لإضافة حساب أصول إلى تطبيق المصادقة">
           <details><summary>تعذر مسح الرمز؟</summary><code id="totp-secret"></code></details>
           <form id="mfa-enroll-form">
             <label for="enroll-code">رمز التأكيد</label>
             <input id="enroll-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
-            <button class="primary-action" type="submit">تأكيد وتفعيل MFA</button>
+            <button class="primary-action" type="submit">تفعيل التحقق بخطوتين</button>
           </form>
         </div>
         <button class="text-action js-sign-out" type="button">تسجيل الخروج</button>
@@ -99,10 +99,30 @@
 
       <div id="dashboard-view" class="app-view" hidden>
         <div class="dashboard-head">
-          <div><p class="step-label">جلسة موثقة aal2</p><h2>لوحة تشغيل أصول</h2></div>
+          <div><p class="step-label">تم التحقق من هويتك</p><h2>لوحة تشغيل أصول</h2></div>
           <button class="text-action js-sign-out" type="button">خروج</button>
         </div>
         <p id="session-identity" class="muted"></p>
+        <details>
+          <summary>إعدادات الحساب</summary>
+          <form id="display-name-form">
+            <label for="display-name">اسم العرض</label>
+            <input id="display-name" name="displayName" type="text" maxlength="80" autocomplete="nickname" required>
+            <p>يظهر هذا الاسم في لوحتك. استمر في استخدام بريدك لتسجيل الدخول.</p>
+            <button type="submit">حفظ الاسم</button>
+            <p id="profile-status" role="status"></p>
+          </form>
+        </details>
+        <nav aria-label="النماذج والخدمات">
+          <h3>النماذج والخدمات</h3>
+          <ul>
+            <li><a href="/solutions/">اختيار خدمة وتفاصيل تنفيذها</a></li>
+            <li><a href="/field-forms/#form-picker">جميع نماذج المنشأة</a></li>
+            <li><a href="/field-forms/?form=F15#form-picker">نموذج نطاق عقد الخدمة</a></li>
+            <li><a href="/field-forms/?form=F16#form-picker">نموذج مستويات الخدمة</a></li>
+            <li><a href="/field-forms/?form=F17#form-picker">نموذج تقييم المورد</a></li>
+          </ul>
+        </nav>
         <div id="organization-empty" hidden>
           <p>لا توجد منشأة مرتبطة بهذا الحساب بعد. أنشئ مساحة أصول الأولى.</p>
           <form id="create-organization-form">
@@ -115,6 +135,12 @@
           <label for="organization-select">المنشأة</label>
           <select id="organization-select"></select>
           <div id="kpi-grid" class="kpi-grid"></div>
+          <details id="contract-register">
+            <summary>سجل عقود المؤسسة</summary>
+            <p role="status"></p><ul></ul>
+            <button type="button" hidden>تحميل العقود</button>
+          </details>
+          <p><a href="/field-forms/#decisions">واجهة المشغّل وقرارات المنشأة</a></p>
           <p><a class="primary-action" href="/field-forms/">نماذج الفني وصور المعاينة</a></p>
           <details id="facility-operations">
             <summary>إدارة المرافق والأصول</summary>
