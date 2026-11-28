@@ -32,6 +32,24 @@ function requireCondition(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function sitemapLocations(xml) {
+  const document = xml.replace(/<!--[\s\S]*?-->/g, "");
+  const rows = [...document.matchAll(/<url>\s*([\s\S]*?)\s*<\/url>/g)];
+  requireCondition(rows.length > 0 && /<urlset\b/.test(document) && /<\/urlset>\s*$/.test(document), "invalid or empty sitemap");
+  const locations = new Set();
+  for (const [, row] of rows) {
+    const entries = [...row.matchAll(/<loc>\s*([^<]*?)\s*<\/loc>/g)];
+    requireCondition(entries.length === 1, "sitemap entry must contain one location");
+    const location = entries[0][1];
+    const url = new URL(location);
+    requireCondition(url.origin === "https://osoulhospitality.com" && url.href === location && !url.search && !url.hash, "noncanonical sitemap location");
+    requireCondition(!/^\/(?:en\/)?(?:command-center|field-forms|login|thank-you)(?:\/|$)/.test(url.pathname), "private route in sitemap");
+    requireCondition(!locations.has(location), "duplicate sitemap location");
+    locations.add(location);
+  }
+  return locations;
+}
+
 await check("critical pages", async () => {
   const paths = ["/", "/solutions/", "/outputs/", "/about/", "/scenarios/", "/insights/", "/contact/", "/privacy/", "/en/", "/en/contact/", "/en/privacy/"];
   const results = await Promise.all(paths.map(async (path) => {
@@ -122,15 +140,18 @@ await check("indexing controls", async () => {
     request("/command-center/"),
     request("/__osoul_health_missing__"),
   ]);
-  const urlCount = (sitemap.body.match(/<url>/g) || []).length;
-  requireCondition(urlCount === 100, `sitemap contains ${urlCount} URLs, expected 100`);
-  requireCondition(!sitemap.body.includes("/command-center/"), "Command Center is exposed in sitemap");
+  requireCondition(sitemap.response.status === 200, `sitemap returned ${sitemap.response.status}`);
+  const expected = sitemapLocations(fs.readFileSync(new URL("../sitemap.xml", import.meta.url), "utf8"));
+  const actual = sitemapLocations(sitemap.body);
+  const missing = [...expected].filter(url => !actual.has(url)).length;
+  const unexpected = [...actual].filter(url => !expected.has(url)).length;
+  requireCondition(!missing && !unexpected, `sitemap differs from release: ${missing} missing, ${unexpected} unexpected`);
   requireCondition(!/Disallow:\s*\/(?:en\/)?thank-you\//.test(robots.body), "robots.txt blocks a thank-you noindex page");
   requireCondition(/name="robots" content="noindex,\s*nofollow"/.test(thankYou.body), "thank-you noindex missing");
   requireCondition(commandCenter.body.includes('name="robots" content="noindex,nofollow,noarchive"'), "Command Center noindex missing");
   requireCondition(notFound.response.status === 404, `missing page returned ${notFound.response.status}`);
   requireCondition((notFound.body.match(/name="robots" content="noindex, follow"/g) || []).length === 1, "404 robots directive is missing or duplicated");
-  return "sitemap, robots, private routes, thank-you pages, and 404 behavior are consistent";
+  return `${actual.size} canonical sitemap locations match the release; indexing controls and 404 behavior are consistent`;
 });
 
 await check("Supabase public-read isolation", async () => {
