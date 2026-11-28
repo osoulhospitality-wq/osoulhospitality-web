@@ -116,6 +116,25 @@ button{font:inherit;cursor:pointer}.primary-action{width:100%;margin-top:22px;bo
 .client-agreement {display:grid;gap:.3rem;padding:.75rem;border-inline-start:3px solid #478067}
 .client-agreement p {margin:.1rem 0}.client-agreement button {justify-self:start}
 
+/* Private period analysis and evidence-based nightly pricing. */
+.insight-desk{margin-block:1rem;padding:clamp(.7rem,2vw,1.2rem);border:1px solid #d5e1d8;border-radius:.85rem;background:#f6f8f4;color:#173c32;min-width:0;scroll-margin:1rem}
+.insight-desk h4,.insight-desk h5,.insight-desk h6{margin:0 0 .55rem;color:#143d32}
+.insight-desk h4,.rate-desk>summary{font-size:1.08rem;font-weight:740}
+.insight-desk h5{font-size:1rem}.insight-desk h6{font-size:.9rem}
+.insight-desk small{display:block;color:#455e52}.insight-groups,.insight-controls,.insight-nav{display:flex;flex-wrap:wrap;align-items:end;gap:.45rem;margin-block:.6rem}
+.insight-groups button{color:#244f40;border:1px solid #a6bbad;border-radius:1.2rem;padding:.42rem .85rem;background:#fff;min-height:2.55rem}
+.insight-groups button[aria-pressed=true]{background:#1c4c3e;color:#fff;border-color:#1c4c3e}
+.insight-controls label{display:grid;gap:.23rem;flex:1 1 9.5rem;max-width:18rem;color:#315443;font-size:.9rem}
+.insight-controls select{margin:0;min-width:0;width:100%}
+.insight-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(9rem,100%),1fr));gap:.5rem;margin:.75rem 0}
+.insight-cards>div{display:grid;align-content:start;gap:.4rem;border:1px solid #d9e2da;border-radius:.6rem;background:#fff;min-width:0;padding:.7rem}
+.insight-cards strong{font-size:clamp(1rem,1.6vw,1.45rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.insight-cards progress{width:100%;height:.42rem;accent-color:#37745a}.insight-assessment{padding:.7rem .85rem;border-inline-start:3px solid #997338;background:#fffaf0;margin-block:.7rem}
+.insight-assessment p,.rate-day p{margin:.35rem 0}.rate-day{background:#fff;border:1px solid #d7e2d9;border-radius:.65rem;padding:.8rem;margin:.6rem 0}
+.rate-desk .client-table{margin:.65rem 0}.rate-desk .rate-pace{margin-block:.7rem}.rate-day details{margin-top:.55rem}
+.insight-desk :is(a,button,select,summary):focus-visible{outline:3px solid #17648a;outline-offset:2px}
+@media(max-width:520px){.insight-desk{padding:.65rem}.insight-controls label{max-width:100%;flex-basis:8.5rem}.insight-cards{grid-template-columns:repeat(auto-fit,minmax(min(7.6rem,100%),1fr))}.insight-cards>div{padding:.55rem}}
+
 /* Pilot workspace */
 .facility-pilot {
   --p-ink:#17392f; --p-muted:#52675f; --p-line:#d8e0d8; --p-paper:#fff;

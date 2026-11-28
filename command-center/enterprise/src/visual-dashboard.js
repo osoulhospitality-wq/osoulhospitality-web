@@ -34,7 +34,7 @@ export function visualNavigation() {
     ["fm-engineering","الأنظمة والأصول","Systems & assets"],["fm-calendar","جدول الصيانة","Maintenance calendar"],
     ["contract-register","العقود","Contracts"],["fm-vendor-quality","جودة الموردين","Supplier quality"],
     ["fm-evidence","المخاطر والامتثال","Risk & compliance"],["fm-resource","المالية والموارد","Finance & utilities"],
-    ["fm-reputation","تقييمات النزلاء","Guest reviews"],["fm-reports","التقارير","Reports"],["facility-shortcuts","النماذج والخدمات","Forms & services"]
+    ["fm-pricing","تسعير الليالي","Nightly pricing"],["fm-reputation","تقييمات النزلاء","Guest reviews"],["fm-reports","التقارير","Reports"],["facility-shortcuts","النماذج والخدمات","Forms & services"]
   ];
   for (const [id,ar,en] of destinations) nav.append(shortcut(t(ar,en),id));
   return nav;
