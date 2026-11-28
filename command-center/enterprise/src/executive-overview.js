@@ -39,6 +39,12 @@ function exact(result) {
   return !result?.error && Number.isSafeInteger(result?.count) && result.count >= 0 ? result.count : null;
 }
 
+// A count is either a query result object (exact count) or an already-resolved count (number or null).
+function countOf(value) {
+  if (typeof value === "number") return Number.isSafeInteger(value) && value >= 0 ? value : null;
+  return exact(value);
+}
+
 function safe(request) {
   return Promise.resolve(request).catch(() => ({error: true}));
 }
@@ -46,6 +52,12 @@ function safe(request) {
 function table(client, name, org, site, columns, head = false) {
   return client.from(name).select(columns, {count: "exact", head})
     .eq("organization_id", org).eq("facility_id", site);
+}
+
+// Single definition of "active plan past its issue date", shared by the count and the register rows.
+function overdueActivePlans(client, org, site, today, columns, head) {
+  return table(client, "facility_pm_plans", org, site, columns, head)
+    .is("paused_at", null).lt("next_due_on", today);
 }
 
 export async function readExecutiveOverview(client, org, site, period) {
@@ -60,14 +72,21 @@ export async function readExecutiveOverview(client, org, site, period) {
     "id,code,submitted_at," + reviewRelation + "(record_id)")
     .eq("status", "submitted").is("field_form_reviews",null)
     .order("submitted_at").order("id").limit(pageSize);
-  const duePlans = table(client, "facility_pm_plans", org, site, "id", true)
-    .is("paused_at",null).lt("next_due_on", today);
+  const duePlans = overdueActivePlans(client, org, site, today, "id", true);
   const [all, visible, finished, overdue, pending, waiting] = await Promise.all([
     issued("plan_id"), issued("plan_id," + workRelation + "!inner(id)"),
     issued("plan_id," + workRelation + "!inner(id)").eq("facility_work_orders.status","completed"),
     openOrders, pendingReviews, duePlans
   ].map(safe));
+  // Contract: overdue and pending are query results (for their lists); waiting is a resolved count or null.
   return {issued: exact(all), known: exact(visible), completed: exact(finished), overdue, pending, waiting: exact(waiting)};
+}
+
+// One page of the overdue-plan register, ordered oldest due date first, then id.
+export function readOverduePlanPage(client, org, site, today, offset) {
+  return overdueActivePlans(client, org, site, today,
+    "id,task,next_due_on,source_reference," + assetRelation + "(asset_code,name)", false)
+    .order("next_due_on").order("id").range(offset, offset + pageSize - 1);
 }
 
 function listPanel(title, result, rowText, empty, id) {
@@ -90,17 +109,17 @@ function listPanel(title, result, rowText, empty, id) {
 // Each source is read separately: null means unverified, zero means read and clear.
 function decisionSources(result) {
   return [
-    {label: t("أوامر وقائية متأخرة", "Overdue preventive orders"), count: exact(result.overdue), anchor: "fm-overdue-orders",
+    {label: t("أوامر وقائية متأخرة", "Overdue preventive orders"), count: countOf(result.overdue), anchor: "fm-overdue-orders",
       reason: t("أوامر صادرة تاريخ استحقاقها قبل اليوم ولم تُغلق.", "Issued orders due before today that are not closed."),
       owner: t("مسؤول الصيانة في المنشأة، أو مقدم الخدمة وفق اتفاقه", "Facility maintenance lead, or the provider under its agreement"),
       action: t("تحديد موعد تنفيذ جديد أو تصعيد التأخير لمقدم الخدمة.", "Set a new completion date or escalate the delay to the provider.")},
-    {label: t("نماذج تنتظر المراجعة", "Forms awaiting review"), count: exact(result.pending), anchor: "fm-pending-reviews",
+    {label: t("نماذج تنتظر المراجعة", "Forms awaiting review"), count: countOf(result.pending), anchor: "fm-pending-reviews",
       reason: t("نماذج أُرسلت ولم يُسجَّل لها قرار مراجعة.", "Submitted forms with no recorded review decision."),
-      owner: t("المالك أو المعتمد المصرَّح له بالمراجعة", "Owner or authorized approver"),
+      owner: t("المالك أو المعتمد (مسمى وظيفي مقترح)", "Owner or approver (suggested job title)"),
       action: t("اعتماد النموذج أو إعادته مع سبب مسجَّل.", "Accept the form or return it with a recorded reason.")},
-    {label: t("خطط تجاوزت موعد إصدارها", "Plans past their issue date"), count: exact(result.waiting), anchor: "fm-calendar",
+    {label: t("خطط تجاوزت موعد إصدارها", "Plans past their issue date"), count: countOf(result.waiting), anchor: "fm-overdue-plans",
       reason: t("خطط نشطة تجاوز موعد إصدارها التالي.", "Active plans past their next issue date."),
-      owner: t("المالك أو المعتمد المصرَّح له بإصدار الخطة أو إيقافها", "Owner or approver authorized to issue or pause the plan"),
+      owner: t("المالك أو المعتمد (مسمى وظيفي مقترح) لإصدار الخطة أو إيقافها", "Owner or approver (suggested job title) to issue or pause the plan"),
       action: t("إصدار الأمر الوقائي أو توثيق سبب التأجيل.", "Issue the preventive order or record the reason for deferral.")}
   ];
 }
@@ -108,6 +127,23 @@ function decisionSources(result) {
 export function decisionItems(result) {
   return decisionSources(result).map(item => ({...item,
     state: item.count === null ? "unverified" : item.count > 0 ? "decision" : "clear"}));
+}
+
+// Returns the summary wording and the state that drives it, for testing and display.
+export function decisionSummary(items, date) {
+  const needing = items.filter(item => item.state === "decision").length;
+  const unverified = items.filter(item => item.state === "unverified").length;
+  if (unverified === items.length)
+    return {key: "all-failed", text: t("تعذر تحديد القرارات لهذه المنشأة. أعد المحاولة.", "Decisions could not be determined for this facility. Try again.")};
+  if (needing && unverified)
+    return {key: "partial", text: t("القرارات المثبتة أدناه. تعذرت قراءة مصدر أو أكثر، فلا تُعد بنوده الغائبة صفرًا.",
+      "Confirmed decisions are listed below. One or more sources could not be read, so their missing items are not zero.")};
+  if (unverified)
+    return {key: "partial-none", text: t("لم تُثبت المصادر المقروءة قرارًا، وتعذرت قراءة مصدر أو أكثر؛ لا يعني ذلك عدم وجود قرار.",
+      "The readable sources confirm no decision, but one or more sources could not be read; this does not mean no decision exists.")};
+  if (needing)
+    return {key: "decisions", text: t("بنود تحتاج قرارًا حتى ", "Items needing a decision as of ") + date + t(" بتوقيت الرياض.", " (Riyadh).")};
+  return {key: "clear", text: t("لا توجد بنود تحتاج قرارًا في المصادر المقروءة اليوم.", "No items need a decision in the sources read today.")};
 }
 
 function openEvidence(id) {
@@ -129,28 +165,21 @@ function decisionCard(result, period) {
   section.setAttribute("aria-labelledby", heading.id);
   const summary = node("p");
   summary.setAttribute("role", "status");
-  const needing = items.filter(item => item.state === "decision");
-  const unverified = items.filter(item => item.state === "unverified");
-  const unreadNote = unverified.length
-    ? " " + t("بعض المصادر لم تُقرأ، فلا يُعد غياب بنودها دليلًا على عدم وجودها.", "Some sources were not read, so the absence of their items is not evidence that none exist.")
-    : "";
-  summary.textContent = (needing.length
-    ? t("بنود تحتاج قرارًا حتى ", "Items needing a decision as of ") + period.today + t(" بتوقيت الرياض.", " (Riyadh).")
-    : t("لا توجد بنود تحتاج قرارًا في المصادر المقروءة اليوم.", "No items need a decision in the sources read today.")) + unreadNote;
+  summary.textContent = decisionSummary(items, period.today).text;
   const list = node("ol");
   for (const item of items) {
     const li = node("li");
-    const head = node("strong", item.label + " · " + (item.count === null ? unknown() : number(item.count)));
-    li.append(head);
+    li.append(node("strong", item.label + " · " + (item.count === null ? unknown() : number(item.count))));
     if (item.state === "decision") {
       const details = node("dl");
       line(details, t("السبب", "Why"), item.reason);
-      line(details, t("المسؤول المصرَّح له", "Authorized to act"), item.owner);
+      line(details, t("المسؤول الوظيفي المقترح", "Suggested job owner"), item.owner);
       line(details, t("الإجراء", "Action"), item.action);
-      const link = node("a", t("عرض الدليل والسجل", "Open evidence and register"));
-      link.href = "#" + item.anchor;
-      link.addEventListener("click", event => { event.preventDefault(); openEvidence(item.anchor); });
-      li.append(details, link);
+      const open = node("button", t("عرض الدليل والسجل", "Open evidence and register"));
+      open.type = "button";
+      open.setAttribute("aria-controls", item.anchor);
+      open.addEventListener("click", () => openEvidence(item.anchor));
+      li.append(details, open);
     } else if (item.state === "clear") {
       li.append(node("span", " · " + t("لا يتطلب قرارًا في المصدر المقروء", "No decision required in the source read")));
     } else {
@@ -159,8 +188,8 @@ function decisionCard(result, period) {
     list.append(li);
   }
   section.append(heading, summary, list);
-  section.append(node("p", t("لا يسجّل النظام حاليًا اسم مسؤول لكل بند؛ الدور المذكور هو الجهة المصرّح لها بالإجراء.",
-    "The system does not yet record a named assignee for each item; the role shown is the party authorized to act.")));
+  section.append(node("p", t("المسميات الوظيفية مقترحة للتوجيه ولا تمنح حسابك صلاحية فعلية؛ صلاحيات الاعتماد تحددها سياسة الوصول.",
+    "Job titles are suggested routing and do not grant your account any permission; approval rights are set by the access policy.")));
   return section;
 }
 
@@ -175,7 +204,7 @@ function metrics(result, period) {
     : new Intl.NumberFormat(locale(),{style:"percent",maximumFractionDigits:1}).format(percentage)
       + " (" + number(result.completed) + "/" + number(result.issued) + ")";
   line(data, t("إنجاز أوامر الصيانة الوقائية الصادرة", "Completion of issued preventive work"), value);
-  line(data, t("خطط نشطة تجاوزت موعد الإصدار التالي", "Active plans past their next issue date"), number(result.waiting));
+  line(data, t("خطط نشطة تجاوزت موعد الإصدار التالي", "Active plans past their next issue date"), number(countOf(result.waiting)));
   container.append(data, node("p", t("المقام هو الاستحقاقات التي صدر لها أمر وتاريخها ضمن الفترة، من ", "Denominator: issued occurrences with due dates from ")
     + period.first + t(" إلى ", " to ") + period.today + t(" بتوقيت الرياض.", " (Riyadh).")));
   container.append(listPanel(t("أوامر وقائية صادرة تجاوزت تاريخ الاستحقاق", "Issued preventive orders past due"),result.overdue,
@@ -192,6 +221,19 @@ export function setupExecutiveOverview(client, parent) {
   root.className = "facility-performance";
   root.hidden = true;
   const resultBox = node("div");
+
+  // Evidence register for active plans past their issue date. Lives outside resultBox so refreshes do not drop it.
+  const overdueRegister = node("details");
+  overdueRegister.id = "fm-overdue-plans";
+  const overdueStatus = node("p");
+  overdueStatus.setAttribute("role", "status");
+  const overdueList = node("ol");
+  const overdueMore = node("button");
+  overdueMore.type = "button";
+  overdueMore.hidden = true;
+  overdueRegister.append(node("summary", t("خطط نشطة تجاوزت موعد إصدارها", "Active plans past their issue date")),
+    overdueStatus, overdueList, overdueMore);
+
   const schedule = node("section");
   schedule.id="fm-calendar";
   const label = node("label", t("فترة الاستحقاقات القادمة", "Upcoming due dates"));
@@ -209,10 +251,10 @@ export function setupExecutiveOverview(client, parent) {
   const more = node("button", t("تحميل المزيد من الخطط", "Load more plans"));
   more.type = "button";
   schedule.append(node("h4",t("تقويم الصيانة الوقائية", "Preventive maintenance calendar")),label,scheduleStatus,scheduleList,more);
-  root.append(node("h3",t("مركز متابعة المالك", "Owner follow-up desk")),resultBox,schedule,history);
+  root.append(node("h3",t("مركز متابعة المالك", "Owner follow-up desk")),resultBox,overdueRegister,schedule,history);
   parent.append(root);
   let current = null;
-  let revision = 0, pageRequest = 0, offset = 0;
+  let revision = 0, pageRequest = 0, offset = 0, overdueRequest = 0, overdueOffset = 0;
 
   history.addEventListener("toggle", async () => {
     if (!history.open || !current) return;
@@ -240,6 +282,54 @@ export function setupExecutiveOverview(client, parent) {
     });
     timestamps.replaceChildren(rows);
   });
+
+  async function loadOverduePlans(reset) {
+    if (!current) return;
+    const request = ++overdueRequest;
+    const {org,site,date} = current;
+    const today = periodInRiyadh(date).today;
+    if (reset) { overdueOffset = 0; overdueList.replaceChildren(); }
+    overdueMore.hidden = true;
+    overdueStatus.textContent = t("جارٍ قراءة الخطط المتأخرة…", "Loading overdue plans…");
+    const result = await safe(readOverduePlanPage(client, org, site, today, overdueOffset));
+    if (request !== overdueRequest) return;
+    const total = exact(result);
+    if (total === null || !Array.isArray(result.data)) {
+      overdueStatus.textContent = t("تعذرت قراءة الخطط المتأخرة.", "Overdue plans could not be read.");
+      overdueMore.textContent = t("إعادة المحاولة", "Retry");
+      overdueMore.hidden = false;
+      return;
+    }
+    for (const plan of result.data) {
+      const item = node("li"), details = node("details"), evidence = node("dl");
+      details.append(node("summary", [plan.next_due_on, plan.task, plan.facility_assets?.name].filter(Boolean).join(" · ")));
+      line(evidence, t("هوية الخطة", "Plan ID"), plan.id);
+      line(evidence, t("رمز الأصل", "Asset code"), plan.facility_assets?.asset_code || unknown());
+      line(evidence, t("مرجع خطة الصيانة", "Maintenance plan source"), plan.source_reference || unknown());
+      line(evidence, t("موعد الإصدار التالي", "Next issue date"), plan.next_due_on || unknown());
+      item.append(details); details.append(evidence); overdueList.append(item);
+    }
+    overdueOffset += result.data.length;
+    overdueStatus.textContent = t("الترتيب: الأقدم موعدًا أولًا ثم المعرّف · الحد: ", "Order: oldest due date first, then ID · Limit: ")
+      + number(pageSize) + t(" خطط لكل صفحة · معروض ", " plans per page · Showing ")
+      + number(Math.min(overdueOffset, total)) + t(" من أصل ", " of ") + number(total) + t(" خطة", " plans");
+    overdueMore.textContent = t("تحميل المزيد من الخطط المتأخرة", "Load more overdue plans");
+    overdueMore.hidden = !result.data.length || overdueOffset >= total;
+  }
+
+  function resetOverdueRegister() {
+    overdueRequest++;
+    overdueOffset = 0;
+    overdueRegister.open = false;
+    overdueList.replaceChildren();
+    overdueStatus.textContent = "";
+    overdueMore.hidden = true;
+  }
+  overdueRegister.addEventListener("toggle", () => {
+    if (overdueRegister.open && current) void loadOverduePlans(true);
+  });
+  overdueMore.addEventListener("click", () => void loadOverduePlans(overdueOffset === 0));
+
   async function loadCalendar(reset) {
     if (!current) return;
     const request = ++pageRequest;
@@ -283,6 +373,7 @@ export function setupExecutiveOverview(client, parent) {
     root.hidden = !org || !site;
     history.open = false; timestamps.replaceChildren();
     resultBox.replaceChildren(); scheduleList.replaceChildren();
+    resetOverdueRegister();
     scheduleStatus.textContent = ""; more.hidden = true; horizon.value = "30";
     if (root.hidden) return;
     current = {org,site,date:new Date()};

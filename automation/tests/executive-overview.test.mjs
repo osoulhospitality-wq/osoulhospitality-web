@@ -65,11 +65,11 @@ test("decision card separates unverified sources from zero and never invents a d
   assert.equal(mixed["fm-overdue-orders"].state, "decision");
   assert.equal(mixed["fm-overdue-orders"].count, 3);
   assert.equal(mixed["fm-pending-reviews"].state, "clear");
-  assert.equal(mixed["fm-calendar"].state, "unverified");
+  assert.equal(mixed["fm-overdue-plans"].state, "unverified");
 });
 test("every decision names the authorized role, the action and an existing evidence anchor", () => {
   const items = decisionItems({overdue:{count:1,data:[]}, pending:{count:2,data:[]}, waiting:{count:4,data:[]}});
-  assert.deepEqual(items.map(item => item.anchor), ["fm-overdue-orders","fm-pending-reviews","fm-calendar"]);
+  assert.deepEqual(items.map(item => item.anchor), ["fm-overdue-orders","fm-pending-reviews","fm-overdue-plans"]);
   for (const item of items) {
     assert.equal(item.state, "decision");
     assert.ok(item.owner && item.action && item.reason && item.label);
