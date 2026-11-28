@@ -70,8 +70,9 @@ export async function readExecutiveOverview(client, org, site, period) {
   return {issued: exact(all), known: exact(visible), completed: exact(finished), overdue, pending, waiting: exact(waiting)};
 }
 
-function listPanel(title, result, rowText, empty) {
+function listPanel(title, result, rowText, empty, id) {
   const panel = node("details");
+  if (id) panel.id = id;
   const count = exact(result);
   panel.append(node("summary", title + " · " + number(count)));
   if (count === null || !Array.isArray(result.data)) panel.append(node("p", unknown()));
@@ -86,9 +87,87 @@ function listPanel(title, result, rowText, empty) {
   return panel;
 }
 
+// Each source is read separately: null means unverified, zero means read and clear.
+function decisionSources(result) {
+  return [
+    {label: t("أوامر وقائية متأخرة", "Overdue preventive orders"), count: exact(result.overdue), anchor: "fm-overdue-orders",
+      reason: t("أوامر صادرة تاريخ استحقاقها قبل اليوم ولم تُغلق.", "Issued orders due before today that are not closed."),
+      owner: t("مسؤول الصيانة في المنشأة، أو مقدم الخدمة وفق اتفاقه", "Facility maintenance lead, or the provider under its agreement"),
+      action: t("تحديد موعد تنفيذ جديد أو تصعيد التأخير لمقدم الخدمة.", "Set a new completion date or escalate the delay to the provider.")},
+    {label: t("نماذج تنتظر المراجعة", "Forms awaiting review"), count: exact(result.pending), anchor: "fm-pending-reviews",
+      reason: t("نماذج أُرسلت ولم يُسجَّل لها قرار مراجعة.", "Submitted forms with no recorded review decision."),
+      owner: t("المالك أو المعتمد المصرَّح له بالمراجعة", "Owner or authorized approver"),
+      action: t("اعتماد النموذج أو إعادته مع سبب مسجَّل.", "Accept the form or return it with a recorded reason.")},
+    {label: t("خطط تجاوزت موعد إصدارها", "Plans past their issue date"), count: exact(result.waiting), anchor: "fm-calendar",
+      reason: t("خطط نشطة تجاوز موعد إصدارها التالي.", "Active plans past their next issue date."),
+      owner: t("المالك أو المعتمد المصرَّح له بإصدار الخطة أو إيقافها", "Owner or approver authorized to issue or pause the plan"),
+      action: t("إصدار الأمر الوقائي أو توثيق سبب التأجيل.", "Issue the preventive order or record the reason for deferral.")}
+  ];
+}
+
+export function decisionItems(result) {
+  return decisionSources(result).map(item => ({...item,
+    state: item.count === null ? "unverified" : item.count > 0 ? "decision" : "clear"}));
+}
+
+function openEvidence(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  for (let p = target; p; p = p.parentElement) if (p.tagName === "DETAILS") p.open = true;
+  if (!target.hasAttribute("tabindex") && target.tagName !== "DETAILS") target.tabIndex = -1;
+  (target.querySelector(":scope > summary") || target).focus({preventScroll: true});
+  target.scrollIntoView({block: "start"});
+}
+
+function decisionCard(result, period) {
+  const items = decisionItems(result);
+  const section = node("section");
+  section.id = "fm-decision-today";
+  section.className = "decision-today";
+  const heading = node("h4", t("قرار مطلوب اليوم", "Decisions needed today"));
+  heading.id = "fm-decision-title";
+  section.setAttribute("aria-labelledby", heading.id);
+  const summary = node("p");
+  summary.setAttribute("role", "status");
+  const needing = items.filter(item => item.state === "decision");
+  const unverified = items.filter(item => item.state === "unverified");
+  const unreadNote = unverified.length
+    ? " " + t("بعض المصادر لم تُقرأ، فلا يُعد غياب بنودها دليلًا على عدم وجودها.", "Some sources were not read, so the absence of their items is not evidence that none exist.")
+    : "";
+  summary.textContent = (needing.length
+    ? t("بنود تحتاج قرارًا حتى ", "Items needing a decision as of ") + period.today + t(" بتوقيت الرياض.", " (Riyadh).")
+    : t("لا توجد بنود تحتاج قرارًا في المصادر المقروءة اليوم.", "No items need a decision in the sources read today.")) + unreadNote;
+  const list = node("ol");
+  for (const item of items) {
+    const li = node("li");
+    const head = node("strong", item.label + " · " + (item.count === null ? unknown() : number(item.count)));
+    li.append(head);
+    if (item.state === "decision") {
+      const details = node("dl");
+      line(details, t("السبب", "Why"), item.reason);
+      line(details, t("المسؤول المصرَّح له", "Authorized to act"), item.owner);
+      line(details, t("الإجراء", "Action"), item.action);
+      const link = node("a", t("عرض الدليل والسجل", "Open evidence and register"));
+      link.href = "#" + item.anchor;
+      link.addEventListener("click", event => { event.preventDefault(); openEvidence(item.anchor); });
+      li.append(details, link);
+    } else if (item.state === "clear") {
+      li.append(node("span", " · " + t("لا يتطلب قرارًا في المصدر المقروء", "No decision required in the source read")));
+    } else {
+      li.append(node("span", " · " + t("تعذرت قراءة المصدر؛ لا يعني ذلك صفرًا", "Source not read; this is not a zero")));
+    }
+    list.append(li);
+  }
+  section.append(heading, summary, list);
+  section.append(node("p", t("لا يسجّل النظام حاليًا اسم مسؤول لكل بند؛ الدور المذكور هو الجهة المصرّح لها بالإجراء.",
+    "The system does not yet record a named assignee for each item; the role shown is the party authorized to act.")));
+  return section;
+}
+
 function metrics(result, period) {
   const container = node("section");
   container.append(node("h4",t("أولويات الصيانة والمراجعة", "Maintenance and review priorities")));
+  container.append(decisionCard(result, period));
   const data = node("dl");
   const percentage = completionRatio(result.issued,result.known,result.completed);
   const value = percentage === null
@@ -101,10 +180,10 @@ function metrics(result, period) {
     + period.first + t(" إلى ", " to ") + period.today + t(" بتوقيت الرياض.", " (Riyadh).")));
   container.append(listPanel(t("أوامر وقائية صادرة تجاوزت تاريخ الاستحقاق", "Issued preventive orders past due"),result.overdue,
     row => [row.due_on, row.facility_work_orders?.summary || unknown(), row.work_order_id].join(" · "),
-    t("لا تظهر أوامر وقائية متأخرة.", "No overdue preventive orders are visible.")));
+    t("لا تظهر أوامر وقائية متأخرة.", "No overdue preventive orders are visible."), "fm-overdue-orders"));
   container.append(listPanel(t("نماذج مرسلة تنتظر المراجعة", "Submitted forms awaiting review"),result.pending,
     row => [row.code, row.submitted_at ? riyadhClock.format(new Date(row.submitted_at)) : unknown(), row.id].join(" · "),
-    t("لا تظهر نماذج مرسلة تنتظر المراجعة.", "No submitted forms awaiting review are visible.")));
+    t("لا تظهر نماذج مرسلة تنتظر المراجعة.", "No submitted forms awaiting review are visible."), "fm-pending-reviews"));
   return container;
 }
 

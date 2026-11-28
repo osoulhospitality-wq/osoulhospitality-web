@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 globalThis.document = {documentElement:{lang:"en-SA"}};
-const {periodInRiyadh, completionRatio, readExecutiveOverview} = await import("../../command-center/enterprise/src/executive-overview.js");
+const {periodInRiyadh, completionRatio, readExecutiveOverview, decisionItems} = await import("../../command-center/enterprise/src/executive-overview.js");
 
 test("month and day roll at Riyadh midnight including year boundary", () => {
   assert.deepEqual(periodInRiyadh(new Date("2025-12-31T21:00:00Z"),7), {today:"2026-01-01",first:"2026-01-01",end:"2026-01-07"});
@@ -53,4 +53,25 @@ test("query errors are preserved for individual sources and never converted to z
   const result = await readExecutiveOverview(client,"o","f",periodInRiyadh());
   assert.deepEqual([result.issued,result.known,result.completed,result.waiting],[null,null,null,null]);
   assert.ok(result.overdue.error);assert.ok(result.pending.error);
+});
+
+test("decision card separates unverified sources from zero and never invents a decision", () => {
+  const byAnchor = items => Object.fromEntries(items.map(item => [item.anchor, item]));
+  const unread = decisionItems({overdue:{error:true}, pending:{error:true}, waiting:{error:true}});
+  assert.ok(unread.every(item => item.state === "unverified" && item.count === null));
+  const clear = byAnchor(decisionItems({overdue:{count:0,data:[]}, pending:{count:0,data:[]}, waiting:{count:0,data:[]}}));
+  assert.ok(Object.values(clear).every(item => item.state === "clear" && item.count === 0));
+  const mixed = byAnchor(decisionItems({overdue:{count:3,data:[]}, pending:{count:0,data:[]}, waiting:{error:true}}));
+  assert.equal(mixed["fm-overdue-orders"].state, "decision");
+  assert.equal(mixed["fm-overdue-orders"].count, 3);
+  assert.equal(mixed["fm-pending-reviews"].state, "clear");
+  assert.equal(mixed["fm-calendar"].state, "unverified");
+});
+test("every decision names the authorized role, the action and an existing evidence anchor", () => {
+  const items = decisionItems({overdue:{count:1,data:[]}, pending:{count:2,data:[]}, waiting:{count:4,data:[]}});
+  assert.deepEqual(items.map(item => item.anchor), ["fm-overdue-orders","fm-pending-reviews","fm-calendar"]);
+  for (const item of items) {
+    assert.equal(item.state, "decision");
+    assert.ok(item.owner && item.action && item.reason && item.label);
+  }
 });
