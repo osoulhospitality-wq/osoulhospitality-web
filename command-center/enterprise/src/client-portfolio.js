@@ -53,16 +53,37 @@ export function setupClientPortfolio(db) {
   document.getElementById("fm-facility").before(panel);
   if(location.hash==="#contract-register")contractPanel.open=true;
   let clients=[],organization="",sequence=0,read,clientId="",code="";
-  let pilotClient="", pilotState=new Map();
+  let pilotState=new Map(),periodKey="";
+  // Facility UUIDs stay distinct even when two clients use the same building code.
+  function reportingPeriods() {
+    const groups=new Map();
+    for(const client of clients){
+      const pilot=client.detail?.pilot;
+      if(!pilot?.sites?.length)continue;
+      const key=JSON.stringify([pilot.start,pilot.end,pilot.timezone]);
+      let group=groups.get(key);
+      if(!group){
+        group={key,pilot:{start:pilot.start,end:pilot.end,timezone:pilot.timezone,sites:[]},places:[]};
+        groups.set(key,group);
+      }
+      for(const record of pilot.sites){
+        const site=client.facilities?.find(f=>f.code===record.code);
+        if(!site)continue;
+        group.places.push({code:site.id,name:site.name});
+        group.pilot.sites.push({...record,code:site.id,clientName:client.name});
+      }
+    }
+    return [...groups.values()].filter(g=>g.places.length).sort((a,b)=>String(b.pilot.start).localeCompare(String(a.pilot.start)));
+  }
   function focusPilot(){
     const section=panel.querySelector("#facility-pilot");
-    if(section){section.focus({preventScroll:true});section.scrollIntoView({block:"start"});}
+    if(section){section.focus({preventScroll:true});panel.scrollIntoView({block:"start"});}
   }
   const building=()=>document.getElementById("fm-building-select");
   function showClient(id,facilityCode="",move=false){
-    if(pilotClient!==id){pilotState=new Map();pilotClient=id;}
+
     clientId=id;code=facilityCode;render();
-    if(move){const heading=panel.querySelector("h3");heading?.focus({preventScroll:true});panel.scrollIntoView({block:"start"});}
+    if(move){panel.tabIndex=-1;panel.focus({preventScroll:true});panel.scrollIntoView({block:"start"});}
   }
   function renderContracts(){
     contractSection.replaceChildren(elem("h4",t("عقود العملاء والمنشآت","Client and facility agreements")));
@@ -87,37 +108,78 @@ export function setupClientPortfolio(db) {
     }
     contractSection.hidden=!clients.length;
   }
+  function selectSite(id){
+    const owner=clients.find(c=>c.facilities?.some(f=>f.id===id));
+    const site=owner?.facilities.find(f=>f.id===id);
+    if(!site)return;
+    const base=building();
+    if(base && [...base.options].some(o=>o.value===id) && base.value!==id){
+      base.value=id;
+      base.dispatchEvent(new Event("change"));
+    }else{
+      showClient(owner.id,site.code);
+    }
+  }
   function render(){
     panel.replaceChildren();
-    const client=clients.find(c=>c.id===clientId);if(!client){panel.hidden=true;return;}
+    if(!clients.length){panel.hidden=true;return;}
     panel.hidden=false;
-    const heading=elem("h3",t("العملاء المتعاقدون","Contracted clients"));heading.tabIndex=-1;
-    const filters=elem("div",null,"client-filters"),places=client.facilities||[];
-    const site=places.find(f=>f.code===code);
-    const [cl,ci]=select(t("العميل","Client"),clients.map(c=>[c.id,c.name]),id=>showClient(id));
-    ci.value=client.id;
-    const [sl,si]=select(t("نطاق التقرير","Report scope"),[["",t("محفظة العميل","Client portfolio")],...places.map(f=>[f.code,f.name])],code=>{
-      const selected=places.find(f=>f.code===code),base=building();
-      if(selected&&base&&[...base.options].some(o=>o.value===selected.id)&&base.value!==selected.id){
-        base.value=selected.id;base.dispatchEvent(new Event("change"));
-      }
-      showClient(client.id,code);
+    const client=clients.find(c=>c.id===clientId);
+    const places=client?.facilities||clients.flatMap(c=>c.facilities||[]);
+    const site=client?.facilities?.find(f=>f.code===code);
+    const picker=elem("div",null,"client-filters dossier-scope");
+    const clientChoices=clients.map(c=>[c.id,c.name]);
+    if(clients.length>1)clientChoices.unshift(["",t("محفظة أصول · كل العملاء","Osoul portfolio · All clients")]);
+    const [clientLabel,clientSelect]=select(t("نطاق العميل","Client scope"),clientChoices,id=>showClient(id));
+    clientSelect.value=clientId;
+    const siteChoices=places.map(f=>[client?f.code:f.id,f.name]);
+    const [siteLabel,siteSelect]=select(t("المنشأة","Facility"),[["",t("جميع منشآت النطاق","All facilities in scope")],...siteChoices],key=>{
+      if(!key){showClient(clientId);return;}
+      const selected=client?places.find(f=>f.code===key):places.find(f=>f.id===key);
+      if(selected)selectSite(selected.id);
     });
-    si.value=site?.code||"";filters.append(cl,sl);
+    siteSelect.value=site?.code||"";
+    picker.append(clientLabel,siteLabel);
+    panel.append(picker);
+    if(!client){
+      const periods=reportingPeriods(),group=periods.find(g=>g.key===periodKey)||periods[0];
+      if(group){
+        periodKey=group.key;
+        if(periods.length>1){
+          const [periodLabel,periodSelect]=select(t("أسبوع الخطة","Planning week"),periods.map(g=>[g.key,[g.pilot.start,g.pilot.end,g.pilot.timezone].join(" · ")]),next=>{periodKey=next;render();});
+          periodSelect.value=periodKey;picker.append(periodLabel);
+        }
+        const board=renderFacilityPilot(group.pilot,group.places,"",pilotState,selectSite);
+        if(board)panel.append(board);
+      }else{
+        panel.append(elem("p",t("اختر عميلًا لاستعراض عقده وسجلات منشآته.","Choose a client to see its agreement and facility records.")));
+      }
+      return;
+    }
     const source=id=>sourceName(client.sources||[],id);
+    const clientPilot=client.detail?.pilot;
+    if(clientPilot){
+      const group=reportingPeriods().find(g=>g.key===JSON.stringify([clientPilot.start,clientPilot.end,clientPilot.timezone]));
+      if(group){
+        const ids=new Set(places.map(f=>f.id));
+        const scoped={...clientPilot,sites:group.pilot.sites.filter(f=>ids.has(f.code))};
+        const board=renderFacilityPilot(scoped,group.places.filter(f=>ids.has(f.code)),site?.id||"",pilotState,selectSite);
+        if(board)panel.append(board);
+      }
+    }
+    const contract=client.contract||{};
+    const heading=elem("h3",site?.name||client.name);heading.tabIndex=-1;
     const links=elem("nav",null,"fm-shortcuts");
     const contractLink=elem("a",t("عقد العميل","Client agreement"));contractLink.href="#contract-register";
     contractLink.onclick=()=>{contractPanel.open=true;};links.append(contractLink);
     const forms=elem("a",t("اختيار المبنى المسند ونموذج الفني","Choose an assigned building and field form"));forms.href=(document.documentElement.lang.startsWith("en")?"/en":"")+"/field-forms/#form-picker";links.append(forms);
-    const contract=client.contract||{};
-    panel.append(heading,filters,elem("h4",site?.name||client.name),
-      elem("p",[contract.name,statusLabel(contract.status||client.status),contract.evidence_note].filter(Boolean).join(" · ")),
-      links);
+    panel.append(heading,elem("p",[contract.name,statusLabel(contract.status||client.status),contract.evidence_note].filter(Boolean).join(" · ")),links);
     const register=sourceRegister(site);
     if(register)panel.append(register);
-    const pilot=renderFacilityPilot(client.detail?.pilot,places,site?.code||"",pilotState);
-    if(pilot)panel.append(pilot);
-    panel.append(facts(client,site,source),monthlyChart(client,site,source),...records(client,site,source));
+    if(client.observations?.length||client.detail?.totals||site?.detail?.metrics?.length){
+      panel.append(facts(client,site,source),monthlyChart(client,site,source));
+    }
+    panel.append(...records(client,site,source));
   }
   document.getElementById("fm-building-select")?.addEventListener("change",()=>{
     const id=building()?.value;
@@ -126,7 +188,7 @@ export function setupClientPortfolio(db) {
   });
   return async function load(id){
     const token=++sequence;
-    read?.abort();pilotState=new Map();pilotClient="";organization=id;clients=[];clientId="";code="";
+    read?.abort();pilotState=new Map();periodKey="";organization=id;clients=[];clientId="";code="";
     panel.replaceChildren();contractSection.replaceChildren();panel.hidden=contractSection.hidden=true;
     if(!id)return;
     read=new AbortController();
@@ -139,14 +201,15 @@ export function setupClientPortfolio(db) {
       if(!clients.length)return;
       const initialSite=building()?.value;
       const matched=clients.find(c=>c.facilities?.some(f=>f.id===initialSite));
-      const initial=matched||clients[0];
-      const pilotEntry=location.hash==="#facility-pilot"?clients.find(c=>c.detail?.pilot?.sites?.length):null;
-      showClient(pilotEntry?.id||initial.id,pilotEntry?"":matched?.facilities.find(f=>f.id===initialSite)?.code||"");
+      const initial=matched || clients.find(c=>c.observations?.length) || clients[0];
+      const allClients=clients.length>1 && location.hash!=="#client-portfolio";
+      const pilotEntry=location.hash==="#facility-pilot" && !allClients;
+      showClient(allClients?"":initial.id,allClients||pilotEntry?"":matched?.facilities.find(f=>f.id===initialSite)?.code||"");
       renderContracts();
       if(location.hash==="#facility-pilot"){
         requestAnimationFrame(()=>{if(sequence===token)focusPilot();});
       }else if(location.hash==="#client-portfolio") {
-        requestAnimationFrame(()=>{if(sequence===token){panel.querySelector("h3")?.focus({preventScroll:true});panel.scrollIntoView({block:"start"});}});
+        requestAnimationFrame(()=>{if(sequence===token){panel.querySelector("select")?.focus({preventScroll:true});panel.scrollIntoView({block:"start"});}});
       } else if(location.hash==="#contract-register") {
         contractPanel.open=true;
         requestAnimationFrame(()=>{if(sequence===token)contractPanel.scrollIntoView({block:"start"});});
