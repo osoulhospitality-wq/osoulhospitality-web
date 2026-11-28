@@ -191,7 +191,7 @@ async function showDashboard(session) {
     });
     select.replaceChildren(...options);
     await loadCounts(select.value);
-    setStatus(uiText("تم التحقق من هويتك وتحميل بيانات منشآتك.", "Your identity is verified and your facility data has loaded."), "success");
+    setStatus(uiText("تم فتح لوحة المنشأة.", "Your facility dashboard is open."), "success");
   } catch (error) {
     setStatus(friendlyError(error), "error");
   }
@@ -379,7 +379,7 @@ if (!configReady) {
     setStatus(uiText("جارٍ تحميل مؤشرات المنشأة…", "Loading organization metrics…"));
     try {
       await loadCounts(event.currentTarget.value);
-      setStatus(uiText("تم تحميل البيانات المصرح بها.", "Authorized data loaded."), "success");
+      setStatus(uiText("تم اختيار المنشأة.", "Facility selected."), "success");
     } catch (error) {
       setStatus(friendlyError(error), "error");
     }
