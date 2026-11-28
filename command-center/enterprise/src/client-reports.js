@@ -105,3 +105,6 @@ export function monthlyChart(client,site,source) {
   }
   draw();return box;
 }
+
+export const metricLabel = key => human(names,key);
+export const unitLabel = key => human(units,key);

@@ -5,6 +5,7 @@ import { setupReportHistory } from "./report-history.js";
 import { setupExecutiveOverview } from "./executive-overview.js";
 import { setupEngineeringIntelligence } from "./engineering-intelligence.js";
 import { setupEvidenceCenter } from "./evidence-center.js";
+import { setupFacilityPricing } from "./facility-pricing.js";
 import { setupResourceFinance } from "./resource-finance.js";
 import { uiText as t } from "./locale.js";
 
@@ -97,6 +98,7 @@ export function setupPerformance(client) {
   root.lastElementChild.id="fm-engineering";
   const showEvidence = setupEvidenceCenter(client,root);
   root.lastElementChild.id="fm-evidence";
+  const showPricing=setupFacilityPricing(client,root);
   const showResourceFinance = setupResourceFinance(client,root);
   root.lastElementChild.id="fm-resource";
   let sequence = 0, currentOrg = "", trendRequest;
@@ -111,6 +113,7 @@ export function setupPerformance(client) {
     void showExecutive(org,site);
     void showEngineering(org,site);
     void showEvidence(org,site);
+    showPricing(org,site);
     void showResourceFinance(org,site);
     trendRequest?.abort();
     trendRequest = new AbortController();
@@ -175,6 +178,7 @@ export function setupPerformance(client) {
     void showExecutive("","");
     void showEngineering("","");
     void showEvidence("","");
+    showPricing("","");
     void showResourceFinance("","");
     select.replaceChildren();
     grid.replaceChildren();

@@ -1,5 +1,8 @@
 import {uiText as t} from "./locale.js";
 import {elem,select,table,detail,monthlyChart} from "./client-reports.js";
+import {setupFacilityPricing} from "./facility-pricing.js";
+import {managementHistory} from "./management-history.js";
+import {goToPanel} from "./visual-dashboard.js";
 import {renderFacilityPilot,sourceRegister} from "./facility-pilot.js";
 const fmt=new Intl.NumberFormat(document.documentElement.lang,{maximumFractionDigits:2});
 const value=v=>Number.isFinite(v)?fmt.format(v):"—";
@@ -157,6 +160,24 @@ export function setupClientPortfolio(db) {
       return;
     }
     const source=id=>sourceName(client.sources||[],id);
+    const quick=elem("nav",null,"fm-shortcuts insight-nav");
+    quick.setAttribute("aria-label",t("قراءة أداء المنشأة","Performance review"));
+    const historyLink=elem("a",t("مقارنة مؤشرات الشهور","Compare monthly KPIs"));
+    historyLink.href="#fm-management-history";historyLink.onclick=e=>{e.preventDefault();goToPanel("fm-management-history");};
+    quick.append(historyLink);
+    let dossierPricing;
+    if(site){
+      const needsLocalScope=building()?.value!==site.id;
+      if(needsLocalScope){
+        dossierPricing=elem("div");
+        const setPriceScope=setupFacilityPricing(db,dossierPricing,"fm-dossier-pricing");
+        setPriceScope(organization,site.id);
+      }
+      const target=needsLocalScope?"fm-dossier-pricing":"fm-pricing";
+      const rates=elem("a",t("تسعير الليالي","Nightly pricing"));rates.href="#"+target;
+      rates.onclick=e=>{e.preventDefault();goToPanel(target);};quick.append(rates);
+    }
+    picker.after(quick);
     const clientPilot=client.detail?.pilot;
     if(clientPilot){
       const group=reportingPeriods().find(g=>g.key===JSON.stringify([clientPilot.start,clientPilot.end,clientPilot.timezone]));
@@ -174,6 +195,8 @@ export function setupClientPortfolio(db) {
     contractLink.onclick=()=>{contractPanel.open=true;};links.append(contractLink);
     const forms=elem("a",t("اختيار المبنى المسند ونموذج الفني","Choose an assigned building and field form"));forms.href=(document.documentElement.lang.startsWith("en")?"/en":"")+"/field-forms/#form-picker";links.append(forms);
     panel.append(heading,elem("p",[contract.name,statusLabel(contract.status||client.status),contract.evidence_note].filter(Boolean).join(" · ")),links);
+    panel.append(managementHistory(client,site,source));
+    if(dossierPricing)panel.append(dossierPricing);
     const register=sourceRegister(site);
     if(register)panel.append(register);
     if(client.observations?.length||client.detail?.totals||site?.detail?.metrics?.length){
