@@ -6,6 +6,14 @@ import { setupPerformance } from "./facility-performance.js";
 
 import { setupContracts } from "./contracts.js";
 
+import { setupProviderDesk } from "./provider-desk.js";
+import { setupCommercialIntelligence } from "./commercial-intelligence.js";
+import { setupPortfolio } from "./portfolio.js";
+
+let providerDesk, showCommercial, showPortfolio, resetOperations;
+let authEpoch=0, activeSessionId=null;
+let dashboardGeneration=0;
+const workspace = new URLSearchParams(location.search).get("workspace");
 let showContracts;
 let countsVersion = 0;
 let showPerformance;
@@ -19,6 +27,7 @@ const views = {
   passwordUpdate: document.querySelector("#password-update-view"),
   verify: document.querySelector("#mfa-verify-view"),
   enroll: document.querySelector("#mfa-enroll-view"),
+  provider: document.querySelector("#provider-view"),
   dashboard: document.querySelector("#dashboard-view")
 };
 const statusNode = document.querySelector("#app-status");
@@ -32,8 +41,22 @@ function setStatus(message = "", type = "") {
 }
 
 function showView(name) {
+  if(name!=="provider") void providerDesk?.showProvider(false);
   if (name !== "dashboard") {
+    document.getElementById("panel-search").value="";
+    document.getElementById("panel-matches").replaceChildren();
+    resetOperations?.();
     countsVersion++;
+    dashboardGeneration++;
+    providerDesk?.setOrganization("");
+    showCommercial?.("");
+    showPortfolio?.("");
+    document.querySelector("#organization-select").replaceChildren();
+    document.querySelector("#organization-dashboard").hidden=true;
+    document.querySelector("#organization-empty").hidden=true;
+    document.querySelector("#profile-status").textContent="";
+    document.querySelector("#session-identity").textContent="";
+    document.querySelector("#display-name").value="";
     showPerformance?.("");
     showContracts?.("");
     document.querySelector("#kpi-grid").replaceChildren();
@@ -56,7 +79,8 @@ function setBusy(form, busy) {
 
 async function signOut() {
   setStatus(uiText("جارٍ إنهاء الجلسة…", "Signing out…"));
-  await supabase.auth.signOut();
+  const {error}=await supabase.auth.signOut();
+  if(error){setStatus(friendlyError(error),"error");return;}
   activeFactorId = null;
   passwordUpdateUserId = null;
   showView("signIn");
@@ -137,15 +161,25 @@ async function verifyFactor(form, factorId) {
 }
 
 async function getOrganizations() {
-  const { data, error } = await supabase.from("organizations").select("id,name,created_at").order("created_at", { ascending: true });
-  if (error) throw error;
-  return data || [];
+  const rows=[];
+  for(let offset=0;;){
+    const {data,error}=await supabase.from("organizations").select("id,name,created_at").order("created_at").order("id").range(offset,offset+99);
+    if(error)throw error;
+    if(!data?.length)return rows;
+    rows.push(...data);
+    offset+=data.length;
+  }
 }
 
 async function loadCounts(organizationId) {
   const version = ++countsVersion;
+  document.getElementById("panel-search").value="";
+  document.getElementById("panel-matches").replaceChildren();
   document.querySelector("#kpi-grid").replaceChildren();
   showContracts(organizationId);
+  providerDesk.setOrganization(organizationId);
+  showCommercial(organizationId);
+  const portfolioReady=showPortfolio(organizationId);
   void showPerformance(organizationId);
   const definitions = [
     ["suppliers", uiText("الموردون", "Suppliers")], ["products", uiText("المنتجات", "Products")], ["quotes", uiText("عروض الأسعار", "Quotations")],
@@ -155,6 +189,7 @@ async function loadCounts(organizationId) {
     const { count, error } = await supabase.from(table).select("*", { count: "exact", head: true }).eq("organization_id", organizationId);
     return { label, count: !error && Number.isSafeInteger(count) ? count : uiText("غير متاح", "Unavailable") };
   }));
+  await portfolioReady;
   if (version !== countsVersion) return;
   document.querySelector("#kpi-grid").innerHTML = results.map(({ label, count }) => `<div class="kpi"><strong>${count}</strong><span>${label}</span></div>`).join("");
 }
@@ -166,12 +201,21 @@ function renderAccountIdentity(user) {
 }
 
 async function showDashboard(session) {
+  if(workspace==="provider") {
+    showView("provider");
+    setStatus();
+    await providerDesk.showProvider(true);
+    return;
+  }
+  showView("signIn");
+  const generation=++dashboardGeneration;
   showPerformance?.("");
-  showView("dashboard");
   renderAccountIdentity(session.user);
   document.querySelector("#profile-status").textContent = "";
   try {
     const organizations = await getOrganizations();
+    if(generation!==dashboardGeneration)return;
+    showView("dashboard");
     const empty = document.querySelector("#organization-empty");
     const dashboard = document.querySelector("#organization-dashboard");
     if (!organizations.length) {
@@ -191,14 +235,21 @@ async function showDashboard(session) {
     });
     select.replaceChildren(...options);
     await loadCounts(select.value);
+    if(generation!==dashboardGeneration)return;
+    if(workspace==="portfolio") {
+      const portfolio=document.getElementById("portfolio-desk");
+      if(portfolio && !portfolio.hidden){portfolio.open=true;portfolio.scrollIntoView({block:"start"});}
+    }
     setStatus(uiText("تم فتح لوحة المنشأة.", "Your facility dashboard is open."), "success");
   } catch (error) {
-    setStatus(friendlyError(error), "error");
+    if(generation===dashboardGeneration)setStatus(friendlyError(error), "error");
   }
 }
 
 async function routeSession() {
+  const epoch=authEpoch;
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if(epoch!==authEpoch)return;
   if (sessionError) {
     setStatus(friendlyError(sessionError), "error");
     showView("signIn");
@@ -213,6 +264,7 @@ async function routeSession() {
   }
 
   const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(epoch!==authEpoch)return;
   if (aalError) {
     setStatus(friendlyError(aalError), "error");
     return;
@@ -230,6 +282,7 @@ async function routeSession() {
   }
 
   const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+  if(epoch!==authEpoch)return;
   if (factorsError) {
     setStatus(friendlyError(factorsError), "error");
     return;
@@ -258,9 +311,53 @@ if (!configReady) {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
     global: { headers: { "X-Client-Info": "osoul-command-center-v15" } }
   });
-  setupFacilityOperations(supabase);
+  const search=document.getElementById("panel-search");
+  const matches=document.getElementById("panel-matches");
+  const normalize=value=>value.normalize("NFKC").toLocaleLowerCase().replace(/[أإآ]/g,"ا").replace(/[\u064B-\u065F]/g,"").trim();
+  search.addEventListener("input",()=>{
+    matches.replaceChildren();
+    const term=normalize(search.value);
+    if(!term)return;
+    for(const item of document.querySelectorAll("#organization-dashboard details > summary")){
+      if(item.closest("[hidden]")||!normalize(item.textContent).includes(term))continue;
+      const button=document.createElement("button");
+      button.type="button";button.textContent=item.textContent;
+      button.onclick=()=>{
+        if(!item.isConnected||item.closest("[hidden]"))return;
+        for(let el=item.parentElement;el;el=el.parentElement)if(el.tagName==="DETAILS")el.open=true;
+        item.focus();item.scrollIntoView({block:"center"});
+      };
+      matches.append(button);
+    }
+    if(!matches.childElementCount)matches.textContent=uiText("لم تظهر أداة بهذا الاسم ضمن المنشأة المحددة.","No matching tool for the selected facility.");
+  });
+  resetOperations = setupFacilityOperations(supabase);
   showPerformance = setupPerformance(supabase);
   showContracts = setupContracts(supabase);
+  providerDesk = setupProviderDesk(supabase);
+  showCommercial = setupCommercialIntelligence(supabase);
+  showPortfolio = setupPortfolio(supabase);
+  if(workspace==="provider"||workspace==="portfolio"){
+    const title=workspace==="provider"?uiText("بوابة مقدم الخدمة","Service provider portal"):uiText("غرفة إدارة المحفظة","Portfolio command center");
+    document.getElementById("enterprise-title").textContent=title;
+    document.title=title+" | Osoul";
+  }
+  supabase.auth.onAuthStateChange((event,session)=>{
+    const id=session?.user?.id||null;
+    const changed=activeSessionId!==null && id!==activeSessionId;
+    activeSessionId=id;
+    if(event==="SIGNED_OUT"||changed){
+      authEpoch++;
+      activeFactorId=null;
+      passwordUpdateUserId=null;
+      document.querySelector("#totp-qr").removeAttribute("src");
+      document.querySelector("#totp-secret").textContent="";
+      for(const form of document.querySelectorAll("#enterprise-app form"))form.reset();
+      showView("signIn");
+      setStatus();
+      if(id)window.setTimeout(routeSession,0);
+    }
+  });
 
   document.querySelector("#display-name-form").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -271,10 +368,12 @@ if (!configReady) {
       status.textContent = uiText("أدخل اسم عرض من حرف إلى 80 حرفًا.", "Enter a display name of 1 to 80 characters.");
       return;
     }
+    const epoch=authEpoch;
     setBusy(form, true);
     try {
       const { data, error } = await supabase.auth.updateUser({ data: { display_name: name } });
       if (error) throw error;
+      if(epoch!==authEpoch)return;
       renderAccountIdentity(data.user);
       status.textContent = uiText("حُفظ اسم العرض.", "Display name saved.");
     } catch (error) {

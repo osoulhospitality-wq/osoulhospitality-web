@@ -55,3 +55,13 @@ jobs:
           node-version: '22'
       - name: Validate Dragon workflow and acceptance policy
         run: node automation/tests/dragon-workflow.test.mjs
+
+  fm-control:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify facilities control and internal routing
+        run: node --test automation/tests/*.test.mjs automation/corporation/*.test.mjs

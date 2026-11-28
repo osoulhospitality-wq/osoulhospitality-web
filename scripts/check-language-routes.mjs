@@ -34,10 +34,10 @@ for (const route of urls) {
 for (const prefix of ["", "/en"]) {
   const login = fs.readFileSync(path.join(root, prefix, "login/index.html"), "utf8");
   const owner = fs.readFileSync(path.join(root, prefix, "command-center/enterprise/index.html"), "utf8");
-  for (const href of [prefix + "/command-center/enterprise/", "/field-forms/", "/field-forms/#decisions"]) {
+  for (const href of [prefix + "/command-center/enterprise/", prefix + "/field-forms/", prefix + "/field-forms/#decisions"]) {
     if (!login.includes('href="' + href + '"')) failures.push(prefix + "/login/ missing " + href);
   }
-  if (!owner.includes('href="/field-forms/"')) failures.push(prefix + " owner portal missing field link");
+  if (!owner.includes('href="' + prefix + '/field-forms/"')) failures.push(prefix + " owner portal missing field link");
   if (/https?:\/\/[^"\s]*(?:chatgpt\.site|chatgpt\.com)/i.test(login + owner)) {
     failures.push(prefix + " workspace redirects off the Osoul domain");
   }

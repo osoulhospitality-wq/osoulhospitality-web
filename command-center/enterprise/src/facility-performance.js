@@ -1,3 +1,9 @@
+import { setupReputation } from "./reputation.js";
+import { setupReportHistory } from "./report-history.js";
+import { setupExecutiveOverview } from "./executive-overview.js";
+import { setupEngineeringIntelligence } from "./engineering-intelligence.js";
+import { setupEvidenceCenter } from "./evidence-center.js";
+import { setupResourceFinance } from "./resource-finance.js";
 import { uiText as t } from "./locale.js";
 
 const facts = [
@@ -70,9 +76,21 @@ export function setupPerformance(client) {
   grid.className = "performance-cards";
   root.append(node("h3", t("أداء المنشأة وجودة خدمة المورد","Facility performance and supplier quality")), label, status, grid);
   document.querySelector("#kpi-grid").after(root);
+  const showReputation=setupReputation(client,root);
+  const showReports=setupReportHistory(client,root);
+  const showExecutive = setupExecutiveOverview(client,root);
+  const showEngineering = setupEngineeringIntelligence(client,root);
+  const showEvidence = setupEvidenceCenter(client,root);
+  const showResourceFinance = setupResourceFinance(client,root);
   let sequence = 0, currentOrg = "";
   async function showSite() {
     const token = ++sequence, org = currentOrg, site = select.value;
+    void showReputation(org,site);
+    void showReports(org,site);
+    void showExecutive(org,site);
+    void showEngineering(org,site);
+    void showEvidence(org,site);
+    void showResourceFinance(org,site);
     grid.replaceChildren();
     if (!org || !site) return;
     status.textContent = t("جارٍ قراءة سجلات المبنى…","Reading building records…");
@@ -121,6 +139,12 @@ export function setupPerformance(client) {
   return async function setOrganization(org) {
     const token = ++sequence;
     currentOrg = org;
+    void showReputation("","");
+    void showReports("","");
+    void showExecutive("","");
+    void showEngineering("","");
+    void showEvidence("","");
+    void showResourceFinance("","");
     select.replaceChildren();
     grid.replaceChildren();
     status.textContent = "";

@@ -44,6 +44,22 @@ await check("critical pages", async () => {
   return `${results.length} critical routes returned complete HTML`;
 });
 
+await check("facilities portal entrances", async () => {
+  const routes = ["", "/en"].flatMap(locale => [
+    [locale + "/login/", ["?workspace=provider", "?workspace=portfolio", "/field-forms/#decisions"]],
+    [locale + "/field-forms/", ["app.bundle.js", "shift-desk.js", "asset-scan.js"]],
+    [locale + "/command-center/enterprise/", ['id="sign-in-view"', 'id="provider-body"']],
+  ]);
+  await Promise.all(routes.map(async ([path, markers]) => {
+    const { response, body } = await request(path);
+    requireCondition(response.status === 200 && new URL(response.url).origin === new URL(baseUrl).origin, path + " is unavailable on the expected origin");
+    const language = path.startsWith("/en/") ? "en" : "ar";
+    requireCondition(body.includes('<html lang="' + language), path + " has an unexpected language");
+    for (const marker of markers) requireCondition(body.includes(marker), path + " is missing " + marker);
+  }));
+  return "Both languages delivered the role selector and expected protected portal shells";
+});
+
 await check("security headers", async () => {
   const { response } = await request("/", { readBody: false });
   const required = [

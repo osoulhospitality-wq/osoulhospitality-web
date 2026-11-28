@@ -100,7 +100,8 @@ export function setupFacilityOperations(client) {
       }
     });
   }
-  organization.addEventListener("change", () => {
+  function reset() {
+    generation++;
     panel.open = false;
     list.replaceChildren();
     for (const { form } of forms) {
@@ -108,6 +109,8 @@ export function setupFacilityOperations(client) {
       for (const select of form.querySelectorAll("select")) select.replaceChildren(new Option(uiText("اختر", "Select"), ""));
     }
     status.textContent = "";
-  });
+  }
+  organization.addEventListener("change", reset);
   panel.addEventListener("toggle", refresh);
+  return reset;
 }

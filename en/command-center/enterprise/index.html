@@ -8,14 +8,14 @@
   <meta name="description" content="Secure access to facilities, assets, work orders and service visits for Osoul Hospitality owners and operations teams.">
   <link rel="icon" href="/brand/osool-mark-v8.svg">
   <link rel="stylesheet" href="/assets/index-5F7A2-v8.css">
-  <link rel="stylesheet" href="/command-center/enterprise/app.css?v=71edaa7159">
+  <link rel="stylesheet" href="/command-center/enterprise/app.css?v=1ae773b173">
   <script src="/command-center/enterprise/config.js" defer></script>
-  <script src="/command-center/enterprise/app.bundle.js?v=582ba57ee8" defer></script>
-<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css"></head>
+  <script src="/command-center/enterprise/app.bundle.js?v=629715e1d0" defer></script>
+<link rel="stylesheet" href="/brand/facilities-v1.css"><link rel="stylesheet" href="/command-center/language.css?v=c6b48eaf9e"></head>
 <body>
   <a class="skip-link" href="#enterprise-app">Skip to sign-in</a>
   <header class="enterprise-header">
-    <a href="/en/login/" class="enterprise-brand" aria-label="Choose a workspace">
+    <a href="/en/login/" class="enterprise-brand" title="Choose a workspace">
       <img src="/brand/osool-mark-v8.svg" width="52" height="52" alt="">
       <span><strong>Osoul Platform</strong><small>Facilities and asset management</small></span>
     </a>
@@ -97,6 +97,11 @@
         <button class="text-action js-sign-out" type="button">Sign out</button>
       </div>
 
+      <section id="provider-view" class="app-view" hidden>
+        <div class="dashboard-head"><h2>Provider contracts</h2><button type="button" class="text-action js-sign-out">Sign out</button></div>
+        <p>Select a contract to submit a report or invoice reference and track its review.</p>
+        <div id="provider-body"></div>
+      </section>
       <div id="dashboard-view" class="app-view" hidden>
         <div class="dashboard-head">
           <div><p class="step-label">Multi-factor session verified</p><h2>Operations dashboard</h2></div>
@@ -113,16 +118,17 @@
             <p id="profile-status" role="status"></p>
           </form>
         </details>
-        <nav aria-label="Forms and services">
+
+        <details id="facility-shortcuts"><summary>Forms and service shortcuts</summary>        <nav aria-label="Forms and services">
           <h3>Forms and services</h3>
           <ul>
             <li><a href="/en/solutions/">Browse services and delivery details</a></li>
-            <li><a href="/field-forms/#form-picker">All facility forms (Arabic)</a></li>
-            <li><a href="/field-forms/?form=F15#form-picker">Service contract scope form (Arabic)</a></li>
-            <li><a href="/field-forms/?form=F16#form-picker">Service level form (Arabic)</a></li>
-            <li><a href="/field-forms/?form=F17#form-picker">Supplier evaluation form (Arabic)</a></li>
+            <li><a href="/en/field-forms/#form-picker">All facility forms</a></li>
+            <li><a href="/en/field-forms/?form=F15#form-picker">Service contract scope form</a></li>
+            <li><a href="/en/field-forms/?form=F16#form-picker">Service level form</a></li>
+            <li><a href="/en/field-forms/?form=F17#form-picker">Supplier evaluation form</a></li>
           </ul>
-        </nav>
+        </nav></details>
         <div id="organization-empty" hidden>
           <p>This account has no organization yet. Create your first workspace to get started.</p>
           <form id="create-organization-form">
@@ -134,14 +140,21 @@
         <div id="organization-dashboard" hidden>
           <label for="organization-select">Organization</label>
           <select id="organization-select"></select>
+          <div class="panel-finder">
+            <label for="panel-search">Find a dashboard tool</label>
+            <input type="search" id="panel-search" placeholder="e.g. contracts, assets, maintenance" autocomplete="off">
+            <div id="panel-matches" role="status" aria-live="polite"></div>
+          </div>
           <div id="kpi-grid" class="kpi-grid"></div>
+          <details id="provider-reviews"><summary>Review provider submissions</summary>
+            <p>Accepting a submission records the review decision. Payment requires a separate financial process.</p><div data-inbox></div></details>
           <details id="contract-register">
             <summary>Organization contract register</summary>
             <p role="status"></p><ul></ul>
             <button type="button" hidden>Load contracts</button>
           </details>
-          <p><a href="/field-forms/#decisions">Operator decision desk (Arabic)</a></p>
-          <p><a class="primary-action" href="/field-forms/">Technician forms and inspection photos (Arabic)</a></p>
+          <p><a href="/en/field-forms/#decisions">Operator decision desk</a></p>
+          <p><a class="primary-action" href="/en/field-forms/">Technician forms and inspection photos</a></p>
           <details id="facility-operations">
             <summary>Facilities and asset management</summary>
             <p id="facility-status" role="status"></p>

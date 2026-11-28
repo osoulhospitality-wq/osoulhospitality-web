@@ -1,0 +1,166 @@
+{
+  "CEO": {
+    "name": "Chief executive",
+    "nameAr": "الرئيس التنفيذي"
+  },
+  "AUDIT_STRATEGY": {
+    "name": "Strategy auditor",
+    "nameAr": "تدقيق الاستراتيجية"
+  },
+  "COO": {
+    "name": "Chief operating officer",
+    "nameAr": "مدير العمليات"
+  },
+  "CQO": {
+    "name": "Chief quality officer",
+    "nameAr": "مدير الجودة"
+  },
+  "FM": {
+    "name": "Facilities management",
+    "nameAr": "إدارة المرافق"
+  },
+  "AUDIT_OPERATIONS": {
+    "name": "Operations auditor",
+    "nameAr": "التدقيق التشغيلي"
+  },
+  "ASSET": {
+    "name": "Asset management",
+    "nameAr": "إدارة الأصول"
+  },
+  "AUDIT_DATA": {
+    "name": "Data auditor",
+    "nameAr": "تدقيق البيانات"
+  },
+  "ENGINEERING": {
+    "name": "Engineering",
+    "nameAr": "الإدارة الهندسية"
+  },
+  "MAINTENANCE": {
+    "name": "Maintenance management",
+    "nameAr": "إدارة الصيانة"
+  },
+  "CFO": {
+    "name": "Chief financial officer",
+    "nameAr": "المدير المالي"
+  },
+  "CPO": {
+    "name": "Chief procurement officer",
+    "nameAr": "مدير المشتريات"
+  },
+  "AUDIT_FINANCE": {
+    "name": "Financial auditor",
+    "nameAr": "التدقيق المالي"
+  },
+  "O04": {
+    "name": "Supplier management",
+    "nameAr": "إدارة الموردين"
+  },
+  "CLO": {
+    "name": "Chief legal officer",
+    "nameAr": "المدير القانوني"
+  },
+  "AUDIT_LEGAL": {
+    "name": "Legal auditor",
+    "nameAr": "تدقيق الالتزامات"
+  },
+  "BOARD_RISK": {
+    "name": "Risk and governance committee",
+    "nameAr": "لجنة المخاطر والحوكمة"
+  },
+  "BOARD_AUDIT": {
+    "name": "Independent Audit & Red Team Committee",
+    "nameAr": "لجنة التدقيق المستقلة"
+  },
+  "HSE": {
+    "name": "Health, safety and environment",
+    "nameAr": "الصحة والسلامة والبيئة"
+  },
+  "FIELD_QC": {
+    "name": "Field quality control",
+    "nameAr": "فحص جودة التنفيذ"
+  },
+  "CDO": {
+    "name": "Chief data officer",
+    "nameAr": "مدير البيانات"
+  },
+  "PREDICT": {
+    "name": "Predictive analytics",
+    "nameAr": "التحليلات التنبؤية"
+  },
+  "AUDIT_AI": {
+    "name": "AI quality auditor",
+    "nameAr": "تدقيق جودة الذكاء الاصطناعي"
+  },
+  "BI": {
+    "name": "Business intelligence",
+    "nameAr": "ذكاء الأعمال"
+  },
+  "CMO": {
+    "name": "Chief marketing officer",
+    "nameAr": "مدير التسويق"
+  },
+  "AUDIT_MARKETING": {
+    "name": "Marketing auditor",
+    "nameAr": "التدقيق التسويقي"
+  },
+  "M20": {
+    "name": "PR and reputation",
+    "nameAr": "العلاقات العامة والسمعة"
+  },
+  "CXO": {
+    "name": "Chief experience officer",
+    "nameAr": "مدير تجربة العملاء"
+  },
+  "AUDIT_UX": {
+    "name": "User experience auditor",
+    "nameAr": "تدقيق تجربة المستخدم"
+  },
+  "SUSTAIN": {
+    "name": "Resource efficiency",
+    "nameAr": "الاستدامة وكفاءة الموارد"
+  },
+  "O08": {
+    "name": "Business continuity",
+    "nameAr": "استمرارية الأعمال"
+  },
+  "UXUI": {
+    "name": "User experience and interface design",
+    "nameAr": "تصميم تجربة الواجهات"
+  },
+  "T01": {
+    "name": "Systems architecture",
+    "nameAr": "هندسة الأنظمة"
+  },
+  "AUDIT_TECH": {
+    "name": "Technology auditor",
+    "nameAr": "التدقيق التقني"
+  },
+  "T03": {
+    "name": "Backend engineering",
+    "nameAr": "تطوير الخدمات الخلفية"
+  },
+  "T02": {
+    "name": "Frontend engineering",
+    "nameAr": "تطوير الواجهات"
+  },
+  "T04": {
+    "name": "Database engineering",
+    "nameAr": "هندسة قواعد البيانات"
+  },
+  "CISO": {
+    "name": "Chief information security officer",
+    "nameAr": "مدير الأمن السيبراني"
+  },
+  "AUDIT_SECURITY": {
+    "name": "Security auditor",
+    "nameAr": "تدقيق الأمن السيبراني"
+  },
+  "A03": {
+    "name": "Automation engineering",
+    "nameAr": "الأتمتة"
+  },
+  "T07": {
+    "name": "Software testing",
+    "nameAr": "اختبارات البرمجيات"
+  }
+}
