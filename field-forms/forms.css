@@ -17,3 +17,55 @@
 .shift-detail{display:block;color:#375047}
 .shift-detail[data-period=late]{color:#853618}
 #field-shortcuts button:focus-visible,.shift-desk :focus-visible{outline:3px solid #975e1a;outline-offset:2px}
+
+/* The same signed-in facility scope drives both the charts and the field forms. */
+body{background:#f1f4f1;color:#1a3833}
+main{max-width:76rem;padding:clamp(1rem,3vw,2.25rem)}
+header{background:#173f36;padding:.65rem max(1rem,calc((100vw - 72rem)/2));box-shadow:0 1px 0 #163b34}
+header .field-brand{display:inline-flex;align-items:center;gap:.48rem}
+.field-brand img{display:block;width:32px;height:32px;border-radius:8px;background:#fff;padding:3px}
+header [data-field-language]{font-size:.9rem}
+#workspace-title{font-size:clamp(1.45rem,3.2vw,2.2rem);letter-spacing:-.025em}
+main>nav a{color:#28634f;text-underline-offset:.2em}
+.field-assignment{display:flex;align-items:baseline;gap:.75rem 1.3rem;flex-wrap:wrap;margin-bottom:.8rem;padding:.6rem 1rem}
+.field-assignment>label{flex:2 1 17rem;max-width:29rem}
+.field-assignment>details{flex:1 1 12rem;min-width:0}
+.field-assignment details summary{font-weight:650;color:#28594a}
+#field-shortcuts{margin:.8rem 0}
+.field-visual{border:1px solid #cad6cf;border-radius:18px;background:#f9fbf9;overflow:hidden;box-shadow:0 8px 28px #1b40330d}
+.field-mast{padding:clamp(1rem,3vw,2.2rem);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:linear-gradient(105deg,#1a4b3e,#133a36 55%,#0e322f);color:#fff}
+.field-mast h2{font-size:clamp(1.55rem,4vw,2.65rem);letter-spacing:-.035em;margin:.22rem 0;overflow-wrap:anywhere}
+.field-mast p{margin:0;color:#e2eeea;font-size:.9rem}
+.field-mast .field-role{font-weight:700;color:#e8d7ae}
+.field-signals{display:flex;gap:clamp(1rem,4vw,2.5rem)}
+.field-signals div{display:grid;align-content:start;line-height:1.3;padding-inline-start:.8rem;border-inline-start:2px solid #88a69c}
+.field-signals strong{font-size:clamp(1.5rem,3vw,2.15rem);font-variant-numeric:tabular-nums}
+.field-signals span{font-size:.83rem;color:#edf3ed}
+.field-launch{display:flex;flex-wrap:wrap;gap:.45rem;padding:.65rem clamp(.8rem,2.5vw,1.6rem);border-bottom:1px solid #dce4df;background:#fff}
+.field-launch-button,.field-link{background:#fff;color:#254d40;border:1px solid #c5d4cb;line-height:1.3;font-weight:600}
+.field-launch-button{margin:0;min-height:44px;border-radius:8px}
+.field-chart-grid{display:grid;grid-template-columns:1.04fr 1fr;gap:1rem;padding:1rem}
+.field-chart{background:#fff;border:1px solid #d6e1da;border-radius:12px;padding:clamp(.85rem,2vw,1.45rem);min-width:0}
+.field-chart h3,.field-trace h3{font-size:1.08rem;margin:0 0 .35rem;color:#213f36}
+.field-chart p{margin:0;color:#536c60;font-size:.85rem}
+.field-distribution{display:grid;grid-template-columns:minmax(6.5rem,.85fr) minmax(7rem,1fr);align-items:center;gap:1.2rem;margin-block-start:.8rem}
+.field-ring{width:100%;max-width:10rem;aspect-ratio:1;border-radius:50%;background:#e5ebe7;padding:13%;padding:min(1.25rem,13%);display:grid;place-items:center;justify-self:center}
+.field-ring>div{width:100%;height:100%;border-radius:50%;display:flex;gap:0;flex-direction:column;align-items:center;justify-content:center;background:#fff;line-height:1.22}
+.field-ring strong{font-size:clamp(1.35rem,3vw,2.1rem);font-variant-numeric:tabular-nums}
+.field-ring span{font-size:.7rem;color:#546d5d}
+.field-chart-button{border:0!important;background:transparent;color:#29473a;display:grid;width:100%;margin:0;text-align:start;align-items:center;grid-template-columns:1fr auto;gap:.2rem .6rem;padding:.3rem .2rem;min-height:44px}
+.field-chart-button:hover,.field-link:hover,.field-launch-button:hover{background:#eef4ef}
+.field-legend .field-chart-button span{display:flex;align-items:center;gap:.5rem}
+.field-legend .field-chart-button span::before{content:"";flex:none;width:.6rem;height:.6rem;border-radius:50%;background:var(--series)}
+.field-bars{margin-top:.2rem}.field-bars .field-chart-button{font-size:.88rem;align-content:center;line-height:1.25}
+.field-bar{display:block;grid-column:1/-1;width:100%;height:5px;border-radius:4px;background:#e9eeeb;overflow:hidden}
+.field-bar i{display:block;height:100%;background:var(--series);border-radius:inherit}
+.field-trace{margin:0 1rem 1rem;padding:1rem;background:white;border:1px solid #ccd9cf;border-radius:10px}
+.field-trace ul{list-style:none;margin:.5rem 0;padding:0}
+.field-trace li{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.45rem 0;border-bottom:1px solid #e3e9e5}
+.field-trace li span{min-width:0;overflow-wrap:anywhere}
+.field-trace li small{display:block}
+.field-visual :focus-visible,#field-shortcuts :focus-visible{outline:3px solid #9f6826;outline-offset:2px}
+#field-overview[aria-busy=true]:empty{padding:.65rem;border:1px solid #d4ded6;border-radius:8px}
+@media(max-width:48rem){.field-chart-grid{grid-template-columns:1fr;gap:.7rem;padding:.7rem}.field-distribution{grid-template-columns:minmax(5rem,8.5rem) minmax(6rem,1fr)}.field-signals{width:100%}.field-mast{gap:1rem}.field-assignment{align-items:start}.field-assignment>label{margin:.3rem 0}.field-trace{margin:0 .7rem .7rem}.field-launch-button{flex:1 1 7rem}.field-trace li{flex-wrap:wrap}.field-trace li button{margin:0}}
+@media(prefers-reduced-motion:reduce){.field-visual *{scroll-behavior:auto!important}}

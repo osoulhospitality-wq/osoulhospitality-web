@@ -1,3 +1,4 @@
+import {portfolioVisuals, goToPanel} from "./visual-dashboard.js";
 import {mountAgentActivity} from "./agent-activity.js";
 import {uiText as t} from "./locale.js";
 
@@ -58,7 +59,7 @@ async function collectSite(client,organization,site,signal) {
   const latest=settled[4].value;
   const stamp=latest?.data?.[0]?.created_at;
   const latestDay=stamp && !Number.isNaN(Date.parse(stamp)) ? new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Riyadh"}).format(new Date(stamp)) : null;
-  return {name:site.name,assets:count(0),outstanding:count(1),done:count(2),plans:count(3),
+  return {id:site.id,name:site.name,assets:count(0),outstanding:count(1),done:count(2),plans:count(3),
     latest:latest && !latest.error && Array.isArray(latest.data) && !latest.data.length ? t("لا أوامر ظاهرة","No visible orders") : latestDay};
 }
 
@@ -133,7 +134,7 @@ function printReport(values,title,notes) {
   window.setTimeout(()=>frame.remove(),120000);
 }
 
-export function setupPortfolio(client) {
+export function setupPortfolio(client, dashboardFirst=false) {
   const panel=cell("details"), title=t("محفظة منشآت المؤسسة","Organization facility portfolio");
   const info=cell("p",meta()), status=cell("p"), data=cell("div");
   const button=text=>{const b=cell("button",text);b.type="button";return b;};
@@ -145,9 +146,13 @@ export function setupPortfolio(client) {
   panel.id="portfolio-desk";
   panel.hidden=true;
   status.setAttribute("role","status");
-  panel.append(cell("summary",title),info,status,data,controls);
+  const history=cell("div");
+  history.dataset.osoulHistory="portfolio";
+  history.hidden=!dashboardFirst;
+  panel.append(cell("summary",title),history,info,status,data,controls);
   const resetCouncil = mountAgentActivity(panel, () => refresh.click());
-  document.querySelector("#contract-register").after(panel);
+  if (dashboardFirst) document.querySelector("#fm-facility").before(panel);
+  else document.querySelector("#contract-register").after(panel);
   let organization="",epoch=0,request=null,cursors=[""],page=0,following=null,output=null;
   function resetOutput() {
     output=null;following=null;data.replaceChildren();status.textContent="";
@@ -173,7 +178,16 @@ export function setupPortfolio(client) {
         t("تقارن كثافة الأوامر المفتوحة على أساس الأصول المسجلة. تتطلب مقارنة الجودة أو الربحية بيانات نوع المنشأة ومساحتها وعمرها وإيراداتها وتكاليفها.","Outstanding order density is normalized by registered assets. Comparisons of quality or profitability require facility use, area, age, revenue and expense data.")];
       const values=[headers(),...result.rows.map(columns)];
       output={notes,values};
-      data.replaceChildren(renderTable(values));
+      const comparison=portfolioVisuals(result.rows, siteId=>{
+        const picker=document.querySelector("#fm-building-select");
+        if (!Array.from(picker.options).some(option=>option.value===siteId)) {
+          status.textContent=t("لم تكتمل قراءة قائمة المباني. حدّث البيانات وأعد المحاولة.","The building list is not available yet. Refresh and try again.");
+          return;
+        }
+        picker.value=siteId;picker.dispatchEvent(new Event("change"));
+        goToPanel("fm-facility");
+      });
+      data.replaceChildren(comparison,renderTable(values));
       status.textContent=result.rows.length?notes.slice(1,3).join(" · "):t("لا تظهر منشآت لهذه المؤسسة.","No facilities are visible for this organization.");
       previous.disabled=plannedPage===0;next.disabled=!following;
       print.disabled=sheet.disabled=!result.rows.length;
@@ -205,13 +219,14 @@ export function setupPortfolio(client) {
   print.onclick=()=>exportPage("print");sheet.onclick=()=>exportPage("excel");
   return async id=>{
     const version=++epoch;
+    history.dispatchEvent(new Event("osoul:report-scope-reset"));
     request?.abort();resetOutput();resetCouncil();panel.open=false;panel.hidden=true;
     organization=id;page=0;cursors=[""];
     if (!id) return;
     // Keep this preliminary visibility check separate from cancellable page reads.
     try {
       const allowed=await hasPortfolioAccess(client,id,new AbortController().signal);
-      if(version===epoch) panel.hidden=!allowed;
+      if(version===epoch) {panel.hidden=!allowed; if(allowed && dashboardFirst) panel.open=true;}
     } catch {if(version===epoch) panel.hidden=true;}
   };
 }

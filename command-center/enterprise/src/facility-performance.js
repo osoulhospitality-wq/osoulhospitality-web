@@ -1,3 +1,5 @@
+import { facilityVisuals, firstOrderDate, weeklyIntake, monthlyIntake, visualNavigation } from "./visual-dashboard.js";
+import { setupFacilityActivity } from "./facility-activity.js";
 import { setupReputation } from "./reputation.js";
 import { setupReportHistory } from "./report-history.js";
 import { setupExecutiveOverview } from "./executive-overview.js";
@@ -69,28 +71,53 @@ export function setupPerformance(client) {
   root.className = "facility-performance";
   const label = node("label", t("المبنى","Building"));
   const select = node("select");
+  select.id="fm-building-select";
   label.append(select);
   const status = node("p");
   status.setAttribute("role","status");
   const grid = node("div");
   grid.className = "performance-cards";
-  root.append(node("h3", t("أداء المنشأة وجودة خدمة المورد","Facility performance and supplier quality")), label, status, grid);
-  document.querySelector("#kpi-grid").after(root);
+  root.id="fm-facility";
+  const overview=node("div"), scope=node("div");
+  scope.className="fm-site-scope";scope.append(label,status);
+  const history=node("div");
+  history.dataset.osoulHistory="owner";
+  history.hidden=new URLSearchParams(location.search).get("workspace")==="portfolio";
+  const nav=visualNavigation();
+  nav.hidden=true;
+  root.append(scope,overview,history,nav,grid);
+  document.querySelector(".panel-finder").before(root);
+  const showOrders=setupFacilityActivity(client,root,false), showVisits=setupFacilityActivity(client,root,true);
   const showReputation=setupReputation(client,root);
+  root.lastElementChild.id="fm-reputation";
   const showReports=setupReportHistory(client,root);
+  root.lastElementChild.id="fm-reports";
   const showExecutive = setupExecutiveOverview(client,root);
   const showEngineering = setupEngineeringIntelligence(client,root);
+  root.lastElementChild.id="fm-engineering";
   const showEvidence = setupEvidenceCenter(client,root);
+  root.lastElementChild.id="fm-evidence";
   const showResourceFinance = setupResourceFinance(client,root);
-  let sequence = 0, currentOrg = "";
+  root.lastElementChild.id="fm-resource";
+  let sequence = 0, currentOrg = "", trendRequest;
   async function showSite() {
     const token = ++sequence, org = currentOrg, site = select.value;
+    history.dispatchEvent(new Event("osoul:report-scope-reset"));
+    history.dataset.siteLabel=select.selectedOptions[0]?.textContent || "";
+    nav.hidden=!site;
+    showOrders(org,site);showVisits(org,site);
     void showReputation(org,site);
     void showReports(org,site);
     void showExecutive(org,site);
     void showEngineering(org,site);
     void showEvidence(org,site);
     void showResourceFinance(org,site);
+    trendRequest?.abort();
+    trendRequest = new AbortController();
+    const cutoff=new Date(), signal=trendRequest.signal;
+    const firstRecord=org && site ? firstOrderDate(client,org,site,signal) : null;
+    const weeksRead = org && site ? weeklyIntake(client,org,site,signal,cutoff,firstRecord) : null;
+    overview.replaceChildren();
     grid.replaceChildren();
     if (!org || !site) return;
     status.textContent = t("جارٍ قراءة سجلات المبنى…","Reading building records…");
@@ -98,7 +125,7 @@ export function setupPerformance(client) {
     const orderCount = state => exact(client.from("facility_work_orders").select("id,facility_assets!inner(facility_id)",ids)
       .eq("organization_id",org).eq("facility_assets.facility_id",site).eq("status",state));
     try {
-      const [assets, visits, plans, states, building, ratings] = await Promise.all([
+      const [assets, visits, plans, states, building, ratings, weeks] = await Promise.all([
         exact(client.from("facility_assets").select("id",ids).eq("organization_id",org).eq("facility_id",site)),
         exact(client.from("facility_visits").select("id,facility_work_orders!inner(facility_assets!inner(facility_id))",ids)
           .eq("organization_id",org).eq("facility_work_orders.facility_assets.facility_id",site)),
@@ -107,18 +134,17 @@ export function setupPerformance(client) {
         client.rpc("field_building_read",{p_site:site}),
         client.from("field_form_records").select("answers,field_form_reviews!field_form_reviews_record_id_fkey!inner(decision,reviewed_at)")
           .eq("organization_id",org).eq("facility_id",site).eq("code","F17").eq("field_form_reviews.decision","accepted")
-          .order("submitted_at",{ascending:false}).order("id").limit(10)
+          .order("submitted_at",{ascending:false}).order("id").limit(10),
+        weeksRead
       ]);
       if (token!==sequence) return;
       const profile = card(t("حقائق المبنى المعتمدة","Verified building facts"));
       const dl = node("dl");
       for(const [key,ar,en] of facts) dl.append(node("dt",t(ar,en)),node("dd",building.error ? unavailable() : approvedFact(building.data,key)));
       profile.append(dl);
-      const work = card(t("أوامر العمل حسب الحالة","Work orders by current status"));
-      const max = Math.max(...states.filter(Number.isFinite),0);
-      stages.forEach(([,ar,en],i)=>work.append(meter(t(ar,en),states[i],max)));
-      work.append(node("p",t("كل الفترات · الأصول المسجلة","All time · registered assets")+" "+(assets??unavailable())+" · "+t("الزيارات","visits")+" "+(visits??unavailable())+" · "+t("خطط الصيانة الدورية غير الموقوفة","unpaused maintenance plans")+" "+(plans??unavailable())));
+      overview.replaceChildren(facilityVisuals({name:select.selectedOptions[0]?.textContent || "",states,assets,visits,plans,weeks,cutoff,readMonthly:()=>monthlyIntake(client,org,site,signal,cutoff,firstRecord)}));
       const vendors = card(t("تقييمات الموردين المعتمدة","Accepted supplier assessments"));
+      vendors.id="fm-vendor-quality";
       vendors.append(node("p",t("آخر عشرة تقييمات معتمدة حسب تاريخ تقديم النموذج F17. لكل تقييم فترة مستقلة ودرجات من 100.","Up to ten accepted F17 assessments by submission date. Each has its own period and scores out of 100.")));
       if (ratings.error) vendors.append(node("p",unavailable()));
       else if (!ratings.data.length) vendors.append(node("p",t("لا يوجد تقييم معتمد لهذه المنشأة.","No accepted assessment for this facility.")));
@@ -129,7 +155,7 @@ export function setupPerformance(client) {
         for(const [key,ar,en] of dimensions) details.append(meter(t(ar,en),rating(answers[key]),100));
         vendors.append(details);
       }
-      grid.replaceChildren(profile,work,vendors);
+      grid.replaceChildren(profile,vendors);
       status.textContent = t("وقت القراءة بتوقيت الرياض","Read at Riyadh time")+" · "+new Intl.DateTimeFormat(document.documentElement.lang,{timeZone:"Asia/Riyadh",dateStyle:"medium",timeStyle:"short"}).format(new Date());
     } catch {
       if(token===sequence) status.textContent=t("تعذرت قراءة مؤشرات المبنى.","Building metrics could not be read.");
@@ -139,6 +165,11 @@ export function setupPerformance(client) {
   return async function setOrganization(org) {
     const token = ++sequence;
     currentOrg = org;
+    history.dispatchEvent(new Event("osoul:report-scope-reset"));
+    delete history.dataset.siteLabel;
+    nav.hidden=true;
+    trendRequest?.abort();overview.replaceChildren();
+    showOrders("","");showVisits("","");
     void showReputation("","");
     void showReports("","");
     void showExecutive("","");

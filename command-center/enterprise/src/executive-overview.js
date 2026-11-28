@@ -114,6 +114,7 @@ export function setupExecutiveOverview(client, parent) {
   root.hidden = true;
   const resultBox = node("div");
   const schedule = node("section");
+  schedule.id="fm-calendar";
   const label = node("label", t("فترة الاستحقاقات القادمة", "Upcoming due dates"));
   const horizon = node("select");
   for (const n of [7,30,365]) horizon.add(new Option(t(n === 7 ? "٧ أيام" : n === 30 ? "٣٠ يومًا" : "٣٦٥ يومًا", n + " days"), String(n)));
