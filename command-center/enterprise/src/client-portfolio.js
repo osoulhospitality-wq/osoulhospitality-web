@@ -1,5 +1,6 @@
 import {uiText as t} from "./locale.js";
 import {elem,select,table,detail,monthlyChart} from "./client-reports.js";
+import {renderFacilityPilot,sourceRegister} from "./facility-pilot.js";
 const fmt=new Intl.NumberFormat(document.documentElement.lang,{maximumFractionDigits:2});
 const value=v=>Number.isFinite(v)?fmt.format(v):"—";
 const statuses={
@@ -52,8 +53,14 @@ export function setupClientPortfolio(db) {
   document.getElementById("fm-facility").before(panel);
   if(location.hash==="#contract-register")contractPanel.open=true;
   let clients=[],organization="",sequence=0,read,clientId="",code="";
+  let pilotClient="", pilotState=new Map();
+  function focusPilot(){
+    const section=panel.querySelector("#facility-pilot");
+    if(section){section.focus({preventScroll:true});section.scrollIntoView({block:"start"});}
+  }
   const building=()=>document.getElementById("fm-building-select");
   function showClient(id,facilityCode="",move=false){
+    if(pilotClient!==id){pilotState=new Map();pilotClient=id;}
     clientId=id;code=facilityCode;render();
     if(move){const heading=panel.querySelector("h3");heading?.focus({preventScroll:true});panel.scrollIntoView({block:"start"});}
   }
@@ -67,6 +74,15 @@ export function setupClientPortfolio(db) {
       const terms=[t("البدء","Start")+" "+(c.start_date||"—"),t("الانتهاء","End")+" "+(c.end_date||"—"),
         t("القيمة السنوية","Annual value")+" "+value(c.annual_value)+(c.currency?" "+c.currency:"")];
       el.append(elem("small",terms.join(" · ")),action(t("عرض العميل والمباني","View client and buildings"),()=>showClient(client.id,"",true)));
+      if(client.detail?.pilot?.sites?.length){
+        el.append(action(t("بنود خدمات المباني المسعّرة وغير المسعّرة والزيارات التجريبية","Building service prices, unpriced scope and pilot visits"),()=>{
+          showClient(client.id,"");location.hash="facility-pilot";focusPilot();
+        }));
+      }
+      for(const site of client.facilities||[]){
+        const source=sourceRegister(site);
+        if(source){source.querySelector("summary").append(document.createTextNode(" · "+site.name));el.append(source);}
+      }
       contractSection.append(el);
     }
     contractSection.hidden=!clients.length;
@@ -96,7 +112,12 @@ export function setupClientPortfolio(db) {
     const contract=client.contract||{};
     panel.append(heading,filters,elem("h4",site?.name||client.name),
       elem("p",[contract.name,statusLabel(contract.status||client.status),contract.evidence_note].filter(Boolean).join(" · ")),
-      links,facts(client,site,source),monthlyChart(client,site,source),...records(client,site,source));
+      links);
+    const register=sourceRegister(site);
+    if(register)panel.append(register);
+    const pilot=renderFacilityPilot(client.detail?.pilot,places,site?.code||"",pilotState);
+    if(pilot)panel.append(pilot);
+    panel.append(facts(client,site,source),monthlyChart(client,site,source),...records(client,site,source));
   }
   document.getElementById("fm-building-select")?.addEventListener("change",()=>{
     const id=building()?.value;
@@ -105,7 +126,7 @@ export function setupClientPortfolio(db) {
   });
   return async function load(id){
     const token=++sequence;
-    read?.abort();organization=id;clients=[];clientId="";code="";
+    read?.abort();pilotState=new Map();pilotClient="";organization=id;clients=[];clientId="";code="";
     panel.replaceChildren();contractSection.replaceChildren();panel.hidden=contractSection.hidden=true;
     if(!id)return;
     read=new AbortController();
@@ -119,9 +140,12 @@ export function setupClientPortfolio(db) {
       const initialSite=building()?.value;
       const matched=clients.find(c=>c.facilities?.some(f=>f.id===initialSite));
       const initial=matched||clients[0];
-      showClient(initial.id,matched?.facilities.find(f=>f.id===initialSite)?.code||"");
+      const pilotEntry=location.hash==="#facility-pilot"?clients.find(c=>c.detail?.pilot?.sites?.length):null;
+      showClient(pilotEntry?.id||initial.id,pilotEntry?"":matched?.facilities.find(f=>f.id===initialSite)?.code||"");
       renderContracts();
-      if(location.hash==="#client-portfolio") {
+      if(location.hash==="#facility-pilot"){
+        requestAnimationFrame(()=>{if(sequence===token)focusPilot();});
+      }else if(location.hash==="#client-portfolio") {
         requestAnimationFrame(()=>{if(sequence===token){panel.querySelector("h3")?.focus({preventScroll:true});panel.scrollIntoView({block:"start"});}});
       } else if(location.hash==="#contract-register") {
         contractPanel.open=true;
