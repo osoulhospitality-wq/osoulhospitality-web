@@ -82,6 +82,16 @@ button{font:inherit;cursor:pointer}.primary-action{width:100%;margin-top:22px;bo
 #organization-dashboard :is(.fm-chart-card,.performance-cards,.facility-performance,details){scroll-margin-block-start:1rem}
 @media(max-width:680px){.fm-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.fm-chart-grid,.performance-cards{grid-template-columns:minmax(0,1fr)}.fm-site-scope{gap:.3rem}.fm-building-row{grid-template-columns:1fr 1fr}.fm-stack-track{grid-column:1/-1}.fm-shortcuts a{min-height:44px}.fm-metric{padding:.7rem}.fm-ring{width:7rem}#organization-dashboard>details,.facility-performance>details{padding:.7rem}}
 .fm-shortcuts[hidden]{display:none}
+.facility-performance .decision-today{margin-block:.8rem;padding:.9rem 1rem;border:1px solid var(--line);border-inline-start:4px solid var(--gold);border-radius:12px;background:#fffbf2;min-width:0}
+.facility-performance .decision-today h4{margin:0 0 .4rem;color:var(--forest)}
+.facility-performance .decision-today [role=status]{margin:0 0 .6rem;font-size:.95rem;font-weight:650;line-height:1.6;color:var(--ink)}
+.facility-performance .decision-today ol{margin:0;padding-inline-start:1.2rem;display:grid;gap:.7rem;min-width:0}
+.facility-performance .decision-today li{min-width:0;overflow-wrap:anywhere}
+.facility-performance .decision-today dl{display:grid;grid-template-columns:minmax(0,1fr);gap:.15rem .5rem;margin:.35rem 0}
+.facility-performance .decision-today dt{font-weight:650;font-size:.8rem;color:var(--forest)}
+.facility-performance .decision-today dd{margin:0 0 .3rem;font-size:.85rem;line-height:1.6;color:var(--muted)}
+.facility-performance .decision-today a{display:inline-flex;align-items:center;min-height:44px;font-weight:650;color:var(--forest);text-decoration-thickness:2px}
+.facility-performance .decision-today a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .fm-chart-card>select{width:auto;max-width:100%;margin-top:.25rem;padding:.2rem .4rem;border-radius:.35rem;font-size:.8rem}
 .fm-activity ul{list-style:none;padding:0}
 .fm-activity li{padding:.75rem .2rem;border-block-end:1px solid #dce7df}
