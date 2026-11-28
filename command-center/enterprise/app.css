@@ -105,3 +105,24 @@ button{font:inherit;cursor:pointer}.primary-action{width:100%;margin-top:22px;bo
 .client-table th,.client-table td {padding:.45rem .5rem;border-block-end:1px solid #dbe7df;text-align:start}
 .client-agreement {display:grid;gap:.3rem;padding:.75rem;border-inline-start:3px solid #478067}
 .client-agreement p {margin:.1rem 0}.client-agreement button {justify-self:start}
+
+/* Pilot workspace */
+.facility-pilot{--forest:#164738;--leaf:#437855;--blue:#456389;margin:1.2rem 0;padding:0 0 1.1rem;border:1px solid #becdc2;border-radius:1rem;overflow:hidden;background:#fff;color:#18372b;scroll-margin:1rem}
+.facility-pilot .pilot-head{display:flex;flex-flow:row wrap;justify-content:space-between;align-items:center;gap:.45rem 1rem;padding:1.2rem clamp(.65rem,3vw,1.3rem);background:var(--forest);color:#fff}
+.facility-pilot .pilot-head h4{font-size:1.28rem;color:#fff;margin:0}.pilot-head p{color:#e2efe4;max-width:52ch;margin:.3rem 0 0}.pilot-head small{color:#e2efe4}
+.pilot-tabs{display:flex;flex-wrap:wrap;gap:.3rem;padding:.65rem;background:#f1f5f0;border-bottom:1px solid #d5e0d6}
+.facility-pilot button,.pilot-tabs button{border:1px solid #abbdb2;border-radius:.45rem;padding:.42rem .7rem;background:white;color:#194235;font:inherit;cursor:pointer;min-height:2.65rem}
+.facility-pilot button:focus-visible,.facility-pilot summary:focus-visible{outline:3px solid #196d95;outline-offset:2px}
+.pilot-tabs button[aria-pressed=true],.pilot-drill button[type=submit]:first-of-type{background:var(--forest);color:white}
+.facility-pilot>.pilot-tabs+div{padding:.85rem clamp(.65rem,3vw,1.3rem) 0}
+.pilot-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:.5rem}.pilot-metrics>div{background:#f1f6ef;border-radius:.6rem;border-block-start:3px solid #68856c;padding:.7rem}
+.pilot-metrics>div:nth-child(2){background:#f1f4f8;border-color:#627d9e}.pilot-metrics strong{font-size:clamp(1rem,2.7vw,1.28rem);display:block;margin-top:.26rem;font-variant-numeric:tabular-nums}
+.pilot-figure{padding:1rem 0;margin:0}.pilot-figure figcaption,.facility-pilot h5{font-weight:700;font-size:1rem;margin:.55rem 0}
+.pilot-legend{display:flex;flex-wrap:wrap;gap:.3rem}.pilot-tag{display:inline-block;border-radius:1rem;padding:.15rem .55rem;font-size:.8rem;background:#ebeae5;color:#41483b;white-space:normal}
+.pilot-tag-documented,.pilot-tag-accepted{background:#dcecdf;color:#195331}.pilot-tag-simulated,.pilot-tag-submitted{background:#e0e8f6;color:#294b79}.pilot-tag-returned{background:#f5e7ce;color:#704600}
+.pilot-compare{display:grid;grid-template-columns:minmax(5rem,1fr) minmax(3rem,2fr) minmax(5rem,1fr);gap:.5rem;align-items:center;margin-block:.6rem}.pilot-track{display:flex;align-items:center;background:#f0f3ee;border-radius:1rem;overflow:hidden;height:.75rem}.pilot-track .documented{background:var(--leaf)}.pilot-track .simulated{background:var(--blue)}.pilot-track i{height:100%}
+.pilot-glance button{display:block;width:100%;text-align:start;margin-block:.3rem}.pilot-list details>summary{display:flex;gap:.45rem;align-items:center;justify-content:space-between;cursor:pointer}.pilot-list summary strong,.pilot-list summary small{display:block}
+.pilot-list details{padding:.6rem;border:1px solid #d3dfd5;border-radius:.55rem;margin:.5rem 0}.pilot-drill{border-block-start:1px solid #c0d2c4;padding:.7rem 0;margin:.55rem 0}
+.pilot-drill>.pilot-tag{margin-inline-start:.4rem}.pilot-drill label:not(.pilot-check),.pilot-drill textarea{display:block;width:100%;box-sizing:border-box}.pilot-drill textarea{min-height:3rem}
+.pilot-drill input[type=checkbox]{width:1.1rem;height:1.1rem;vertical-align:middle;margin-inline-end:.4rem}.pilot-drill fieldset{min-width:0;border:1px solid #ccd7cf;border-radius:.5rem}.pilot-check{display:block;min-height:2rem}.pilot-drill button+button{margin-inline-start:.45rem}
+.pilot-decisions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.6rem}.pilot-decisions article{padding:.8rem;border:1px solid #d3ded4;border-inline-start:3px solid #996e3a;border-radius:.5rem}.pilot-decisions strong{display:block}.facility-pilot label{max-width:100%}.facility-pilot select,.facility-pilot input{max-width:100%}
