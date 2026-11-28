@@ -4,6 +4,10 @@ import { setupFacilityOperations } from "./facility-operations.js";
 
 import { setupPerformance } from "./facility-performance.js";
 
+import { setupContracts } from "./contracts.js";
+
+let showContracts;
+let countsVersion = 0;
 let showPerformance;
 const config = window.OSOUL_ENTERPRISE_CONFIG || {};
 const requiredKeys = ["supabaseUrl", "supabasePublishableKey"];
@@ -28,7 +32,12 @@ function setStatus(message = "", type = "") {
 }
 
 function showView(name) {
-  if (name !== "dashboard") showPerformance?.("");
+  if (name !== "dashboard") {
+    countsVersion++;
+    showPerformance?.("");
+    showContracts?.("");
+    document.querySelector("#kpi-grid").replaceChildren();
+  }
   Object.entries(views).forEach(([key, node]) => { node.hidden = key !== name; });
 }
 
@@ -63,6 +72,10 @@ async function initializeSession(callback) {
     passwordUpdateUserId = data.session.user.id;
   }
   await routeSession();
+  if (!callback.size && !views.signIn.hidden && !data?.session
+    && new URLSearchParams(location.search).get("action") === "recover") {
+    document.querySelector("#show-password-recovery").click();
+  }
   if (callback.has("error") || (callbackToken
     && (callbackType === "invite" || callbackType === "recovery")
     && !passwordUpdateUserId)) {
@@ -93,7 +106,7 @@ async function beginEnrollment() {
     document.querySelector("#totp-secret").textContent = data.totp.secret;
     document.querySelector("#enrollment-details").hidden = false;
     button.hidden = true;
-    setStatus(uiText("امسح الرمز وأدخل رمز التأكيد لتفعيل MFA.", "Scan the QR code and enter the confirmation code to enable MFA."), "success");
+    setStatus(uiText("امسح الرمز وأدخل رمز التأكيد لتفعيل التحقق بخطوتين.", "Scan the QR code and enter the confirmation code to enable two-step verification."), "success");
     document.querySelector("#enroll-code").focus();
   } catch (error) {
     setStatus(friendlyError(error), "error");
@@ -130,6 +143,9 @@ async function getOrganizations() {
 }
 
 async function loadCounts(organizationId) {
+  const version = ++countsVersion;
+  document.querySelector("#kpi-grid").replaceChildren();
+  showContracts(organizationId);
   void showPerformance(organizationId);
   const definitions = [
     ["suppliers", uiText("الموردون", "Suppliers")], ["products", uiText("المنتجات", "Products")], ["quotes", uiText("عروض الأسعار", "Quotations")],
@@ -137,16 +153,23 @@ async function loadCounts(organizationId) {
   ];
   const results = await Promise.all(definitions.map(async ([table, label]) => {
     const { count, error } = await supabase.from(table).select("*", { count: "exact", head: true }).eq("organization_id", organizationId);
-    if (error) throw error;
-    return { label, count: count || 0 };
+    return { label, count: !error && Number.isSafeInteger(count) ? count : uiText("غير متاح", "Unavailable") };
   }));
+  if (version !== countsVersion) return;
   document.querySelector("#kpi-grid").innerHTML = results.map(({ label, count }) => `<div class="kpi"><strong>${count}</strong><span>${label}</span></div>`).join("");
+}
+
+function renderAccountIdentity(user) {
+  const name = typeof user.user_metadata?.display_name === "string" ? user.user_metadata.display_name : "";
+  document.querySelector("#display-name").value = name;
+  document.querySelector("#session-identity").textContent = name || user.email || uiText("حساب العمل", "Business account");
 }
 
 async function showDashboard(session) {
   showPerformance?.("");
   showView("dashboard");
-  document.querySelector("#session-identity").textContent = uiText("الحساب", "Account") + ": " + (session.user.email || uiText("مستخدم مؤسسي", "Business user"));
+  renderAccountIdentity(session.user);
+  document.querySelector("#profile-status").textContent = "";
   try {
     const organizations = await getOrganizations();
     const empty = document.querySelector("#organization-empty");
@@ -168,7 +191,7 @@ async function showDashboard(session) {
     });
     select.replaceChildren(...options);
     await loadCounts(select.value);
-    setStatus(uiText("الجلسة محمية بـ MFA، وتم تحميل البيانات المصرح بها فقط.", "Your session is protected by MFA. Only authorized data has been loaded."), "success");
+    setStatus(uiText("تم فتح لوحة المنشأة.", "Your facility dashboard is open."), "success");
   } catch (error) {
     setStatus(friendlyError(error), "error");
   }
@@ -215,7 +238,7 @@ async function routeSession() {
   if (verified) {
     activeFactorId = verified.id;
     showView("verify");
-    setStatus(uiText("أكمل رمز التحقق لرفع مستوى الجلسة إلى aal2.", "Enter the authenticator code to verify your session."));
+    setStatus(uiText("أدخل الرمز الظاهر في تطبيق التحقق لفتح لوحتك.", "Enter the authenticator code to verify your session."));
     document.querySelector("#mfa-code").focus();
   } else {
     showView("enroll");
@@ -237,7 +260,29 @@ if (!configReady) {
   });
   setupFacilityOperations(supabase);
   showPerformance = setupPerformance(supabase);
+  showContracts = setupContracts(supabase);
 
+  document.querySelector("#display-name-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const status = document.querySelector("#profile-status");
+    const name = form.elements.displayName.value.trim();
+    if (!name || name.length > 80) {
+      status.textContent = uiText("أدخل اسم عرض من حرف إلى 80 حرفًا.", "Enter a display name of 1 to 80 characters.");
+      return;
+    }
+    setBusy(form, true);
+    try {
+      const { data, error } = await supabase.auth.updateUser({ data: { display_name: name } });
+      if (error) throw error;
+      renderAccountIdentity(data.user);
+      status.textContent = uiText("حُفظ اسم العرض.", "Display name saved.");
+    } catch (error) {
+      status.textContent = friendlyError(error);
+    } finally {
+      setBusy(form, false);
+    }
+  });
   const recoveryButton = document.querySelector("#show-password-recovery");
   recoveryButton.disabled = false;
   recoveryButton.addEventListener("click", () => {
@@ -334,7 +379,7 @@ if (!configReady) {
     setStatus(uiText("جارٍ تحميل مؤشرات المنشأة…", "Loading organization metrics…"));
     try {
       await loadCounts(event.currentTarget.value);
-      setStatus(uiText("تم تحميل البيانات المصرح بها.", "Authorized data loaded."), "success");
+      setStatus(uiText("تم اختيار المنشأة.", "Facility selected."), "success");
     } catch (error) {
       setStatus(friendlyError(error), "error");
     }
