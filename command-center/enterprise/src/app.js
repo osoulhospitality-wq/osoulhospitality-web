@@ -183,7 +183,7 @@ async function loadCounts(organizationId) {
   void showPerformance(organizationId);
   const definitions = [
     ["suppliers", uiText("الموردون", "Suppliers")], ["products", uiText("المنتجات", "Products")], ["quotes", uiText("عروض الأسعار", "Quotations")],
-    ["contracts", uiText("العقود", "Contracts")], ["requests", uiText("الطلبات", "Requests")], ["approvals", uiText("الاعتمادات", "Approvals")]
+    ["contracts", uiText("عقود الموردين", "Supplier agreements")], ["requests", uiText("الطلبات", "Requests")], ["approvals", uiText("الاعتمادات", "Approvals")]
   ];
   const results = await Promise.all(definitions.map(async ([table, label]) => {
     const { count, error } = await supabase.from(table).select("*", { count: "exact", head: true }).eq("organization_id", organizationId);
